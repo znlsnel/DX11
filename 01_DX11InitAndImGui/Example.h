@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <iostream>
 #include <windows.h>
 #include <memory>
 #include <iostream>
@@ -235,9 +236,30 @@ public:
 
 	void Update()
 	{
-		std::vector<Vec4> pixels(canvasWidth * canvasHeight, Vec4{0.8f, 0.8f, 0.8f, 1.0f});
-		pixels[0 + canvasWidth * 0] = Vec4{ 1.0f, 0.0f, 0.0f, 1.0f };
-		pixels[1 + canvasWidth * 0] = Vec4{ 1.0f, 1.0f, 0.0f, 1.0f };
+		static int i = 0;
+	
+		i++;
+		if (i >= canvasWidth * canvasHeight)
+			i = 0;
+		
+		std::vector<Vec4> pixels(canvasWidth * canvasHeight, Vec4{ canvasColor[0], canvasColor [1], canvasColor [2], 1.f});
+
+		Vec4 color = Vec4{ 0.f, 0.f, 1.f, 1.f };
+
+		switch (i % 3) {
+		case 0:
+			color = Vec4{ 1.f, 0.f, 0.f, 1.f };
+			break;
+		case 1:
+			color = Vec4{ 0.f, 1.f, 0.f, 1.f }; 
+			break;
+		}
+
+		//for (int j = canvasWidth * (i / canvasWidth); j <= i; j++)
+		//	pixels[j] = color;
+		//
+
+
 
 		// Update texture buffer
 		D3D11_MAPPED_SUBRESOURCE ms;
@@ -309,5 +331,5 @@ public:
 	UINT indexCount;	
 
 	int canvasWidth, canvasHeight;
-	float backgroundColor[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float canvasColor[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
 };

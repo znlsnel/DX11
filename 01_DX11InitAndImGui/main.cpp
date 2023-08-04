@@ -65,8 +65,6 @@ int main()
 	ImGui_ImplDX11_Init(example->device, example->deviceContext);
 	ImGui_ImplWin32_Init(hwnd);
 
-	float canvasColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };//TODO: 실습문제용 임시코드
-
 	// Main message loop
 	MSG msg = {};
 	while (WM_QUIT != msg.message)
@@ -79,18 +77,18 @@ int main()
 		else
 		{
 			// Start the Dear ImGui frame
-			//ImGui_ImplDX11_NewFrame();//TODO: IMGUI 사용
-			//ImGui_ImplWin32_NewFrame();
-			//ImGui::NewFrame();
-			//ImGui::Begin("Background Color");
-			//ImGui::SliderFloat3("RGB(0.0->1.0)", canvasColor, 0.0f, 1.0f);
-			//ImGui::End();
-			//ImGui::Render();
+			ImGui_ImplDX11_NewFrame();//TODO: IMGUI 사용
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+			ImGui::Begin("Background Color");
+			ImGui::SliderFloat3("RGB(0.0->1.0)", example->canvasColor, 0.0f, 1.0f);
+			ImGui::End();
+			ImGui::Render();
 
 			example->Update();
 			example->Render();
 
-			//ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());//TODO: IMGUI 사용
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());//TODO: IMGUI 사용
 
 			// switch the back buffer and the front buffer
 			example->swapChain->Present(1, 0);
