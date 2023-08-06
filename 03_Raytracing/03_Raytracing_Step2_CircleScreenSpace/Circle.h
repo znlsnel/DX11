@@ -26,8 +26,10 @@ namespace hlab
 		{
 			// TODO: 여기에 원의 방정식을 이용해서 x가 원 안에 들어 있는지 아닌지에 따라
 			//		true나 false 반환
+			glm::vec2 temp = x - center;
+			const float length = (glm::pow(temp.x, 2) + glm::pow(temp.y, 2));
 
-			return false;
+			return length < radius * radius;
 		}
 	};
 }

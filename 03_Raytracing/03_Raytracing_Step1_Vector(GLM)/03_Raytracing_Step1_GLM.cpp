@@ -61,6 +61,10 @@ int main()
 
     */
 
+    // 벡터 정의하는 방법 (vec3, vec4 등도 있어요)
+    //glm::vec3 a(1.0f, 2.0f, 3.0f);
+    //glm::vec3 b(7.0f, 8.0f, 9.0f);
+
     // 내적(inner product, dot product)
     auto aDotB = glm::dot(a, b);
 
