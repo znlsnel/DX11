@@ -48,7 +48,7 @@ public:
 	{
 		// 이미지 읽어들이기
 		image.ReadFromFile("image_1.jpg"); // 컴퓨터 속도가 느리다면 "image_1_360.jpg" 사용
-
+		tempImage = image;
 		// 시간 측정
 		const auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -65,18 +65,22 @@ public:
 		*/
 
 		//for(int i = 0; i < 100; i++)
-		//	image.BoxBlur5();
+		//	tempImage.BoxBlur5();
 		
 		//for (int i = 0; i < 100; i++)
-		//	image.GaussianBlur5();
+		//	tempImage.GaussianBlur5();
 
-		//image.Bloom(0.3f, 1000, 1.0f);// image_1
+
+
+
+
+		tempImage.Bloom(0.3f, 1000, 1.0f);// image_1
 
 		const auto elapsed_time = std::chrono::high_resolution_clock::now() - start_time;
 
 		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count() / 1000.0 << " sec" << std::endl;
 
-		image.WritePNG("result.png");
+		tempImage.WritePNG("result.png");
 
 		// this->canvasWidth = image.width
 		// this->canvasHeight = image.height
@@ -232,10 +236,10 @@ public:
 		{
 			const std::vector<Vertex> vertices =
 			{
-				{ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.f, 1.f },},
-				{ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.f, 1.f },},
-				{ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.f, 0.f },},
-				{ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.f, 0.f },},
+				{ { -0.9f, -0.9f, 0.0f, 1.0f }, { 0.f, 1.f },},
+				{ {  0.9f, -0.9f, 0.0f, 1.0f }, { 1.f, 1.f },},
+				{ {  0.9f,  0.9f, 0.0f, 1.0f }, { 1.f, 0.f },},
+				{ { -0.9f,  0.9f, 0.0f, 1.0f }, { 0.f, 0.f },},
 			};
 
 			D3D11_BUFFER_DESC bufferDesc;
@@ -292,8 +296,19 @@ public:
 		*/
 
 		//image.Blur(7);
-
 		//image.GaussianBlur5();
+
+		for (int i = 0; i < image.height; i++) {
+			for (int j = 0; j < image.width; j++) {
+
+				const int idx = j + image.width * i;
+				image.pixels[idx].v[0] = std::clamp(tempImage.pixels[idx].v[0] + *brightness, 0.f, 1.f);
+				image.pixels[idx].v[1] = std::clamp(tempImage.pixels[idx].v[1] + *brightness, 0.f, 1.f);
+				image.pixels[idx].v[2] = std::clamp(tempImage.pixels[idx].v[2] + *brightness, 0.f, 1.f);
+			}
+		}
+
+
 
 		// 이미지의 내용을 GPU 메모리로 복사
 		D3D11_MAPPED_SUBRESOURCE ms;
@@ -305,7 +320,7 @@ public:
 
 	void Render()
 	{
-		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
 		deviceContext->RSSetViewports(1, &viewport);
 		deviceContext->OMSetRenderTargets(1, &renderTargetView, nullptr);
 		deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
@@ -366,5 +381,8 @@ public:
 	UINT indexCount;
 
 	int canvasWidth, canvasHeight;
+	float* brightness = new float(0.f);
+	bool* bBoxBlur = new bool(false);
 	Image image; //std::vector<Vec4> pixels;
+	Image tempImage; 
 };

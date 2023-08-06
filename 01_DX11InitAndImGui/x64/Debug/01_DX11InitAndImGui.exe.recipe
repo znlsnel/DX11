@@ -2,15 +2,15 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\DEVELOPMENT\GIT\DX11_HongLab\01_DX11InitAndImGui\x64\Debug\01_DX11InitAndImGui.exe</FullPath>
+      <FullPath>C:\Users\dudth\Downloads\새 폴더\x64\Debug\01_DX11InitAndImGui.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
-      <FullPath>C:\DEVELOPMENT\GIT\DX11_HongLab\01_DX11InitAndImGui\x64\Debug\PS.cso</FullPath>
+      <FullPath>C:\Users\dudth\Downloads\새 폴더\x64\Debug\PS.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>C:\DEVELOPMENT\GIT\DX11_HongLab\01_DX11InitAndImGui\x64\Debug\VS.cso</FullPath>
+      <FullPath>C:\Users\dudth\Downloads\새 폴더\x64\Debug\VS.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />

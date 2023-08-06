@@ -82,6 +82,7 @@ int main()
 			ImGui::NewFrame();
 			ImGui::Begin("Background Color");
 			ImGui::SliderFloat3("RGB(0.0->1.0)", example->canvasColor, 0.0f, 1.0f);
+
 			ImGui::End();
 			ImGui::Render();
 

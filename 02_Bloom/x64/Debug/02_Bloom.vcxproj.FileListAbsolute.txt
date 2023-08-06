@@ -1,0 +1,2 @@
+C:\DEVELOPMENT\GIT\DX11_HongLab\02_Bloom\x64\Debug\02_Bloom.exe
+C:\Users\dudth\Downloads\02_Bloom2\x64\Debug\02_Bloom.exe

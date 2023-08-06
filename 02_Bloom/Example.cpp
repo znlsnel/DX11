@@ -6,7 +6,6 @@
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
-
 #include <algorithm> // std::clamp (C++17)
 
 void Image::ReadFromFile(const char* filename)
@@ -34,9 +33,9 @@ void Image::ReadFromFile(const char* filename)
 	pixels.resize(width * height);
 	for (int i = 0; i < width * height; i ++)
 	{
-		pixels[i].v[0] = img[i * channels] / 255.0f;
-		pixels[i].v[1] = img[i * channels +1] / 255.0f;
-		pixels[i].v[2] = img[i * channels +2] / 255.0f;
+		pixels[i].v[0] = (img[i * channels] / 255.0f);
+		pixels[i].v[1] = (img[i * channels + 1] / 255.0f);
+		pixels[i].v[2] = (img[i * channels + 2] / 255.0f);
 		pixels[i].v[3] = 1.0f;
 	}
 
@@ -50,20 +49,20 @@ void Image::WritePNG(const char* filename)
 	std::vector<unsigned char> img(width * height * channels, 0);
 	for (int i = 0; i < width * height; i++)
 	{
-		img[i * channels] = uint8_t(pixels[i].v[0] * 255.0f); // v[0]이 0.0f 이상 1.0f 이하 가정
-		img[i * channels + 1] = uint8_t(pixels[i].v[1] * 255.0f);
-		img[i * channels + 2] = uint8_t(pixels[i].v[2] * 255.0f);
+		img[i * channels] = uint8_t(pixels[i].v[0] * 255.f); // v[0]이 0.0f 이상 1.0f 이하 가정
+		img[i * channels + 1] = uint8_t(pixels[i].v[1] * 255.f);
+		img[i * channels + 2] = uint8_t(pixels[i].v[2] * 255.f);
 	}
 
 	stbi_write_png(filename, width, height, channels, img.data(), width * channels);
 }
 
-Vec4& Image::GetPixel(int i, int j)
+Vec4& Image::GetPixel(int w, int h)
 {
-	i = std::clamp(i, 0, this->width - 1);
-	j = std::clamp(j, 0, this->height - 1);
+	w = std::clamp(w, 0, this->width - 1);
+	h = std::clamp(h, 0, this->height - 1);
 
-	return this->pixels[i + this->width * j];
+	return this->pixels[w + this->width * h];
 }
 
 void Image::BoxBlur5()
@@ -82,6 +81,25 @@ void Image::BoxBlur5()
 	{
 		for (int i = 0; i < this->width; i++)
 		{
+			 int idx = i +  this->width * j;
+			Vec4 temp{ 0.f, 0.f, 0.f, 1.f };
+
+			for (int k = -2; k <= 2; k++) {
+				Vec4 vertiPixel = this->GetPixel(i + k,  j );
+				Vec4 horizonPixel = this->GetPixel(i,  j + k );
+
+				temp.v[0] += horizonPixel.v[0];
+				temp.v[1] += horizonPixel.v[1];
+				temp.v[2] += horizonPixel.v[2];
+
+				temp.v[0] += vertiPixel.v[0];
+				temp.v[1] += vertiPixel.v[1];
+				temp.v[2] += vertiPixel.v[2];
+			}
+
+			pixelsBuffer[idx].v[0] = temp.v[0] * 0.1f;
+			pixelsBuffer[idx].v[1] = temp.v[1] * 0.1f;
+			pixelsBuffer[idx].v[2] = temp.v[2]  * 0.1f;
 			// 주변 픽셀들의 색을 평균내어서 (i, j)에 있는 픽셀의 색을 변경
 			// this->pixels로부터 읽어온 값들을 평균내어서 pixelsBuffer의 값들을 바꾸기
 		}
@@ -90,7 +108,7 @@ void Image::BoxBlur5()
 	// Swap
 	std::swap(this->pixels, pixelsBuffer);
 
-	//return; // 여기까지 구현하고 테스트
+	return; // 여기까지 구현하고 테스트
 
 	// 세로 방향 (y 방향)
 #pragma omp parallel for
@@ -126,13 +144,32 @@ void Image::GaussianBlur5()
 		{
 			// 주변 픽셀들의 색을 평균내어서 (i, j)에 있는 픽셀의 색을 변경
 			// this->pixels로부터 읽어온 값들을 평균내어서 pixelsBuffer의 값들을 바꾸기
+			int idx = i + this->width * j;
 
+			Vec4 temp{ 0.f, 0.f, 0.f, 1.f };
+			for (int k = 0; k < 5; k++) {
+				Vec4 vertiPixel = this->GetPixel(i + k-2, j);
+				Vec4 horizonPixel = this->GetPixel(i, j + k-2);
+
+				temp.v[0] += horizonPixel.v[0] * weights[k] / 2;
+				temp.v[1] += horizonPixel.v[1] * weights[k] / 2;
+				temp.v[2] += horizonPixel.v[2] * weights[k] / 2;
+
+				temp.v[0] += vertiPixel.v[0] * weights[k] / 2;
+				temp.v[1] += vertiPixel.v[1] * weights[k] / 2;
+				temp.v[2] += vertiPixel.v[2] * weights[k] / 2;
+			}
+
+			pixelsBuffer[idx].v[0] = temp.v[0];
+			pixelsBuffer[idx].v[1] = temp.v[1];
+			pixelsBuffer[idx].v[2] = temp.v[2];
 		}
 	}
 
 	// Swap
 	std::swap(this->pixels, pixelsBuffer);
 
+	return;
 	// 세로 방향 (y 방향)
 #pragma omp parallel for
 	for (int j = 0; j < this->height; j++)
@@ -162,16 +199,23 @@ void Image::Bloom(const float& th, const int& numRepeat, const float& weight)
 	for (int j = 0; j < height; j ++)
 		for (int i = 0; i < width; i++)
 		{
-
-
+			const int idx = i + this->width * j;
+			Vec4& tempVec = this->GetPixel(i, j);
+			float relativeLuminance = (tempVec.v[0] * 0.2126f) + (tempVec.v[1] * 0.7152f) + (tempVec.v[2] * 0.0722f);
+			if (th > relativeLuminance) {
+				tempVec.v[0] = 0.f;
+				tempVec.v[1] = 0.f;
+				tempVec.v[2] = 0.f;
+			}
+			
 		}
 
 	// 여기서 Blur하지 않고 결과 확인
-
+	//return;
 	// 밝은 부분만 Blur 
 	for (int i = 0; i < numRepeat; i++)
 	{
-		
+		this->GaussianBlur5();
 	}
 
 	// 여기서 또 한 번 결과 확인
@@ -179,7 +223,9 @@ void Image::Bloom(const float& th, const int& numRepeat, const float& weight)
 	// 밝은 부분만 Blur한 것과 원본 이미지를 더하기 (밝은 부분 Blur에 weight 곱해서 강도 조절)
 	for (int i = 0; i < pixelsBackup.size(); i++)
 	{
+		this->pixels[i].v[0] = std::clamp(this->pixels[i].v[0] * weight + pixelsBackup[i].v[0], 0.f, 1.f);
+		this->pixels[i].v[1] = std::clamp(this->pixels[i].v[1] * weight + pixelsBackup[i].v[1], 0.f, 1.f);
+		this->pixels[i].v[2] = std::clamp(this->pixels[i].v[2] * weight + pixelsBackup[i].v[2], 0.f, 1.f);
 		
-
 	}
 }
