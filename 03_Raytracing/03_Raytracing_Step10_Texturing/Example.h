@@ -62,7 +62,7 @@ public:
 			memcpy(ms.pData, pixels.data(), pixels.size() * sizeof(glm::vec4));
 			deviceContext->Unmap(canvasTexture, NULL);
 		}
-		count++;
+		//count++;
 	}
 
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/how-to--compile-a-shader
