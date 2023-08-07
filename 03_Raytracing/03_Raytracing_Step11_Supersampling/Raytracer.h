@@ -138,6 +138,13 @@ namespace hlab
 			//[수정] 강의 영상과 달리 subdx에 0.5f를 곱해줬습니다.
 
 			// ...
+			for (int j = 0; j < 2; j++)
+				for (int i = 0; i < 2; i++) {
+					vec3 subPos(pixelPos.x + float(i) * subdx, pixelPos.y + float(j) * subdx, pixelPos.z);
+					Ray myRay{ subPos, glm::normalize(subPos - eyePos) };
+					pixelColor += traceRay2x2(eyePos, subPos, subdx, recursiveLevel - 1);
+				}
+
 
 			return pixelColor * 0.25f;
 		}
