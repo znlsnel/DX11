@@ -3,6 +3,7 @@
 #include "Sphere.h"
 #include "Ray.h"
 #include "Light.h"
+#include <iostream>
 
 #include <vector>
 
@@ -59,11 +60,13 @@ namespace hlab
 			for (int l = 0; l < objects.size(); l++)
 			{
 				auto hit = objects[l]->CheckRayCollision(ray);
-
+				//std::cout << "object [" << l << "]  Center.Z :  " << dynamic_cast<hlab::Sphere*>(objects[l].get())->center.z << std::endl;
 				if (hit.d >= 0.0f)
 				{
-					hit.obj = objects[l];
-					return hit;
+					if (closest_hit.d <= -1.f || closest_hit.d > hit.d) {
+						closest_hit = hit;
+						closest_hit.obj = objects[l];
+					}
 				}
 			}
 
@@ -94,6 +97,7 @@ namespace hlab
 
 		void Render(std::vector<glm::vec4>& pixels)
 		{
+
 			std::fill(pixels.begin(), pixels.end(), vec4{ 0.0f, 0.0f, 0.0f, 1.0f });
 
 			const vec3 eyePos(0.0f, 0.0f, -1.5f);
@@ -108,7 +112,9 @@ namespace hlab
 					// 스크린에 수직인 z방향, 절대값 1.0인 유닉 벡터
 					// Orthographic projection (정투영) vs perspective projection (원근투영)
 
-					const auto rayDir = vec3(0.0f, 0.0f, 1.0f);
+					const auto eyePos = vec3(0.0f, 0.0f, -2.f);
+					const auto rayDir = glm::normalize(pixelPosWorld - eyePos);
+
 					Ray pixelRay{ pixelPosWorld, rayDir };
 
 					pixels[i + width * j] = vec4(glm::clamp(traceRay(pixelRay), 0.0f, 1.0f), 1.0f);

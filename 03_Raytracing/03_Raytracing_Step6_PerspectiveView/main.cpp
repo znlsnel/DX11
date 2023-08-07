@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 
+#include "Sphere.h"
 #include "Example.h"
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -87,14 +88,16 @@ int main()
 			// ImGui::SliderFloat3("Diffuse color", &example->raytracer.sphere->diff.x, 0.0f, 1.0f);
 			// ImGui::SliderFloat3("Specular color", &example->raytracer.sphere->spec.x, 0.0f, 1.0f);
 			// ImGui::SliderFloat("Specular power", &example->raytracer.sphere->alpha, 0.0f, 100.0f);
-			// ImGui::SliderFloat("Specular coeff", &example->raytracer.sphere->ks, 0.0f, 1.0f);
+			 ImGui::SliderFloat("Object1_ZOffset", &(dynamic_cast<hlab::Sphere*>(example->raytracer.objects[0].get())->center.z), 0.0f, 5.f);
+			 ImGui::SliderFloat("Object2_ZOffset", &dynamic_cast<hlab::Sphere*>(example->raytracer.objects[1].get())->center.z, 0.0f, 5.f);
+			 ImGui::SliderFloat("Object3_ZOffset", &dynamic_cast<hlab::Sphere*>(example->raytracer.objects[2].get())->center.z, 0.0f, 5.f);
 			ImGui::End();
 			ImGui::Render();
 
 			example->Update();
 			example->Render();
 
-			// ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+			 ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 			// switch the back buffer and the front buffer
 			example->swapChain->Present(1, 0);
