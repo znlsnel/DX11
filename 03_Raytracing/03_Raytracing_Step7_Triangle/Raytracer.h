@@ -33,7 +33,7 @@ namespace hlab
 
             objects.push_back(sphere1);
 
-            auto triangle1 = make_shared<Triangle>(vec3(-2.0f, -2.0f, 2.0f), vec3(-2.0f, 2.0f, 2.0f), vec3(2.0f, 2.0f, 2.0f));
+            auto triangle1 = make_shared<Triangle>(vec3(-5.0f, -4.0f, 2.0f), vec3(0.0f, 2.0f, 5.0f), vec3(5.0f, -4.0f, 2.0f));
 
             triangle1->amb = vec3(0.2f);
             triangle1->dif = vec3(0.5f);

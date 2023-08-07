@@ -16,6 +16,7 @@ namespace hlab
 		Triangle()
 			: v0(vec3(0.0f)), v1(vec3(0.0f)), v2(vec3(0.0f))
 		{
+			
 		}
 
 		Triangle(vec3 v0, vec3 v1, vec3 v2)
@@ -62,33 +63,35 @@ namespace hlab
 			/* 1. 삼각형이 놓여 있는 평면의 수직 벡터 계산 */
 			// faceNormal = ...;
 			//주의: 삼각형의 넓이가 0일 경우에는 계산할 수 없음
+			faceNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
 			// 삼각형 뒷면을 그리고 싶지 않은 경우 (Backface culling)
-			// if (... < 0.0f) return false;
+			if (glm::dot(-dir, faceNormal) < 0.0f) return false;
 
 			// 평면과 광선이 수평에 매우 가깝다면 충돌하지 못하는 것으로 판단
-			// if (... < 1e-2f) return false; // t 계산시 0으로 나누기 방지
+			if (glm::abs(glm::dot(dir, faceNormal)) < 1e-2f) return false; // t 계산시 0으로 나누기 방지
 
 			/* 2. 광선과 평면의 충돌 위치 계산 */
-			// t = ...
+			t = (dot(v0, faceNormal) - dot(orig, faceNormal)) / dot(dir, faceNormal);
 
 			// 광선의 시작점 이전에 충돌한다면 렌더링할 필요 없음
-			// if (...) return false;
+			if (t < 0.f) return false;
 
-			// point = orig + t * dir; // 충돌점
+			point = orig + t * dir; // 충돌점
 
 			/* 3. 그 충돌 위치가 삼각형 안에 들어 있는 지 확인 */
 
 			// 작은 삼각형들 3개의 normal 계산
-			// const vec3 normal0 = ...
-			// const vec3 normal1 = ...
-			// const vec3 normal2 = ...
+			const vec3 normal0 = glm::normalize(glm::cross(point - v2, v1 - v2));
+			 const vec3 normal1 = glm::normalize(glm::cross(point - v1, v0 - v1));
+			 const vec3 normal2 = glm::normalize(glm::cross(point - v0, v2 - v0));
+
 			// 방향만 확인하면 되기 때문에 normalize() 생략 가능
 			// 아래에서 cross product의 절대값으로 작은 삼각형들의 넓이 계산
 
-			// if (dot(normal0, faceNormal) < 0.0f) return false;
-			// if (dot(normal1, faceNormal) < 0.0f) return false;
-			// if (dot(normal2, faceNormal) < 0.0f) return false;
+			 if (dot(normal0, faceNormal) < 0.0f) return false;
+			 if (dot(normal1, faceNormal) < 0.0f) return false;
+			 if (dot(normal2, faceNormal) < 0.0f) return false;
 
 			// Barycentric coordinates 계산
 			// 텍스춰링(texturing)에서 사용
