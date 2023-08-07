@@ -52,7 +52,7 @@ namespace hlab
 
 		void Render(std::vector<glm::vec4> &pixels)
 		{
-			std::fill(pixels.begin(), pixels.end(), vec4{0.0f, 0.0f, 0.0f, 1.0f});
+			std::fill(pixels.begin(), pixels.end(), vec4{1.0f, 0.0f, 0.0f, 1.0f});
 
 #pragma omp parallel for
 			for (int j = 0; j < height; j++)

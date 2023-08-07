@@ -31,6 +31,17 @@ namespace hlab
              * hit.normal = .. // 충돌 지점에서 구의 단위 법선 벡터(unit normal vector)
              */
 
+            const float b = 2.0f * glm::dot(ray.dir, ray.start - center);
+            const float c = dot(ray.start - center, ray.start - center) - radius * radius;
+            float nabla = sqrt( b * b / 4.f - c);
+
+            if (nabla >= 0) {
+                    const float d1 = -b / 2.f + nabla;
+                    const float d2 = -b / 2.f - nabla;
+                    hit.d = d1 > d2 ? d2 : d1;
+                    hit.normal = glm::normalize(ray.start - center);
+                    hit.point = center + hit.normal * radius;
+            }
             // const float a = glm::dot(ray.dir, ray.dir); // dir이 unit vector라면 a는 1.0f라서 생략 가능
 
             return hit;
