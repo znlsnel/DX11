@@ -42,7 +42,7 @@ namespace hlab
 
 			if (hit.d < 0.0f)
 			{
-				return vec3(0.0f);
+				return vec3(0.f, 0.f, 0.f);
 			}
 			else
 			{

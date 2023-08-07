@@ -53,14 +53,16 @@ namespace hlab
 				// https://www.scratchapixel.com/lessons/3d-basic-rendering/phong-shader-BRDF
 
 				// Diffuse
-				// const vec3 dirToLight = ...
-				const float diff = 1.0f;
-
+				const vec3 dirToLight = glm::normalize(light.pos - hit.point);
+				const float diff = glm::max(glm::dot(hit.normal, dirToLight), 0.f);
+				// 
+				
+				// a : dirToLight - (dot(hit.normal, dirToLight)) * hit.normal
 				// Specular
-				// const vec3 reflectDir = ... // r = 2 (n dot l) n - l
-				const float specular = 1.0f;
+				const vec3 reflectDir = 2.f * glm::dot(hit.normal, dirToLight) * hit.normal - dirToLight;
+				const float specular = glm::pow(glm::max(0.f, glm::dot(-ray.dir, reflectDir)), sphere->alpha);
 
-				return sphere->amb + sphere->diff * diff + sphere->spec * specular * sphere->ks;
+				return sphere->amb + sphere->diff * diff +sphere->spec * specular * sphere->ks;
 				// return sphere->diff * diff;
 				// return sphere->spec * specular * sphere->ks;
 			}
