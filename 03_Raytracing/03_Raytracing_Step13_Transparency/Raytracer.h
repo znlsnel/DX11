@@ -37,7 +37,7 @@ namespace hlab
 
 			objects.push_back(sphere1);
 
-			auto groundTexture = std::make_shared<Texture>("shadertoy_abstract1.jpg");
+			auto groundTexture = std::make_shared<Texture>("ground.png");
 
 			auto ground = make_shared<Square>(vec3(-10.0f, -1.5f, 0.0f), vec3(-10.0f, -1.5f, 10.0f), vec3(10.0f, -1.5f, 10.0f), vec3(10.0f, -1.5f, 0.0f),
 											  vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), vec2(1.0f, 1.0f), vec2(0.0f, 1.0f));
@@ -52,8 +52,8 @@ namespace hlab
 
 			objects.push_back(ground);
 
-			auto squareTexture = std::make_shared<Texture>("back.jpg");
-			auto square = make_shared<Square>(vec3(-10.0f, 10.0f, 10.0f), vec3(10.0f, 10.0f, 10.0f), vec3(10.0f, -10.0f, 10.0f), vec3(-10.0f, -10.0f, 10.0f),
+			auto squareTexture = std::make_shared<Texture>("sky.png");
+			auto square = make_shared<Square>(vec3(-20.0f, 10.0f, 10.0f), vec3(20.0f, 10.0f, 10.0f), vec3(20.0f, -10.0f, 10.0f), vec3(-20.0f, -10.0f, 10.0f),
 											  vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), vec2(1.0f, 1.0f), vec2(0.0f, 1.0f));
 
 			square->amb = vec3(1.0f);
@@ -171,17 +171,19 @@ namespace hlab
 						normal = -hit.normal;
 					}
 
-					// const float cosTheta1 = ... ;
-					// const float sinTheta1 = ... ; // cos^2 + sin^2 = 1
-					// const float sinTheta2 = ... ;
-					// const float cosTheta2 = ... ;
+					const float cosTheta1 = glm::dot(-ray.dir, normal);
+					 const float sinTheta1 = glm::sqrt(1.f - cosTheta1* cosTheta1); // cos^2 + sin^2 = 1
+					 const float sinTheta2 = sinTheta1 / eta; // eta = sinTheta1 / sinTheta2 // sinTheta2 = sinTheta1/eta
+					 const float cosTheta2 = glm::sqrt(1.f - sinTheta2 * sinTheta2); // cos^2 + sin^2  = 1
 
-					// const vec3 m = glm::normalize(...);
-					// const vec3 a = ...;
-					// const vec3 b = ...;
-					// const vec3 refractedDirection = glm::normalize(a + b); // transmission
 
-					// color += ...;
+					 const vec3 m = glm::normalize(glm::dot(normal, -ray.dir) * normal + ray.dir);
+					 const vec3 a = m * sinTheta2;
+					 const vec3 b = -normal * cosTheta2;
+					const vec3 refractedDirection = glm::normalize(a + b); // transmission
+
+					Ray refractedRay{ hit.point + refractedDirection * 1e-2f, refractedDirection };
+					color += traceRay(refractedRay, recurseLevel - 1) * hit.obj->transparency;
 
 					// Fresnel 효과는 생략되었습니다.
 				}

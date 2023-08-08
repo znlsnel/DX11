@@ -40,17 +40,17 @@ namespace hlab
 			sphere2->dif = vec3(0.0f, 0.0f, 1.0f);
 			sphere2->spec = vec3(1.0f);
 			sphere2->alpha = 50.0f;
-			sphere2->reflection = 0.0f;
+			sphere2->reflection = 0.5f;
 			objects.push_back(sphere2);
 
-			auto groundTexture = std::make_shared<Texture>("shadertoy_abstract1.jpg");
+			auto groundTexture = std::make_shared<Texture>("testImage_2.jpg");
 			auto ground = make_shared<Square>(vec3(-10.0f, -1.2f, 0.0f), vec3(-10.0f, -1.2f, 10.0f), vec3(10.0f, -1.2f, 10.0f), vec3(10.0f, -1.2f, 0.0f),
 											  vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), vec2(1.0f, 1.0f), vec2(0.0f, 1.0f));
 			ground->amb = vec4(1.0f);
 			ground->dif = vec4(1.0f);
-			ground->spec = vec4(1.0f);
+			ground->spec = vec4(0.5f);
 			ground->alpha = 10.0f;
-			ground->reflection = 0.0f;
+			ground->reflection = 0.5f;
 			ground->ambTexture = groundTexture;
 			ground->difTexture = groundTexture;
 
@@ -138,8 +138,14 @@ namespace hlab
 						// 수치 오류 주의
 						// 반사광이 반환해준 색을 더할 때의 비율은 hit.obj->reflection
 
-						//const vec3 reflectedDirection = ...						
-						//color += ...
+						                                                                                                                                                                                                                                                   
+						//const vec3 projectionNV = glm::dot(dirToLight, hit.normal) * hit.normal;
+						//const vec3 b = dirToLight - projectionNV;
+						//const vec3 reflectedDirection = glm::normalize(projectionNV - (1.f * b));
+						const vec3 reflectedDirection = glm::normalize(2.f* (hit.normal * dot(-ray.dir, hit.normal)) + ray.dir);
+
+						Ray tempRay{ hit.point + (reflectedDirection * 1e-2f), reflectedDirection };
+						color += hit.obj->reflection * traceRay(tempRay, recurseLevel - 1);
 					}
 
 					if (hit.obj->transparency)
