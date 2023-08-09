@@ -153,6 +153,10 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
     const auto v1 = ProjectWorldToRaster(this->vertexBuffer[i1]);
     const auto v2 = ProjectWorldToRaster(this->vertexBuffer[i2]);
 
+    const float area = EdgeFunction(v0, v1, v2);
+    if (this->cullBackface && area < 0.f)
+        return;
+
     const auto &c0 = this->colorBuffer[i0];
     const auto &c1 = this->colorBuffer[i1];
     const auto &c2 = this->colorBuffer[i2];
@@ -178,9 +182,9 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
         for (size_t i = xMin; i <= xMax; i++) {
 
             const vec2 point = vec2(float(i), float(j));
-            const float alpha0 = EdgeFunction(v1, v2, point);
-            const float alpha1 = EdgeFunction(v2, v0, point);
-            const float alpha2 = EdgeFunction(v0, v1, point);
+            const float alpha0 = EdgeFunction(v1, v2, point) / area;
+            const float alpha1 = EdgeFunction(v2, v0, point) / area;
+            const float alpha2 = EdgeFunction(v0, v1, point) / area;
 
             if (alpha0 >= 0.0f && alpha1 >= 0.0f && alpha2 >= 0.0f) {
 

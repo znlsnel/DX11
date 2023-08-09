@@ -50,11 +50,20 @@ struct VSOutput {
     vec2 uv;
 };
 
+vec3 RotateAboutZ(vec3& v, float Theta) {
+
+        float tempX = v.x * cos(Theta) + v.y * sin(Theta);
+        float tempY = v.x * sin(Theta) + v.y * cos(Theta);
+        return vec3(tempX, tempY, v.z);
+
+}
+
 VSOutput MyVertexShader(const VSInput vsInput) {
     VSOutput vsOutput;
 
     // 여기서 여러가지 변환 가능
-    vsOutput.position = vsInput.position;
+    //vsOutput.position = vsInput.position;
+    vsOutput.position = RotateAboutZ(vsInput.position, constants.rotationZ);
     vsOutput.color = vsInput.color;
     vsOutput.uv = vsInput.uv;
 
@@ -70,6 +79,9 @@ struct PSInput {
 vec4 MyPixelShader(const PSInput psInput) { 
 	
     // 여기서 픽셀의 색을 결정하기 위한 여러가지 규칙 적용
+    if (psInput.uv.x > 0.5f)
+        return vec4(vec3(1.f, 1.f, 0.f), 1.0f); 
+
     return vec4(psInput.color, 1.0f); 
 }
 
