@@ -76,17 +76,17 @@ int main() {
             DispatchMessage(&msg);
         } else {
             // Start the Dear ImGui frame
-            // ImGui_ImplDX11_NewFrame();
-            // ImGui_ImplWin32_NewFrame();
-            // ImGui::NewFrame();
-            // ImGui::Begin("Scene Control");
-            // ImGui::End();
-            // ImGui::Render();
+             ImGui_ImplDX11_NewFrame();
+             ImGui_ImplWin32_NewFrame();
+             ImGui::NewFrame();
+             ImGui::Begin("Scene Control");
+             ImGui::End();
+             ImGui::Render();
 
             example->Update();
             example->Render();
 
-            // ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+            ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
             // switch the back buffer and the front buffer
             example->swapChain->Present(1, 0);
