@@ -130,10 +130,14 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
 				// 뒤에서 Perspective Correct Interpolation으로 보정
                 //TODO: Bary-centric coordinates를 이용해서 z 좌표 찾기
                 //const float depth = ...;
+                const float depth = (alpha0 * this->vertexBuffer[i0].z +
+                                     alpha1 * this->vertexBuffer[i1].z +
+                                     alpha2 * this->vertexBuffer[i2].z) / area;;
 
                 //TODO: 조건 추가
-				if (true) {
+                if (depth < depthBuffer[i + width * j]) {
                     //TODO: 깊이 버퍼 업데이트
+                    depthBuffer[i + width * j] = depth;
                     pixels[i + width * j] = vec4(color, 1.0f);
                 }
             }
@@ -153,7 +157,7 @@ void Rasterization::Render(vector<vec4> &pixels) {
     
     //TODO: 깊이 버퍼의 값도 초기화해줘야 합니다.
 	// std::fill() 사용
-
+    std::fill(depthBuffer.begin(), depthBuffer.end(), 1.f);
     // 뒷쪽의 원을 나중에 그리기
     this->vertexBuffer.resize(circle1.vertexBuffer.size());
     for (size_t i = 0; i < circle1.vertexBuffer.size(); i++) {
