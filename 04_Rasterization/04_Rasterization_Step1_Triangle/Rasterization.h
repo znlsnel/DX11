@@ -30,11 +30,17 @@ class Rasterization {
     vec2 ProjectWorldToRaster(vec3 point);
     float EdgeFunction(const vec2 &v0, const vec2 &v1, const vec2 &point);
     void Render(vector<vec4> &pixels);
+    void RenderTriangle(vector<vec4> &pixels, MyTriangle& triangle);
     void Update();
+    void SetTriangels(int num = 1);
 
   public:
     int width;
     int height;
     MyTriangle triangle;
+
+    vec3 center;
+    float radius = 0.5f;
+    std::vector<MyTriangle> Triangles;
 };
 } // namespace hlab

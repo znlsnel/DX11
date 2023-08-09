@@ -7,6 +7,7 @@ namespace hlab {
 using namespace glm;
 using namespace std;
 
+
 Rasterization::Rasterization(const int &width, const int &height)
     : width(width), height(height) {
 
@@ -22,6 +23,10 @@ Rasterization::Rasterization(const int &width, const int &height)
     triangle.v0.color = {1.0f, 0.0f, 0.0f}; // Red
     triangle.v1.color = {0.0f, 1.0f, 0.0f}; // Green
     triangle.v2.color = {0.0f, 0.0f, 1.0f}; // Blue
+
+    center = vec3(0.f, 0.f, 1.f);
+    SetTriangels(10);
+
 }
 
 // 3차원 좌표를 2차원 좌표로 변환
@@ -69,6 +74,12 @@ float Rasterization::EdgeFunction(const vec2 &v0, const vec2 &v1,
 
 void Rasterization::Render(vector<vec4> &pixels) {
 
+    for (auto &triangle : Triangles) {
+        RenderTriangle(pixels, triangle);
+    }
+}
+
+void Rasterization::RenderTriangle(vector<vec4> &pixels, MyTriangle& triangle) {
     // DirectX에서 자동으로 처리해주는 부분들이기 때문에 흐름만 봐두셔도
     // 충분합니다. 대부분 내부적으로 하드웨어 제조사에서 개발한 드라이버를
     // 사용합니다.
@@ -95,11 +106,11 @@ void Rasterization::Render(vector<vec4> &pixels) {
     const auto yMin = glm::floor(std::min({v0.y, v1.y, v2.y}));
     const auto xMax = glm::ceil(std::max({v0.x, v1.x, v2.x}));
     const auto yMax = glm::ceil(std::max({v0.y, v1.y, v2.y}));
-     
+
     // const auto xMin = 0;
-    //const auto yMin = 0;
+    // const auto yMin = 0;
     // const auto xMax = width - 1;
-    //const auto yMax = height - 1;
+    // const auto yMax = height - 1;
 
     // Bounding box에 포함되는 픽셀들의 색 결정
     for (size_t j = yMin; j <= yMax; j++) {
@@ -119,27 +130,28 @@ void Rasterization::Render(vector<vec4> &pixels) {
             const float alpha1 = EdgeFunction(v2, v0, point);
             const float alpha2 = EdgeFunction(v0, v1, point);
 
-            //std::cout << "alpha 0 : " << alpha0 << "     alpha 1 : " << alpha1
-            //          << "    alpha2 : " << alpha2 << std::endl;
-            //std::cout << "v 0 : " << v0.x << v0.y << "     v 1 : " << v1.x << v1.y
-            //          << "    v2 : " << v2.x << v2.y << std::endl;
+            // std::cout << "alpha 0 : " << alpha0 << "     alpha 1 : " <<
+            // alpha1
+            //           << "    alpha2 : " << alpha2 << std::endl;
+            // std::cout << "v 0 : " << v0.x << v0.y << "     v 1 : " << v1.x <<
+            // v1.y
+            //           << "    v2 : " << v2.x << v2.y << std::endl;
             float result = std::min({alpha0, alpha1, alpha2});
-            
+
             if (result >= 0.f) {
 
-                 const float area = alpha0 + alpha1 + alpha2;
+                const float area = alpha0 + alpha1 + alpha2;
                 // 픽셀의 색 결정
                 // 주의: 원근투영(perspective projection)에서는
                 // depth 값을 고려해서 보정해줘야 합니다.
-                 const float w0 = alpha0 / area;
-                 const float w1 = alpha1 / area;
-                 const float w2 = alpha2 / area;
-
+                const float w0 = alpha0 / area;
+                const float w1 = alpha1 / area;
+                const float w2 = alpha2 / area;
 
                 // Bary-centric coordinates를 이용해서 color interpolation
-                 const vec3 color = w0 * triangle.v0.color +
-                                    w1 * triangle.v1.color +
-                                    w2 * triangle.v2.color;
+                const vec3 color = w0 * triangle.v0.color +
+                                   w1 * triangle.v1.color +
+                                   w2 * triangle.v2.color;
 
                 pixels[i + width * j] = vec4(color, 1.0f);
             }
@@ -149,5 +161,31 @@ void Rasterization::Render(vector<vec4> &pixels) {
 
 void Rasterization::Update() {
     // 애니메이션 구현
+}
+void Rasterization::SetTriangels(int num) { 
+        num = std::max(num, 3);
+
+        // a = sin45 / y 
+        const auto thetaStep = 2.0f * 3.141592f / float(num);
+
+        auto theta = 0.0f;
+        auto vertex = vec3(center.x + radius, center.y, center.z);
+
+        for (int i = 0; i < num; i++) {
+
+                MyTriangle temp;
+                temp.v0.pos = center;
+                temp.v0.color = vec3(1.f, 0.f, 0.f);
+                temp.v2.pos = vertex;
+                temp.v2.color = vec3(0.f, 0.f, 1.f);
+
+                theta += thetaStep;
+                vertex = center + vec3(radius * cos(theta), radius * sin(theta), 0.0f);
+                temp.v1.pos = vertex;
+                temp.v1.color = vec3(0.f, 0.f, 1.f);
+
+                Triangles.push_back(temp);
+        }
+
 }
 } // namespace hlab

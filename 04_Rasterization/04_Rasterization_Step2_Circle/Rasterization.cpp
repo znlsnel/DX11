@@ -2,7 +2,8 @@
 
 #include <algorithm> // std::min(), ...
 
-namespace hlab {
+namespace hlab 
+{
 
 using namespace glm;
 using namespace std;
@@ -12,8 +13,8 @@ Rasterization::Rasterization(const int &width, const int &height)
 
     // 원을 그려봅시다.
     const auto radius = 0.5f;                   // 원의 반지름
-    const auto center = vec3(0.0f, 0.0f, 1.0f); //원의 중심
-    const size_t numTriangles = 5; // 삼각형 몇 개로 그릴지
+    const auto center = vec3(0.0f, 0.0f, 1.0f); // 원의 중심
+    const size_t numTriangles = 50; // 삼각형 몇 개로 그릴지
 
     this->vertices.reserve(numTriangles + 1); // 중심 버텍스 추가
     this->colors.reserve(this->vertices.size());
@@ -29,9 +30,23 @@ Rasterization::Rasterization(const int &width, const int &height)
     const auto kTwoPi = 2.0f * 3.141592f;
     const auto deltaTheta = kTwoPi / float(numTriangles);
 
-	// 여기서부터 this->vertices, colors, indices 결정
+    // 여기서부터 this->vertices, colors, indices 결정
+    for (float theta = 0.0f; theta < kTwoPi; theta += deltaTheta) {
+        this->vertices.push_back(center +
+                                 vec3(cos(theta), sin(theta), 0.0f) * radius);
+        this->colors.push_back(vec3(0.0f, 0.0f, 1.0f));
+    }
 
-	
+    for (int i = 0; i < numTriangles; i++) {
+        this->indices.push_back(0);
+
+        if (i == numTriangles - 1) {
+            this->indices.push_back(1);
+        } else {
+            this->indices.push_back(i + 2);
+        }
+        this->indices.push_back(i + 1);
+    }
 }
 
 // 3차원 좌표를 2차원 좌표로 변환
@@ -120,7 +135,7 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
 
 void Rasterization::Render(vector<vec4> &pixels) {
     // 삼각형 여러개 그리기
-	// 한 삼각형이 vertex가 3개이기 때문에 i += 3
+    // 한 삼각형이 vertex가 3개이기 때문에 i += 3
     for (size_t i = 0; i < this->indices.size(); i += 3) {
         DrawIndexedTriangle(i, pixels);
     }
