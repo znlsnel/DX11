@@ -81,19 +81,19 @@ int main() {
             ImGui::NewFrame();
             ImGui::Begin("Scene Control");
 
-            ImGui::SliderFloat("Rotation1", &example->rasterization.rotation1,
+            ImGui::SliderFloat("Rotation1", &example->rasterization.localRotation,
                                -3.141592f * 2.0f, 3.141592f * 2.0f);
             ImGui::SliderFloat("ScaleX", &example->rasterization.scaleX, -2.0f,
                                2.0f);
             ImGui::SliderFloat("ScaleY", &example->rasterization.scaleY, -2.0f,
                                2.0f);
             ImGui::SliderFloat3("Translation1",
-                                &example->rasterization.translation1[0], -1.0f,
+                                &example->rasterization.localPosition[0], -1.0f,
                                 1.0f);
-            ImGui::SliderFloat("Rotation2", &example->rasterization.rotation2,
+            ImGui::SliderFloat("Rotation2", &example->rasterization.Rotation,
                                -3.141592f * 2.0f, 3.141592f * 2.0f);
             ImGui::SliderFloat3("Translation2",
-                                &example->rasterization.translation2[0], -1.0f,
+                                &example->rasterization.worldPosition[0], -1.0f,
                                 1.0f);
 
             ImGui::End();

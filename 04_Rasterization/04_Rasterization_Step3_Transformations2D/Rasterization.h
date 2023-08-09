@@ -30,10 +30,10 @@ class Rasterization {
 
     Mesh circle; // 원의 기하 정보를 담고 있는 메쉬
 
-    vec3 translation1 = vec3(0.0f); // 첫 번째 이동 물체의 이동
-    vec3 translation2 = vec3(0.0f); // 두 번째 이동 물체의 이동
-    float rotation1 = 0.0f;         // 첫 번째 회전
-    float rotation2 = 0.0f;         // 두 번째 회전
+    vec3 localPosition = vec3(0.0f); // 첫 번째 이동 물체의 이동
+    vec3 worldPosition = vec3(0.0f); // 두 번째 이동 물체의 이동
+    float localRotation = 0.0f;         // 첫 번째 회전
+    float Rotation = 0.0f;      // 두 번째 회전
     float scaleX = 1.0f;            // 스케일은 한 번만 구현
     float scaleY = 1.0f;
 

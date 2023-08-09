@@ -113,8 +113,12 @@ void Rasterization::Render(vector<vec4> &pixels) {
     }
 }
 
-vec3 RotateAboutZ(const vec3 &v, const float &theta) { return v; }
-
+vec3 RotateAboutZ(const vec3 &v, const float &theta) 
+{
+    float x = v.x *cos(theta) - v.y * sin(theta);
+    float y =v.x *  sin(theta) + v.y * cos(theta);
+        return vec3(x, y, v.z);
+}
 void Rasterization::Update() {
     // 애니메이션 구현
 
@@ -122,21 +126,30 @@ void Rasterization::Update() {
     // 이 예제에서는 this->vertexBuffer만 업데이트하고
     // colorBuffer와 indexBuffer는 변화 없음
 
-    // 이동(Translation)
-    // for (size_t i = 0; i < circle.vertices.size(); i++) {
-    //     this->vertexBuffer[i] = ...;
-    // }
+     //이동(Translation)
+//     for (size_t i = 0; i < circle.vertices.size(); i++) {
+//        this->vertexBuffer[i] = circle.vertices[i] + this->localPosition;
+//     }
+//
+//     //회전(Rotation)
+//     for (size_t i = 0; i < circle.vertices.size(); i++) {
+//        this->vertexBuffer[i] =
+//            RotateAboutZ(circle.vertices[i], this->localRotation);
+//    }
+//
+////     스케일(Scale)
+//     for (size_t i = 0; i < circle.vertices.size(); i++) {
+//        this->vertexBuffer[i] = circle.vertices[i] * vec3(scaleX, scaleY, 1.0f);
+//    }
 
-    // 회전(Rotation)
-    // for (size_t i = 0; i < circle.vertices.size(); i++) {
-    //    this->vertexBuffer[i] =
-    //        RotateAboutZ(circle.vertices[i], this->rotation1);
-    //}
-
-    // 스케일(Scale)
-    // for (size_t i = 0; i < circle.vertices.size(); i++) {
-    //    this->vertexBuffer[i] = ...;
-    //}
+     for (size_t i = 0; i < circle.vertices.size(); i++) {
+        auto temp = RotateAboutZ(circle.vertices[i], this->localRotation);
+        temp = temp * vec3(scaleX, scaleY, 1.0f);
+        temp += this->localPosition;
+        temp = RotateAboutZ(temp, this->Rotation);
+        temp += this->worldPosition;
+        this->vertexBuffer[i] = temp;
+     }
 
     // 중요: 버텍스 쉐이더(Vertex shader)가 하는 일들입니다.
 }
