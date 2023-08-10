@@ -117,8 +117,9 @@ vec3 ComputeSpotLight(Light L, Material mat, vec3 pos, vec3 normal,
     float att = CalcAttenuation(d, L.fallOffStart, L.fallOffEnd);
     lightStrength *= att;
 
-    //float spotFactor = ...;
-    //lightStrength *= spotFactor;
+    float spotFactor =
+        glm::pow(glm::max(dot(-lightVec, L.direction), 0.0f), L.spotPower);
+    lightStrength *= spotFactor;
 
     return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
 }

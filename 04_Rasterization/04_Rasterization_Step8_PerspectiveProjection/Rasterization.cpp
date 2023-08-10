@@ -125,7 +125,18 @@ vec2 Rasterization::ProjectWorldToRaster(vec3 pointWorld) {
 
     // 원근투영(Perspective projection)
     if (this->usePerspectiveProjection) {
+
+            const float scale = distEyeToScreen / (distEyeToScreen + pointWorld.z);
+        //   pointProj.y =
+        //    (pointWorld.y / (distEyeToScreen + pointWorld.z)) * distEyeToScreen;
+
+        //pointProj.x = pointWorld.x / (distEyeToScreen + pointWorld.z) *
+        //                 distEyeToScreen;
+
+        pointProj = vec2(pointWorld.x, pointWorld.y) * scale;
         // ... 
+
+
     }
 
     // NDC로 변환[-1, 1] x[-1, 1]
@@ -201,11 +212,19 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
             // 위에서 계산한 삼각형 전체 넓이 area를 재사용
             // area가 음수라면 alpha0, alpha1, alpha2 모두 음수여야
             // 삼각형 안에 포함되는 픽셀로 판단할 수 있습니다.
+            // 
+
             float w0 = EdgeFunction(v1, v2, point) / area;
             float w1 = EdgeFunction(v2, v0, point) / area;
             float w2 = EdgeFunction(v0, v1, point) / area;
 
-            if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
+            // 눈과 스크린사이의 거리 + vertex의 z값을 더해주면 됨
+
+
+
+
+
+            if (w0 >= 0.0f && w1>= 0.0f && w2 >= 0.0f) {
 
                 // Perspective-Correct Interpolation
                 // 논문
@@ -215,16 +234,24 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
                 // OpenGL 구현
                 // https://stackoverflow.com/questions/24441631/how-exactly-does-opengl-do-perspectively-correct-linear-interpolation
 
-                const float z0 = this->vertexBuffer[i0].z + distEyeToScreen;
-                const float z1 = this->vertexBuffer[i1].z + distEyeToScreen;
-                const float z2 = this->vertexBuffer[i2].z + distEyeToScreen;
+                const float z0 = w0 / (this->vertexBuffer[i0].z + distEyeToScreen);
+                const float z1 = w1 / (this->vertexBuffer[i1].z + distEyeToScreen);
+                const float z2 = w2 / (this->vertexBuffer[i2].z + distEyeToScreen);
 
                 if (this->usePerspectiveProjection &&
                     this->usePerspectiveCorrectInterpolation) {
 
                        // w0, w1, w2를 z0, z1, z2를 이용해서 보정
 
+                    float sum = z0 + z1 + z2;
+
+                    w0 = z0 / sum;
+                    w1 = z1/ sum;
+                    w2 = z2 / sum;
+
+                   
                 }
+
 
                 // 이하 동일
                 const float depth = w0 * z0 + w1 * z1 + w2 * z2;

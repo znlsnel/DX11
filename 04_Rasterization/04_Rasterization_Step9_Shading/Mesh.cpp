@@ -21,10 +21,10 @@ void Mesh::InitBox() {
     this->vertices.push_back(vec3(1.0f, -1.0f, 1.0f) * scale);
     this->vertices.push_back(vec3(-1.0f, -1.0f, 1.0f) * scale);
     // TODO: normal 방향도 맞춰주세요.
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f)); 
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(0.0f, -1.0f, 0.0f));
+    this->normals.push_back(vec3(0.0f, -1.0f, 0.0f));
+    this->normals.push_back(vec3(0.0f, -1.0f, 0.0f));
+    this->normals.push_back(vec3(0.0f, -1.0f, 0.0f));
 
     // 앞면
     this->vertices.push_back(vec3(-1.0f, -1.0f, -1.0f) * scale);
@@ -32,10 +32,10 @@ void Mesh::InitBox() {
     this->vertices.push_back(vec3(1.0f, 1.0f, -1.0f) * scale);
     this->vertices.push_back(vec3(1.0f, -1.0f, -1.0f) * scale);
     // TODO: normal 방향도 맞춰주세요.
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(0.0f, 0.0f, -1.0f));
+    this->normals.push_back(vec3(0.0f, 0.0f, -1.0f));
+    this->normals.push_back(vec3(0.0f, 0.0f, -1.0f));
+    this->normals.push_back(vec3(0.0f, 0.0f, -1.0f));
 
     // 뒷면
     this->vertices.push_back(vec3(-1.0f, -1.0f, 1.0f) * scale);
@@ -43,10 +43,10 @@ void Mesh::InitBox() {
     this->vertices.push_back(vec3(1.0f, 1.0f, 1.0f) * scale);
     this->vertices.push_back(vec3(-1.0f, 1.0f, 1.0f) * scale);
     // TODO: normal 방향도 맞춰주세요.
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(0.0f, 1.0f, 1.0f));
+    this->normals.push_back(vec3(0.0f, 1.0f, 1.0f));
+    this->normals.push_back(vec3(0.0f, 1.0f, 1.0f));
+    this->normals.push_back(vec3(0.0f, 1.0f, 1.0f));
 
     // 왼쪽
     this->vertices.push_back(vec3(-1.0f, -1.0f, 1.0f) * scale);
@@ -54,10 +54,10 @@ void Mesh::InitBox() {
     this->vertices.push_back(vec3(-1.0f, 1.0f, -1.0f) * scale);
     this->vertices.push_back(vec3(-1.0f, -1.0f, -1.0f) * scale);
     // TODO: normal 방향도 맞춰주세요.
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(-1.0f, 0.0f, 0.0f));
+    this->normals.push_back(vec3(-1.0f, 0.0f, 0.0f));
+    this->normals.push_back(vec3(-1.0f, 0.0f, 0.0f));
+    this->normals.push_back(vec3(-1.0f, 0.0f, 0.0f));
 
     // 오른쪽
     this->vertices.push_back(vec3(1.0f, -1.0f, 1.0f) * scale);
@@ -65,18 +65,18 @@ void Mesh::InitBox() {
     this->vertices.push_back(vec3(1.0f, 1.0f, -1.0f) * scale);
     this->vertices.push_back(vec3(1.0f, 1.0f, 1.0f) * scale);
     // TODO: normal 방향도 맞춰주세요.
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
-    this->normals.push_back(vec3(0.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(1.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(1.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(1.0f, 1.0f, 0.0f));
+    this->normals.push_back(vec3(1.0f, 1.0f, 0.0f));
 
     this->indices = {
         0,  1,  2,  0,  2,  3,  // 윗면
-        //... // 아랫면
-        //... // 앞면
-        //... // 뒷면
-        //... // 왼쪽
-        //... // 오른쪽
+        4, 5, 6, 4, 6, 7, //... // 아랫면
+        1, 7, 6 , 1, 6, 2,//... // 앞면
+        0, 3, 5, 0, 5, 4,//... // 뒷면
+        0, 4, 7, 0, 7, 1,//... // 왼쪽
+        3, 2, 6, 3, 6, 5//... // 오른쪽
     };
 }
 
