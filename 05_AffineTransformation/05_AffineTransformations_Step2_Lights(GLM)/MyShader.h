@@ -163,7 +163,7 @@ VSOutput MyVertexShader(const VSInput vsInput) {
     vec4 point =
         vec4(vsInput.position.x, vsInput.position.y, vsInput.position.z, 1.0f);
 
-    // point = ...; // 주의: column-major
+     point = constants.modelMatrix * point;
 
     vsOutput.position = vec3(point.x, point.y, point.z);
 
@@ -180,6 +180,7 @@ VSOutput MyVertexShader(const VSInput vsInput) {
         vec4(vsInput.normal.x, vsInput.normal.y, vsInput.normal.z, 0.0f);
     // Unon-uniform transformation인 경우에는 보정 필요
     // normal = ...; // 주의: column-major
+    //normal = constants.
 
     vsOutput.normal = vec3(normal.x, normal.y, normal.z);
 

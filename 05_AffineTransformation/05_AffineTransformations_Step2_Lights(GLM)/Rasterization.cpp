@@ -215,10 +215,17 @@ void Rasterization::Render(vector<vec4> &pixels) {
 
         // 여기서 GPU에게 보내줄 변환 행렬을 만들어줘야 합니다.
         // 순서 주의 (GLM은 column major 사용)
-        // constants.modelMatrix = ...;
+        constants.modelMatrix =
+            glm::translate(mesh->transformation.translation) *
+            glm::rotate(mesh->transformation.rotationX, vec3(1.f, 0.f, 0.f)) *
+            glm::rotate(mesh->transformation.rotationY, vec3(0.f, 1.f, 0.f)) *
+            glm::scale(mesh->transformation.scale);
 
         // Non-uniform scale인 경우에만 필요
-        // constants.invTranspose = ...;
+        constants.invTranspose = constants.modelMatrix;
+        constants.invTranspose[3] = vec4(0.f, 0.f, 0.f, 1.f);
+        constants.invTranspose =
+            glm::inverseTranspose(constants.invTranspose);
 
         // 모델 변환 이외에도 시점 변환, 프로젝션 변환을 행렬로 미리 계산해서
         // 쉐이더로 보내줄 수 있습니다.
@@ -230,7 +237,7 @@ void Rasterization::Render(vector<vec4> &pixels) {
         this->vertexBuffer.resize(mesh->vertexBuffer.size());
         this->normalBuffer.resize(mesh->normalBuffer.size());
         this->colorBuffer.resize(mesh->vertexBuffer.size());
-        // this->uvBuffer.resize(mesh->uvBuffer.size());
+         //this->uvBuffer.resize(mesh->uvBuffer.size());
 
         // GPU 안에서는 멀티쓰레딩으로 여러 버텍스를 한꺼번에 처리합니다.
         for (size_t i = 0; i < mesh->vertexBuffer.size(); i++) {
