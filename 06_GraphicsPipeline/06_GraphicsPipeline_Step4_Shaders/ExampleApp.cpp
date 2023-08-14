@@ -32,6 +32,10 @@ auto MakeSquare() {
     // TODO: 텍스춰 좌표 추가
     // Texture Coordinates (Direct3D 9)
     // https://learn.microsoft.com/en-us/windows/win32/direct3d9/texture-coordinates
+    texcoords.push_back(Vector2(0.0f, 0.0f));
+    texcoords.push_back(Vector2(1.0f, 0.0f) );
+    texcoords.push_back(Vector2(1.0f, 1.0f) );
+    texcoords.push_back(Vector2(0.0f, 1.0f));
 
     vector<Vertex> vertices;
     for (size_t i = 0; i < positions.size(); i++) {
@@ -39,6 +43,7 @@ auto MakeSquare() {
         v.position = positions[i];
         v.color = colors[i];
         // TODO: 텍스춰 좌표 추가
+        v.texcoords = texcoords[i];
         vertices.push_back(v);
     }
     vector<uint16_t> indices = {
@@ -184,6 +189,8 @@ bool ExampleApp::Initialize() {
     m_constantBufferData.projection = Matrix();
 
     AppBase::CreateConstantBuffer(m_constantBufferData, m_constantBuffer);
+    AppBase::CreateConstantBuffer(m_pixelShaderConstantBufferData,
+                                  m_pixelShaderConstantBuffer);
 
     // TODO: 픽셀쉐이더로 보낼 ConstantBuffer 만들기
 
@@ -205,12 +212,23 @@ bool ExampleApp::Initialize() {
     // Semantics
     // https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics
 
+    /*
+    struct Vertex {
+    Vector3 position; 데이터 0부터 시작
+    Vector3 color;  데이터 12(vec3 - float3개) 부터 시작
+    Vector2 texcoords; (데이터 24(vec3 + vec3)부터 시작
+    // TODO: texture coordinates 추가
+};
+    */
+
+
     vector<D3D11_INPUT_ELEMENT_DESC> inputElements = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
          D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 4 * 3,
+        {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 4 * 3, /* POSITION이 vec3니까 4 * 3  */
          D3D11_INPUT_PER_VERTEX_DATA, 0},
-        // TODO: 텍스춰 좌표를 버텍스 쉐이더로 보내겠다!
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 4 * 3 + 4 * 3, /* COLOR도 vec3여서 4*3 + 4*3 */
+         D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
     AppBase::CreateVertexShaderAndInputLayout(
@@ -239,6 +257,8 @@ void ExampleApp::Update(float dt) {
         XMMatrixLookToLH(m_viewEyePos, m_viewEyeDir, m_viewUp);
     m_constantBufferData.view = m_constantBufferData.view.Transpose();
 
+
+
     // 프로젝션
     // m_aspect = AppBase::GetAspectRatio(); // <- GUI에서 조절
     if (m_usePerspectiveProjection) {
@@ -255,6 +275,8 @@ void ExampleApp::Update(float dt) {
     AppBase::UpdateBuffer(m_constantBufferData, m_constantBuffer);
 
     // TODO: 픽셀 쉐이더에서 사용할 ConstantBuffer 업데이트
+    AppBase::UpdateBuffer(m_pixelShaderConstantBufferData,
+                          m_pixelShaderConstantBuffer);
 }
 
 void ExampleApp::Render() {
@@ -293,6 +315,8 @@ void ExampleApp::Render() {
     m_context->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());
 
     // TODO: 여기서 뭘 해줘야 할까요?
+    m_context->PSSetConstantBuffers(0, 1,
+                                    m_pixelShaderConstantBuffer.GetAddressOf());
 
     m_context->PSSetShader(m_colorPixelShader.Get(), 0, 0);
 
@@ -310,10 +334,10 @@ void ExampleApp::Render() {
 }
 
 void ExampleApp::UpdateGUI() {
-    // TODO: GUI 기능 추가
-    // ImGui::SliderFloat("xSplit", &m_pixelShaderConstantBufferData.xSplit,
-    // 0.0f,
-    //                   1.0f);
+ //    TODO: GUI 기능 추가
+     ImGui::SliderFloat("xSplit", &m_pixelShaderConstantBufferData.xSplit,
+     0.0f,
+                       1.0f);
 }
 
 } // namespace hlab

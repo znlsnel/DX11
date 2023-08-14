@@ -18,6 +18,7 @@ using DirectX::SimpleMath::Vector3;
 struct Vertex {
     Vector3 position;
     Vector3 color;
+    Vector2 texcoords;
     // TODO: texture coordinates 추가
 };
 
@@ -27,6 +28,13 @@ struct ModelViewProjectionConstantBuffer {
     Matrix view;
     Matrix projection;
 };
+struct PixelShaderConstantBuffer {
+    float xSplit; // 4바이트
+    float padding[3]; // 12바이트 
+    // 총 16b
+};
+
+
 
 // 주의:
 // For a constant buffer (BindFlags of D3D11_BUFFER_DESC set to
@@ -60,9 +68,9 @@ class ExampleApp : public AppBase {
     UINT m_indexCount;
 
     // TODO: 픽셀쉐이더에서 사용할 Constant Buffer
-
+    ComPtr<ID3D11Buffer> m_pixelShaderConstantBuffer;
     ModelViewProjectionConstantBuffer m_constantBufferData;
-
+    PixelShaderConstantBuffer m_pixelShaderConstantBufferData;
     // TODO: 픽셀쉐이더에서 사용할 Constant Buffer Data
 
     bool m_usePerspectiveProjection = true;

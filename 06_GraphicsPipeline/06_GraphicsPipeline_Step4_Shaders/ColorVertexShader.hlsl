@@ -22,12 +22,18 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0) {
 struct VertexShaderInput {
     float3 pos : POSITION;
     float3 color : COLOR0;
+    float2 texcoord : TEXCOORD0;
+
     // TODO: ≈ÿΩ∫√Á ¡¬«• √ﬂ∞°!
 };
 
+// SV_POSITION : Interpolationµ» ¡§∫∏∏¶ ≥÷¿Ω
+// PixelShaderInput == VertexShadeOutput
 struct PixelShaderInput {
     float4 pos : SV_POSITION;
     float3 color : COLOR;
+    float2 texcoord : TEXCOORD0;
+
     // TODO: ≈ÿΩ∫√Á ¡¬«• √ﬂ∞°!
 };
 
@@ -45,6 +51,7 @@ PixelShaderInput main(VertexShaderInput input) {
 
     output.pos = pos;
     output.color = input.color;
+    output.texcoord = input.texcoord;
     // TODO: ≈ÿΩ∫√Á ¡¬«• √ﬂ∞°!
 
     return output;
