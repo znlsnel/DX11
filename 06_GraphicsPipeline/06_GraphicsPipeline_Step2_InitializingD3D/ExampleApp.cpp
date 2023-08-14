@@ -30,18 +30,74 @@ auto MakeBox() {
     normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
 
     // 아랫면
-
+    positions.push_back(Vector3(-1.0f, -1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(-1.0f, -1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(1.0f, -1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(1.0f, -1.0f, -1.0f) * scale);
+    colors.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    colors.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    colors.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    colors.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(0.0f, -1.0f, 0.0f));
+    normals.push_back(Vector3(0.0f, -1.0f, 0.0f));
+    normals.push_back(Vector3(0.0f, -1.0f, 0.0f));
+    normals.push_back(Vector3(0.0f, -1.0f, 0.0f));
 
     // 앞면
-
+    positions.push_back(Vector3(-1.0f, -1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(-1.0f, 1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(1.0f, 1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(1.0f, -1.0f, -1.0f) * scale);
+    colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, -1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, -1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, -1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, -1.0f));
 
     // 뒷면
- 
+    positions.push_back(Vector3(-1.0f, -1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(-1.0f, 1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(1.0f, 1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(1.0f, -1.0f, 1.0f) * scale);
+    colors.push_back(Vector3(0.0f, 1.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 1.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 1.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 1.0f, 1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    normals.push_back(Vector3(0.0f, 0.0f, 1.0f));
 
     // 왼쪽
- 
+    positions.push_back(Vector3(-1.0f, -1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(-1.0f, 1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(-1.0f, 1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(-1.0f, -1.0f, 1.0f) * scale);
+    colors.push_back(Vector3(0.2f, 1.0f, 0.2f));
+    colors.push_back(Vector3(0.2f, 1.0f, 0.2f));
+    colors.push_back(Vector3(0.2f, 1.0f, 0.2f));
+    colors.push_back(Vector3(0.2f, 1.0f, 0.2f));
+    normals.push_back(Vector3(-1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(-1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(-1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(-1.0f, 0.0f, 0.0f));
 
     // 오른쪽
+    positions.push_back(Vector3(1.0f, -1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(1.0f, 1.0f, -1.0f) * scale);
+    positions.push_back(Vector3(1.0f, 1.0f, 1.0f) * scale);
+    positions.push_back(Vector3(1.0f, -1.0f, 1.0f) * scale);
+    colors.push_back(Vector3(0.6f, 0.6f, 0.4f));
+    colors.push_back(Vector3(0.6f, 0.6f, 0.4f));
+    colors.push_back(Vector3(0.6f, 0.6f, 0.4f));
+    colors.push_back(Vector3(0.6f, 0.6f, 0.4f));
+    normals.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(1.0f, 0.0f, 0.0f));
+    normals.push_back(Vector3(1.0f, 0.0f, 0.0f));
 
     vector<Vertex> vertices;
     for (size_t i = 0; i < positions.size(); i++) {
@@ -53,6 +109,11 @@ auto MakeBox() {
 
     vector<uint16_t> indices = {
         0,  1,  2,  0,  2,  3,  // 윗면
+        4, 5, 6, 4, 6, 7,       // 아랫면
+        8, 9, 10, 8, 10, 11,       // 앞면
+        12, 13, 14, 12, 14, 15,       // 뒷면
+        16, 17, 18, 16, 18, 19,      // 왼쪽면
+        20, 21, 22, 20, 22, 23,       // 오른쪽면
     };
 
     return tuple{vertices, indices};

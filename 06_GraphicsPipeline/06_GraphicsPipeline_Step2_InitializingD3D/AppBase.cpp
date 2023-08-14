@@ -387,7 +387,7 @@ bool AppBase::InitDirect3D() {
     D3D11_RASTERIZER_DESC rastDesc;
     ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC)); // Need this
     rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-    // rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
+    //rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
     rastDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
     rastDesc.FrontCounterClockwise = false;
 

@@ -116,6 +116,27 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
     // 엄밀히 얘기하면 픽셀이 아니라 될 수 있는 "후보"들이기 때문에
     // Fragment라는 다른 용어를 사용하기도 합니다.
     // OpenGL, Vulkan에서는 Fragment Shader, DX에서는 Pixel Shader
+
+
+                    const float z0 = this->vertexBuffer[i0].z + distEyeToScreen;
+    const float z1 = this->vertexBuffer[i1].z + distEyeToScreen;
+    const float z2 = this->vertexBuffer[i2].z + distEyeToScreen;
+
+    const Vector3 p0 = this->vertexBuffer[i0];
+    const Vector3 p1 = this->vertexBuffer[i1];
+    const Vector3 p2 = this->vertexBuffer[i2];
+
+    // 뒷면일 경우에도 쉐이딩이 가능하도록 normal을 반대로
+    // 뒤집어줍니다.
+    const Vector3 n0 =
+        area < 0.0f ? -this->normalBuffer[i0] : this->normalBuffer[i0];
+    const Vector3 n1 =
+        area < 0.0f ? -this->normalBuffer[i1] : this->normalBuffer[i1];
+    const Vector3 n2 =
+        area < 0.0f ? -this->normalBuffer[i2] : this->normalBuffer[i2];
+
+
+
     for (size_t j = yMin; j <= yMax; j++) {
         for (size_t i = xMin; i <= xMax; i++) {
 
@@ -128,7 +149,7 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
             float w1 = EdgeFunction(v2, v0, point) / area;
             float w2 = EdgeFunction(v0, v1, point) / area;
 
-            if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
+            if (min(w0, min(w1, w2)) >= 0.0f) {
 
                 // Perspective-Correct Interpolation
                 // 논문
@@ -138,22 +159,6 @@ void Rasterization::DrawIndexedTriangle(const size_t &startIndex,
                 // OpenGL 구현
                 // https://stackoverflow.com/questions/24441631/how-exactly-does-opengl-do-perspectively-correct-linear-interpolation
 
-                const float z0 = this->vertexBuffer[i0].z + distEyeToScreen;
-                const float z1 = this->vertexBuffer[i1].z + distEyeToScreen;
-                const float z2 = this->vertexBuffer[i2].z + distEyeToScreen;
-
-                const Vector3 p0 = this->vertexBuffer[i0];
-                const Vector3 p1 = this->vertexBuffer[i1];
-                const Vector3 p2 = this->vertexBuffer[i2];
-
-                // 뒷면일 경우에도 쉐이딩이 가능하도록 normal을 반대로
-                // 뒤집어줍니다.
-                const Vector3 n0 = area < 0.0f ? -this->normalBuffer[i0]
-                                               : this->normalBuffer[i0];
-                const Vector3 n1 = area < 0.0f ? -this->normalBuffer[i1]
-                                               : this->normalBuffer[i1];
-                const Vector3 n2 = area < 0.0f ? -this->normalBuffer[i2]
-                                               : this->normalBuffer[i2];
 
                 if (this->usePerspectiveProjection &&
                     this->usePerspectiveCorrectInterpolation) {
@@ -216,8 +221,16 @@ void Rasterization::Render(vector<Vector4> &pixels) {
         // constants.transformation.translation;
 
         // 여기서 GPU에게 보내줄 변환 행렬을 만들어줘야 합니다.
-        // constants.modelMatrix = ...;
-        // constants.invTranspose = ..;
+        constants.modelMatrix =
+            Matrix::CreateScale(mesh->transformation.scale) *
+            Matrix::CreateRotationY(mesh->transformation.rotationY) *
+            Matrix::CreateRotationX(mesh->transformation.rotationX) *
+            Matrix::CreateTranslation(mesh->transformation.translation);
+
+
+         constants.invTranspose = constants.modelMatrix;
+        constants.invTranspose.Translation(Vector3(0.f));
+         constants.invTranspose = constants.invTranspose.Invert().Transpose();
 		// 모델 변환 이외에도 시점 변환, 프로젝션 변환을 행렬로 미리 계산해서
 		// 쉐이더로 보내줄 수 있습니다.
 
