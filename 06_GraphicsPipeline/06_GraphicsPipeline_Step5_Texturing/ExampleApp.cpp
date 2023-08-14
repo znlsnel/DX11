@@ -176,6 +176,8 @@ bool ExampleApp::Initialize() {
     // https://learnopengl.com/Getting-started/Textures
     AppBase::CreateTexture("crate2_diffuse.png", m_texture,
                            m_textureResourceView);
+    AppBase::CreateTexture("wall.jpg", m_texture2, m_texture2ResourceView);
+
 
     // Texture sampler 만들기
     D3D11_SAMPLER_DESC sampDesc;
@@ -251,6 +253,9 @@ bool ExampleApp::Initialize() {
 void ExampleApp::Update(float dt) {
 
     using namespace DirectX;
+    //m_pixelShaderConstantBufferData.xSplit += 0.002f;
+    //if (m_pixelShaderConstantBufferData.xSplit > 1.f)
+    //    m_pixelShaderConstantBufferData.xSplit = 0.f;
 
     // 모델의 변환
     m_constantBufferData.model =
@@ -318,8 +323,9 @@ void ExampleApp::Render() {
 
     m_context->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());
 
-    ID3D11ShaderResourceView *pixelResources[1] = {m_textureResourceView.Get()};
-    m_context->PSSetShaderResources(0, 1, pixelResources);
+    ID3D11ShaderResourceView *pixelResources[2] = {m_textureResourceView.Get(), m_texture2ResourceView.Get()};
+
+    m_context->PSSetShaderResources(0, 2, pixelResources);
     m_context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
 
     m_context->PSSetConstantBuffers(0, 1,
