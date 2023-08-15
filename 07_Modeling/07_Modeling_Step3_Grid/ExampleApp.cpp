@@ -16,6 +16,7 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
+    
     // 지구 텍스춰 출처
     // https://stackoverflow.com/questions/31799670/applying-map-of-the-earth-texture-a-sphere
     AppBase::CreateTexture("ojwD8.jpg", m_texture, m_textureResourceView);
@@ -37,7 +38,7 @@ bool ExampleApp::Initialize() {
     m_device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // Geometry 정의
-    MeshData meshData = GeometryGenerator::MakeGrid(2.0f, 1.7f, 5, 3);
+    MeshData meshData = GeometryGenerator::MakeGrid(2.0f, 1.7f, 100, 100);
 
     m_mesh = std::make_shared<Mesh>();
 

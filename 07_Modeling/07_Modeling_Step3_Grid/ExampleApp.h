@@ -74,6 +74,8 @@ class ExampleApp : public AppBase {
     virtual void UpdateGUI() override;
     virtual void Update(float dt) override;
     virtual void Render() override;
+    
+   
 
   protected:
     ComPtr<ID3D11VertexShader> m_basicVertexShader;

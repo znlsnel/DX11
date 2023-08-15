@@ -202,56 +202,94 @@ MeshData GeometryGenerator::MakeGrid(const float width, const float height,
     // x-y 평면 (z = 0) 위에 격자 구조로 평면 만들기
     // 뒤에서 복잡한 지형으로 확장
 
+
+
     // 1단계: numStacks = 1 이고 numSlices만 고려해서 구현
     // 2단계: 2차원 바둑판 구조
 
     const float dx = width / numSlices;
-
+    const float stackDX = (float)(1 * width) / numStacks;
     MeshData meshData;
 
     vector<Vertex> &vertices = meshData.vertices;
     vector<uint16_t> &indices = meshData.indices;
 
-    // y = -0.5f * height 인 점들
-    Vector3 stackStartPoint = Vector3(-0.5f * width, -0.5f * height, 0.0f);
-    for (int i = 0; i <= numSlices; i++) {
-        Vertex v;
 
-        // x-y 평면에서 시작점을 x 방향으로 이동
-        // v.position = ...;
+    for (int i = 0; i < numStacks; i++) {
+        float currHeight = -0.5f * height + (i * stackDX);
+        Vector3 stackStartPoint = Vector3(-0.5f * width, currHeight, 0.0f);
 
-        // 시점을 향하는 방향
-        v.normal = Vector3(0.0f, 0.0f, -1.0f);
+        for (int i = 0; i <= numSlices; i++) {
+            Vertex v;
 
-        // v.texcoord = ...;
+            // x-y 평면에서 시작점을 x 방향으로 이동
+            v.position = Vector3::Transform(
+                stackStartPoint,
+                Matrix::CreateTranslation(Vector3((float)i * dx, 0.0f, 0.0f)));
+            // 시점을 향하는 방향
+            v.normal = Vector3(0.0f, 0.0f, -1.0f);
 
-        // vertices.push_back(v);
+            v.texcoord = Vector2((float)i / numSlices, 0.0f);
+ 
+
+            vertices.push_back(v);
+        }
     }
 
-    // y = 0.5f * height 인 점들
-    stackStartPoint = Vector3(-0.5f * width, 0.5f * height, 0.0f);
-    for (int i = 0; i <= numSlices; i++) {
-        Vertex v;
+    //// y = -0.5f * height 인 점들
+    //Vector3 stackStartPoint = Vector3(-0.5f * width, -0.5f * height, 0.0f);
+    //for (int i = 0; i <= numSlices; i++) {
+    //    Vertex v;
 
-        // x-y 평면에서 시작점을 x 방향으로 이동
-        // v.position = ...;
+    //    // x-y 평면에서 시작점을 x 방향으로 이동
+    //    v.position = stackStartPoint;
+    //    // 시점을 향하는 방향
+    //    v.normal = Vector3(0.0f, 0.0f, -1.0f);
 
-        // 시점을 향하는 방향
-        v.normal = Vector3(0.0f, 0.0f, -1.0f);
+    //    v.texcoord = Vector2((float)i / numSlices, 0.0f);
+    //    stackStartPoint.x += dx;
 
-        // v.texcoord = ...;
+    //    vertices.push_back(v);
+    //}
 
-        // vertices.push_back(v);
-    }
+    //// y = 0.5f * height 인 점들
+    //stackStartPoint = Vector3(-0.5f * width, 0.5f * height, 0.0f);
+    //for (int i = 0; i <= numSlices; i++) {
+    //    Vertex v;
+
+    //    v.position = stackStartPoint;
+    //    // 시점을 향하는 방향
+    //    v.normal = Vector3(0.0f, 0.0f, -1.0f);
+
+    //    v.texcoord = Vector2((float)i / numSlices, 1.0f);
+    //    stackStartPoint.x += dx;
+
+    //    vertices.push_back(v);
+    //}
 
     // 인덱스 추가
-    for (int i = 0; i < numSlices; i++) {
+    for (int j = 0; j < numStacks - 1 ; j++) {
+            for (int i = 0; i < numSlices; i++) {
 
-        // 첫번째 삼각형
+                 //if (id + 1 % numSlices + 1 == 0) {
+            
+                 //       //indices.push_back(id + 6);
+                 //        id++;
+                 //       continue;
+                 //}
+            int id = i + j * (numSlices + 1);
+                // 첫번째 삼각형
+                indices.push_back(id);
+                indices.push_back(id + numSlices + 1);
+                indices.push_back(id+ numSlices + 2);
 
-        // 두 번째 삼각형
+                // 두 번째 삼각형
+                indices.push_back(id);
+                indices.push_back(id + numSlices + 2);
+                indices.push_back(id +  1);
+            }    
     }
-
+  //  5, 11, 17
     return meshData;
 }
 
