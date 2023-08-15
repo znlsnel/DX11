@@ -257,4 +257,56 @@ MeshData GeometryGenerator::MakeCylinder(const float bottomRadius,
 
     return meshData;
 }
+MeshData GeometryGenerator::MakeSphare(const float Radius, int sliceCount) {
+
+ using namespace DirectX;
+    using DirectX::SimpleMath::Matrix;
+    using DirectX::SimpleMath::Vector3;
+
+    MeshData meshData;
+    const float dTheta = -XM_2PI / float(sliceCount);
+    const float dPhi = -XM_PI / float(sliceCount);
+    
+    std::vector<hlab::Vertex>& vertexts =  meshData.vertices;
+
+    for (int j = 0; j <= sliceCount ; j++) {
+             float currHeight = 0.f;
+             
+             Vector3 startPoint =
+                 Vector3::Transform(Vector3(0.0f, -Radius, 0.0f),
+                                    Matrix::CreateRotationZ(dPhi * j));
+
+            for (int i = 0; i <= sliceCount; i++) {
+                Vertex v;
+                Matrix m = Matrix::CreateRotationY(dTheta * i); /* *
+                           Matrix::CreateRotationZ(dTheta * j);*/
+
+                v.position = Vector3::Transform(startPoint, m);
+                
+                v.normal = v.position - Vector3(0.f, 0.f, 0.f);
+                v.normal.Normalize();
+
+                float texcoordY = (v.position / v.position.Length()).y / 1.0f;
+                v.texcoord = Vector2((float)i / sliceCount, 1.f - (float)j / sliceCount);
+                vertexts.push_back(v);
+            }    
+    }
+    std::vector<hlab::uint16_t> &indices = meshData.indices;
+    for (int j = 0; j <= sliceCount; j++) {
+            for (int i = 0; i <= sliceCount; i++) {
+
+                int id = i + sliceCount * j;
+                indices.push_back(id);
+                indices.push_back(id + sliceCount + 1);
+                indices.push_back(id + sliceCount + 2);
+                            
+                 indices.push_back(id);
+                indices.push_back(id + sliceCount + 2);
+                indices.push_back(id + 1);
+            }
+    }
+
+
+    return meshData;
+}
 } // namespace hlab

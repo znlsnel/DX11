@@ -19,7 +19,7 @@ bool ExampleApp::Initialize() {
     // Texture 만들기
     // https://opengameart.org/content/3-crate-textures-w-bump-normal
     // https://learnopengl.com/Getting-started/Textures
-    AppBase::CreateTexture("crate2_diffuse.png", m_texture,
+    AppBase::CreateTexture("eess22.png", m_texture,
                            m_textureResourceView);
 
     AppBase::CreateTexture("wall.jpg", m_texture2, m_textureResourceView2);
@@ -39,8 +39,8 @@ bool ExampleApp::Initialize() {
     m_device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // Geometry 정의
-    MeshData meshData = GeometryGenerator::MakeCylinder(1.0f, 1.0f, 2.0f, 20);
-
+    //MeshData meshData = GeometryGenerator::MakeCylinder(1.0f, 1.0f, 2.0f, 20);
+    MeshData meshData = GeometryGenerator::MakeSphare(1.0f, 20);
     m_mesh = std::make_shared<Mesh>();
 
     AppBase::CreateVertexBuffer(meshData.vertices, m_mesh->m_vertexBuffer);

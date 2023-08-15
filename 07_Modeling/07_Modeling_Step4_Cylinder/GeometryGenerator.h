@@ -26,5 +26,6 @@ class GeometryGenerator {
     static MeshData MakeCylinder(const float bottomRadius,
                                  const float topRadius, float height,
                                  int sliceCount);
+    static MeshData MakeSphare(const float Radius, int sliceCount);
 };
 } // namespace hlab

@@ -636,12 +636,25 @@ void AppBase::CreateTexture(
     unsigned char *img =
         stbi_load(filename.c_str(), &width, &height, &channels, 0);
 
-    // assert(channels == 4);
+     //assert(channels == 4);
 
     std::vector<uint8_t> image;
 
-    image.resize(width * height * channels);
-    memcpy(image.data(), img, image.size() * sizeof(uint8_t));
+    //image.resize(width * height * channels);
+    image.resize(width * height * 4);
+
+    for (size_t i = 0; i < width * height; i++) {
+
+        for (size_t c = 0; c < 3; c++) {
+
+            image[4 * i + c] = img[i * channels + c];
+        }
+
+        image[4 * i + 3] = 255;
+    }
+
+
+    //memcpy(image.data(), img, image.size() * sizeof(uint8_t));
 
     // Create texture.
     D3D11_TEXTURE2D_DESC txtDesc = {};
@@ -656,7 +669,7 @@ void AppBase::CreateTexture(
     // Fill in the subresource data.
     D3D11_SUBRESOURCE_DATA InitData;
     InitData.pSysMem = image.data();
-    InitData.SysMemPitch = txtDesc.Width * sizeof(uint8_t) * channels;
+    InitData.SysMemPitch = txtDesc.Width * sizeof(uint8_t) * 4;
     // InitData.SysMemSlicePitch = 0;
 
     m_device->CreateTexture2D(&txtDesc, &InitData, texture.GetAddressOf());
