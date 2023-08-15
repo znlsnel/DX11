@@ -24,7 +24,7 @@ class AppBase {
     virtual ~AppBase();
 
     float GetAspectRatio() const;
-
+   
     int Run();
 
     virtual bool Initialize();
@@ -56,6 +56,7 @@ class AppBase {
     template <typename T_VERTEX>
     void CreateVertexBuffer(const vector<T_VERTEX> &vertices,
                             ComPtr<ID3D11Buffer> &vertexBuffer) {
+
 
         // D3D11_USAGE enumeration (d3d11.h)
         // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage
@@ -127,6 +128,23 @@ class AppBase {
         m_context->Unmap(buffer.Get(), NULL);
     }
 
+    void SetViewport() {
+        static int previousGuiWidth = m_guiWidth;
+        
+        if (previousGuiWidth == m_guiWidth)
+            return;
+
+        ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
+        m_screenViewport.TopLeftX = m_guiWidth;
+        m_screenViewport.TopLeftY = 0;
+        m_screenViewport.Width = float(m_screenWidth - m_guiWidth);
+        m_screenViewport.Height = float(m_screenHeight);
+        // m_screenViewport.Width = static_cast<float>(m_screenHeight);
+        m_screenViewport.MinDepth = 0.0f;
+        m_screenViewport.MaxDepth = 1.0f; // Note: important for depth buffering
+
+        m_context->RSSetViewports(1, &m_screenViewport);
+    }
     void CreateTexture(const std::string filename, ComPtr<ID3D11Texture2D> &texture,
                        ComPtr<ID3D11ShaderResourceView> &textureResourceView);
 
@@ -136,6 +154,7 @@ class AppBase {
     // 예: m_d3dDevice -> m_device
     int m_screenWidth; // 렌더링할 최종 화면의 해상도
     int m_screenHeight;
+    int m_guiWidth = 0;
     HWND m_mainWindow;
 
     ComPtr<ID3D11Device> m_device;
@@ -150,5 +169,6 @@ class AppBase {
     ComPtr<ID3D11DepthStencilState> m_depthStencilState;
 
     D3D11_VIEWPORT m_screenViewport;
+    
 };
 } // namespace hlab

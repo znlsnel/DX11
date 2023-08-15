@@ -59,7 +59,7 @@ AppBase::~AppBase() {
 }
 
 float AppBase::GetAspectRatio() const {
-    return float(m_screenWidth) / m_screenHeight;
+    return float(m_screenWidth - m_guiWidth) / m_screenHeight;
 }
 
 int AppBase::Run() {
@@ -83,6 +83,11 @@ int AppBase::Run() {
                         ImGui::GetIO().Framerate);
 
             UpdateGUI(); // 추가적으로 사용할 GUI
+            auto pos = ImGui::GetWindowPos();
+            auto size = ImGui::GetWindowSize();
+            ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+            ImGui::SetWindowSize(ImVec2(size.x, m_screenHeight));
+            m_guiWidth = size.x;
 
             ImGui::End();
             ImGui::Render(); // 렌더링할 것들 기록 끝
@@ -388,16 +393,7 @@ bool AppBase::InitDirect3D() {
     }
 
     // Set the viewport
-    ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
-    m_screenViewport.TopLeftX = 0;
-    m_screenViewport.TopLeftY = 0;
-    m_screenViewport.Width = float(m_screenWidth);
-    m_screenViewport.Height = float(m_screenHeight);
-    // m_screenViewport.Width = static_cast<float>(m_screenHeight);
-    m_screenViewport.MinDepth = 0.0f;
-    m_screenViewport.MaxDepth = 1.0f; // Note: important for depth buffering
-
-    m_context->RSSetViewports(1, &m_screenViewport);
+    SetViewport();
 
     // Create a rasterizer state
     D3D11_RASTERIZER_DESC rastDesc;

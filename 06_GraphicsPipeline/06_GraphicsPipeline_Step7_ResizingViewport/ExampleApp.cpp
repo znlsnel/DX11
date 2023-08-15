@@ -312,7 +312,7 @@ void ExampleApp::Update(float dt) {
         m_vertexConstantBufferData.view.Transpose();
 
     // 프로젝션
-    // m_aspect = AppBase::GetAspectRatio(); // <- GUI에서 조절
+    m_aspect = AppBase::GetAspectRatio(); // <- GUI에서 조절
     if (m_usePerspectiveProjection) {
         m_vertexConstantBufferData.projection = XMMatrixPerspectiveFovLH(
             XMConvertToRadians(m_projFovAngleY), m_aspect, m_nearZ, m_farZ);
@@ -352,6 +352,7 @@ void ExampleApp::Render() {
     // IA: Input-Assembler stage
 
     m_context->RSSetViewports(1, &m_screenViewport);
+    SetViewport();
 
     float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     m_context->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
