@@ -205,7 +205,10 @@ void ExampleApp::Render() {
     m_context->PSSetShader(m_colorPixelShader.Get(), 0, 0);
 
     // TODO:
-    m_context->RSSetState(m_solidRasterizerSate.Get());
+    if (m_drawAsWire)
+        m_context->RSSetState(m_wireRasterizerSate.Get());
+    else
+        m_context->RSSetState(m_solidRasterizerSate.Get());
 
     // 버텍스/인덱스 버퍼 설정
     UINT stride = sizeof(Vertex);

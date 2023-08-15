@@ -58,12 +58,8 @@ static_assert((sizeof(BasicPixelConstantBuffer) % 16) == 0,
               "Constant Buffer size must be 16-byte aligned");
 
 struct NormalVertexConstantBuffer {
-    Matrix model;
-    Matrix invTranspose;
-    Matrix view;
-    Matrix projection;
     float scale = 0.1f;
-    float dummy[3];
+    float dummy[3]{};
 };
 
 class ExampleApp : public AppBase {
@@ -122,5 +118,6 @@ class ExampleApp : public AppBase {
     shared_ptr<Mesh> m_normalLines;
     NormalVertexConstantBuffer m_normalVertexConstantBufferData;
     bool m_drawNormals = true;
+    bool m_dirtyFlag = false;
 };
 } // namespace hlab

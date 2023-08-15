@@ -51,11 +51,12 @@ bool ExampleApp::Initialize() {
     m_BasicVertexConstantBufferData.view = Matrix();
     m_BasicVertexConstantBufferData.projection = Matrix();
 
-    AppBase::CreateConstantBuffer(m_BasicVertexConstantBufferData,
+        AppBase::CreateConstantBuffer(m_BasicVertexConstantBufferData,
                                   m_mesh->m_vertexConstantBuffer);
 
     AppBase::CreateConstantBuffer(m_BasicPixelConstantBufferData,
                                   m_mesh->m_pixelConstantBuffer);
+
 
     vector<D3D11_INPUT_ELEMENT_DESC> basicInputElements = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
@@ -66,11 +67,12 @@ bool ExampleApp::Initialize() {
          D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
-    AppBase::CreateVertexShaderAndInputLayout(
+        AppBase::CreateVertexShaderAndInputLayout(
         L"BasicVertexShader.hlsl", basicInputElements, m_basicVertexShader,
         m_basicInputLayout);
+        AppBase::CreatePixelShader(L"BasicPixelShader.hlsl", m_basicPixelShader);
 
-    AppBase::CreatePixelShader(L"BasicPixelShader.hlsl", m_basicPixelShader);
+
 
     // 노멀 벡터 그리기
     // 문제를 단순화하기 위해 InputLayout은 BasicVertexShader와 같이 사용합시다.
@@ -94,6 +96,16 @@ bool ExampleApp::Initialize() {
     }
 
     // TODO: 여기에 필요한 내용들 작성
+    AppBase::CreateVertexBuffer(normalVertices,
+                                m_normalLines->m_vertexBuffer);
+    m_normalLines->m_indexCount = UINT(normalIndices.size());
+    AppBase::CreateIndexBuffer(normalIndices, m_normalLines->m_indexBuffer);
+    AppBase::CreateConstantBuffer(m_normalVertexConstantBufferData,
+                                  m_normalLines->m_vertexConstantBuffer);
+    AppBase::CreateVertexShaderAndInputLayout(
+        L"NormalVertexShader.hlsl", basicInputElements, m_normalVertexShader,
+        m_basicInputLayout);
+    AppBase::CreatePixelShader(L"NormalPixelShader.hlsl", m_normalPixelShader);
 
     return true;
 }
@@ -165,8 +177,23 @@ void ExampleApp::Update(float dt) {
                           m_mesh->m_pixelConstantBuffer);
 
     // 노멀 벡터 그리기
-    if (m_drawNormals) {
+    if (m_drawNormals && m_dirtyFlag) {
         // TODO: 여기에 필요한 내용들 작성
+        //m_normalVertexConstantBufferData.model =
+        //    m_BasicVertexConstantBufferData.model;
+
+        //m_normalVertexConstantBufferData.view =
+        //    m_BasicVertexConstantBufferData.view;
+
+        //m_normalVertexConstantBufferData.projection =
+        //    m_BasicVertexConstantBufferData.projection;
+
+        //m_normalVertexConstantBufferData.invTranspose =
+        //    m_BasicVertexConstantBufferData.invTranspose;
+
+        AppBase::UpdateBuffer(m_normalVertexConstantBufferData,
+                              m_normalLines->m_vertexConstantBuffer);
+        m_dirtyFlag = false;
     }
 }
 
@@ -224,7 +251,25 @@ void ExampleApp::Render() {
     if (m_drawNormals) {
 
         // TODO: 여기에 필요한 내용들 작성
-        
+        m_context->VSSetShader(m_normalVertexShader.Get(), 0, 0);
+
+        ID3D11Buffer *pptr[2] = {m_mesh->m_vertexConstantBuffer.Get(),
+                                 m_normalLines->m_vertexConstantBuffer.Get()};
+        m_context->VSSetConstantBuffers(0, 2, pptr);
+        //m_context->VSSetConstantBuffers(
+        //    0, 1, m_normalLines->m_vertexConstantBuffer.GetAddressOf());
+
+        m_context->PSSetShader(m_normalPixelShader.Get(), 0, 0);
+
+        m_context->IASetInputLayout(m_basicInputLayout.Get());
+        m_context->IASetVertexBuffers(
+            0, 1, m_normalLines->m_vertexBuffer.GetAddressOf(), &stride,
+            &offset);
+        m_context->IASetIndexBuffer(m_normalLines->m_indexBuffer.Get(),
+                                    DXGI_FORMAT_R16_UINT, 0);
+
+
+
         m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         m_context->DrawIndexed(m_normalLines->m_indexCount, 0, 0);
     }
@@ -235,8 +280,10 @@ void ExampleApp::UpdateGUI() {
     ImGui::Checkbox("Use Texture", &m_BasicPixelConstantBufferData.useTexture);
     ImGui::Checkbox("Wireframe", &m_drawAsWire);
     ImGui::Checkbox("Draw Normals", &m_drawNormals);
-    ImGui::SliderFloat("Normal scale", &m_normalVertexConstantBufferData.scale,
-                       0.0f, 1.0f);
+    if (ImGui::SliderFloat("Normal scale", &m_normalVertexConstantBufferData.scale, 0.0f,
+                           1.0f)) {
+        m_dirtyFlag = true;    
+    }
     ImGui::SliderFloat3("m_modelTranslation", &m_modelTranslation.x, -2.0f,
                         2.0f);
     ImGui::SliderFloat3("m_modelRotation", &m_modelRotation.x, -3.14f, 3.14f);

@@ -1,11 +1,18 @@
 #include "Common.hlsli"
-
-cbuffer NormalVertexConstantBuffer : register(b0)
+cbuffer BasicVertexConstantBuffer : register(b0)
 {
     matrix model;
     matrix invTranspose;
     matrix view;
     matrix projection;
+};
+
+cbuffer NormalVertexConstantBuffer : register(b1)
+{
+    //matrix model;
+    //matrix invTranspose;
+    //matrix view;
+    //matrix projection;
     float scale; // 그려지는 선분의 길이 조절
 };
 
