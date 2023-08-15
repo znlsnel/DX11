@@ -211,21 +211,48 @@ MeshData GeometryGenerator::MakeCylinder(const float bottomRadius,
     // 옆면의 바닥 버텍스들 (인덱스 0 이상 sliceCount 미만)
     for (int i = 0; i <= sliceCount; i++) {
         Vertex v;
+        
+        v.position =
+            Vector3::Transform(Vector3(bottomRadius, -0.5f * height, 0.0f),
+                               Matrix::CreateRotationY(dTheta * float(i)));
 
+
+        v.normal = v.position - Vector3(0.0f, -0.5f * height, 0.0f);
+        v.normal.Normalize();
+
+        v.texcoord = Vector2{(float)i / sliceCount, 1.f};
+        vertices.push_back(v);
         // TODO: 작성 (텍스춰 좌표계, 버텍스 노멀 필요)
     }
 
     // 옆면의 맨 위 버텍스들 (인덱스 sliceCount 이상 2 * sliceCount 미만)
+
     for (int i = 0; i <= sliceCount; i++) {
         Vertex v;
-        
+        v.position = Vector3::Transform(
+            Vector3(topRadius, 0.5f * height, 0.0f),
+            Matrix::CreateRotationY(dTheta * float(i)));
+
+        v.normal = v.position -
+                                      Vector3(0.0f, 0.5f * height, 0.0f);
+        v.normal.Normalize();
+
+        v.texcoord = Vector2{(float)i / sliceCount, 0.f};
         // TODO: 작성 (텍스춰 좌표계, 버텍스 노멀 필요)
+        vertices.push_back(v);
     }
 
     vector<uint16_t> &indices = meshData.indices;
 
     for (int i = 0; i < sliceCount; i++) {
         // TODO: 삼각형 두 개 씩
+        indices.push_back(i);
+        indices.push_back(i + sliceCount + 1);
+        indices.push_back(i + sliceCount + 2);
+
+         indices.push_back(i);
+        indices.push_back(i + sliceCount + 2);
+        indices.push_back(i + 1);
     }
 
     return meshData;
