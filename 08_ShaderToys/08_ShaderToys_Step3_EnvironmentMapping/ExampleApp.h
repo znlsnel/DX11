@@ -88,6 +88,7 @@ class ExampleApp : public AppBase {
     // 하나의 3D 모델이 내부적으로는 여러개의 메쉬로 구성
     std::vector<shared_ptr<Mesh>> m_meshes;
 
+
     // Texturing
     // ComPtr<ID3D11Texture2D> m_texture;
     // ComPtr<ID3D11ShaderResourceView> m_textureResourceView;

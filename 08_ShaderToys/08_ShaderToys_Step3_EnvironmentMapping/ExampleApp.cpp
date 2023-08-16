@@ -98,19 +98,21 @@ bool ExampleApp::Initialize() {
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
+
+
     // Create the Sample State
     m_device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // Geometry 정의
 
-    vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.3f, 100, 100)};
+    //vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.3f, 100, 100)};
 
     // 젤다 모델 다운로드 경로
     // https://f3d.app/doc/GALLERY.html
     // you can download them here. 클릭
 
-    //auto meshes =
-    //    GeometryGenerator::ReadFromFile("c:/zelda/", "zeldaPosed001.fbx");
+    auto meshes =
+        GeometryGenerator::ReadFromFile("C:/DEVELOPMENT/GIT/DX11_HongLab/models/glTF-Sample-Models-master/2.0/FlightHelmet/glTF/", "FlightHelmet.gltf");
 
     // GLTF 샘플 모델들
     // https://github.com/KhronosGroup/glTF-Sample-Models
@@ -355,6 +357,7 @@ void ExampleApp::Render() {
     // 물체들
     m_context->VSSetShader(m_basicVertexShader.Get(), 0, 0);
     m_context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
+
     m_context->PSSetShader(m_basicPixelShader.Get(), 0, 0);
 
     if (m_drawAsWire) {
@@ -369,9 +372,10 @@ void ExampleApp::Render() {
             0, 1, mesh->vertexConstantBuffer.GetAddressOf());
 
         // TODO: 물체 렌더링할 때 큐브맵도 같이 사용
-        ID3D11ShaderResourceView *resViews[1] = {
-            mesh->textureResourceView.Get()};
-        m_context->PSSetShaderResources(0, 1, resViews);
+        ID3D11ShaderResourceView *resViews[2] = {
+            mesh->textureResourceView.Get(),
+        m_cubeMapping.cubemapResourceView.Get()};
+        m_context->PSSetShaderResources(0, 2, resViews);
 
         m_context->PSSetConstantBuffers(
             0, 1, mesh->pixelConstantBuffer.GetAddressOf());

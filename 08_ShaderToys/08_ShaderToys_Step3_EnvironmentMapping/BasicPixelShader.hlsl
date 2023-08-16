@@ -2,7 +2,7 @@
 
 Texture2D g_texture0 : register(t0);
 // TODO:
-
+TextureCube g_textureCube1 : register(t1);
 SamplerState g_sampler : register(s0);
 
 cbuffer BasicPixelConstantBuffer : register(b0)
@@ -49,5 +49,10 @@ float4 main(PixelShaderInput input) : SV_TARGET
     // reflect(광선이 들어오는 방향, 노멀 벡터)
     // https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-reflect
     
-    return useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, input.texcoord) : float4(color, 1.0);
+    float4 environment = g_textureCube1.Sample(g_sampler, reflect(-toEye, input.normalWorld));
+    float4 textureColor = useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, input.texcoord) : float4(color, 1.0);
+   
+    float environmentRatio = 0.5f;
+    return environment * environmentRatio + textureColor * (1.0 - environmentRatio);
+
 }
