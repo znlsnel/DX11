@@ -50,7 +50,12 @@ float4 main(PixelShaderInput input) : SV_TARGET
     // Smoothstep
     // https://thebookofshaders.com/glossary/?search=smoothstep
 
+    float rim = 1.0 - dot(toEye, input.normalWorld);
+    if (useSmoothstep)
+        rim = smoothstep(0.0, 1.0, rim);
+    rim = pow(abs(rim), rimPower);
     
+    color += rim * rimColor * rimStrength;
 
     return useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, input.texcoord) : float4(color, 1.0);
 }

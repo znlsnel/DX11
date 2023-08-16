@@ -31,6 +31,7 @@ bool ExampleApp::Initialize() {
     m_device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // Geometry 정의
+     
 
     vector<MeshData> meshes = {
         GeometryGenerator::ReadFromFile("./", "stanford_dragon.stl")};
@@ -58,6 +59,7 @@ bool ExampleApp::Initialize() {
     //     "ABeautifulGame.gltf");
 
     // auto meshes =
+    // 
     // GeometryGenerator::ReadFromFile("D:\\glTF-Sample-Models\\2.0\\ToyCar\\glTF\\",
     //                                               "ToyCar.gltf");
 
@@ -72,6 +74,7 @@ bool ExampleApp::Initialize() {
     ComPtr<ID3D11Buffer> pixelConstantBuffer;
     AppBase::CreateConstantBuffer(m_BasicVertexConstantBufferData,
                                   vertexConstantBuffer);
+
     AppBase::CreateConstantBuffer(m_BasicPixelConstantBufferData,
                                   pixelConstantBuffer);
 
@@ -109,7 +112,6 @@ bool ExampleApp::Initialize() {
     AppBase::CreateVertexShaderAndInputLayout(
         L"BasicVertexShader.hlsl", basicInputElements, m_basicVertexShader,
         m_basicInputLayout);
-
     AppBase::CreatePixelShader(L"BasicPixelShader.hlsl", m_basicPixelShader);
 
     // 노멀 벡터 그리기

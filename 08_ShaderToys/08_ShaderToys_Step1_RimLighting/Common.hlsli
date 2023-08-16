@@ -53,6 +53,7 @@ float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal,
 
     return mat.ambient + (mat.diffuse + specular) * lightStrength;
 }
+ 
 
 float3 ComputeDirectionalLight(Light L, Material mat, float3 normal,
                                 float3 toEye)
