@@ -8,7 +8,7 @@ using namespace DirectX::SimpleMath;
 
 void ModelLoader::Load(std::string basePath, std::string filename) {
     this->basePath = basePath;
-
+    
     Assimp::Importer importer;
 
     const aiScene *pScene = importer.ReadFile(

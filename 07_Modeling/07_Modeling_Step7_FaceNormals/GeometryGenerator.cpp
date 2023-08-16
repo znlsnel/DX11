@@ -424,11 +424,13 @@ MeshData GeometryGenerator::SubdivideToSphere(const float radius,
     auto UpdateFaceNormal = [](Vertex &v0, Vertex &v1, Vertex &v2) {
 
         // v0, v1, v2로 이루어진 삼각형의 faceNormal 계산
-        // auto faceNormal = ...;
+        auto faceNormal =
+            (v1.position - v0.position).Cross(v2.position - v0.position);
+        faceNormal.Normalize();
 
-        //v0.normal = faceNormal;
-        //v1.normal = faceNormal;
-        //v2.normal = faceNormal;
+        v0.normal = faceNormal;
+        v1.normal = faceNormal;
+        v2.normal = faceNormal;
     };
 
     // 버텍스가 중복되는 구조로 구현
@@ -458,10 +460,10 @@ MeshData GeometryGenerator::SubdivideToSphere(const float radius,
         v5.texcoord = (v1.texcoord + v2.texcoord) * 0.5f;
         ProjectVertex(v5);
 
-        //UpdateFaceNormal(v4, v1, v5);
-        //UpdateFaceNormal(v0, v4, v3);
-        //UpdateFaceNormal(v3, v4, v5);
-        //UpdateFaceNormal(v3, v5, v2);
+        UpdateFaceNormal(v4, v1, v5);
+        UpdateFaceNormal(v0, v4, v3);
+        UpdateFaceNormal(v3, v4, v5);
+        UpdateFaceNormal(v3, v5, v2);
 
         newMesh.vertices.push_back(v4);
         newMesh.vertices.push_back(v1);

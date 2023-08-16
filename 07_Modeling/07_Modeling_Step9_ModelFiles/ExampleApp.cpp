@@ -36,15 +36,15 @@ bool ExampleApp::Initialize() {
     // https://f3d.app/doc/GALLERY.html
     // you can download them here. 클릭
 
-    auto meshes =
-        GeometryGenerator::ReadFromFile("c:/zelda/", "zeldaPosed001.fbx");
+    //auto meshes =
+    //    GeometryGenerator::ReadFromFile("C:/DEVELOPMENT/GIT/DX11_HongLab/models/glTF-Sample-Models-master/2.0/", "benz.fbx");
 
     // GLTF 샘플 모델들
     // https://github.com/KhronosGroup/glTF-Sample-Models
 
-    // auto meshes = GeometryGenerator::ReadFromFile(
-    //     "D:/glTF-Sample-Models/2.0/DamagedHelmet/glTF/",
-    //     "DamagedHelmet.gltf");
+     auto meshes = GeometryGenerator::ReadFromFile(
+         "C:/DEVELOPMENT/GIT/DX11_HongLab/models/glTF-Sample-Models-master/2.0/FlightHelmet/glTF/",
+         "FlightHelmet.gltf");
 
     // auto meshes =
     //     GeometryGenerator::ReadFromFile("D:/glTF-Sample-Models/2.0/ABeautifulGame/glTF/",

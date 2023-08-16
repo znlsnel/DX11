@@ -41,5 +41,10 @@ float4 main(PixelShaderInput input) : SV_TARGET
         color += ComputeSpotLight(light[i], material, input.posWorld, input.normalWorld, toEye);
     }
 
-    return useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, input.texcoord) : float4(color, 1.0);
+    // atan2 : 원 안에 있는 두 점 사이의 절대각을 반환함
+    // acos : cos(x) : 밑변 / 빗변, acos는 x를 구하는 역삼각함수
+    float2 uv;
+    uv.x = atan2(input.posModel.z, input.posModel.x) / (3.141592 * 2.0) + 0.5;
+    uv.y = acos(input.posModel.y / 1.5) / 3.141592;
+    return useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, uv) : float4(color, 1.0);
 }

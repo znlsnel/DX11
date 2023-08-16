@@ -636,6 +636,11 @@ void AppBase::CreateTexture(
     unsigned char *img =
         stbi_load(filename.c_str(), &width, &height, &channels, 0);
 
+    if (img == nullptr)
+    {
+        cout << "CreateTexture->Img Not Valied " << endl;
+        return;
+    }
     // assert(channels == 4);
 
     // 4채널로 만들어서 복사

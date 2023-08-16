@@ -23,7 +23,8 @@ PixelShaderInput main(VertexShaderInput input)
     pos = mul(pos, model);
     
     output.posWorld = pos.xyz; // 월드 위치 따로 저장
-
+    output.posModel = input.posModel;
+    
     pos = mul(pos, view);
     pos = mul(pos, projection);
 
