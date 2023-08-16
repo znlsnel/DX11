@@ -23,11 +23,11 @@ void ExampleApp::InitializeCubeMapping() {
     // -o skybox.dds right.jpg left.jpg top.jpg bottom.jpg front.jpg back.jpg -y
     // https://github.com/Microsoft/DirectXTex/wiki/Texassemble
 
-    // .dds 파일 읽어들여서 초기화
+     //.dds 파일 읽어들여서 초기화
     ComPtr<ID3D11Texture2D> texture;
     auto hr = CreateDDSTextureFromFileEx(
-        // this->m_device.Get(), L"./SaintPetersBasilica/saintpeters.dds", 0,
-        this->m_device.Get(), L"./skybox/skybox.dds", 0, D3D11_USAGE_DEFAULT,
+        //this->m_device.Get(), L"./SaintPetersBasilica/saintpeters.dds", 0,
+        this->m_device.Get(), L"./skybox/saintpeters.dds", 0, D3D11_USAGE_DEFAULT,
         D3D11_BIND_SHADER_RESOURCE, 0,
         D3D11_RESOURCE_MISC_TEXTURECUBE, // 큐브맵용 텍스춰
         DDS_LOADER_FLAGS(false), (ID3D11Resource **)texture.GetAddressOf(),
@@ -115,7 +115,7 @@ bool ExampleApp::Initialize() {
     // you can download them here. 클릭
 
     auto meshes =
-        GeometryGenerator::ReadFromFile("C:/zelda/", "zeldaPosed001.fbx");
+        GeometryGenerator::ReadFromFile("C:/DEVELOPMENT/GIT/DX11_HongLab/models/glTF-Sample-Models-master/2.0/FlightHelmet/glTF/", "FlightHelmet.gltf");
 
     // GLTF 샘플 모델들
     // https://github.com/KhronosGroup/glTF-Sample-Models
@@ -339,6 +339,26 @@ void ExampleApp::Render() {
 
     // 큐브매핑
     // TODO:
+    m_context->IASetInputLayout(m_cubeMapping.inputLayout.Get());
+    m_context->IASetVertexBuffers(
+        0, 1, m_cubeMapping.cubeMesh->vertexBuffer.GetAddressOf(), &stride,
+        &offset);
+    m_context->IASetIndexBuffer(
+        m_cubeMapping.cubeMesh->indexBuffer.Get(),
+        DXGI_FORMAT::DXGI_FORMAT_R32_UINT, 0);
+    m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    m_context->VSSetShader(m_cubeMapping.vertexShader.Get(),0, 0);
+    m_context->VSSetConstantBuffers(0, 1,
+        m_cubeMapping.cubeMesh->vertexConstantBuffer.GetAddressOf());
+
+    ID3D11ShaderResourceView *views[1] = {
+        m_cubeMapping.cubemapResourceView.Get()};
+    m_context->PSSetShaderResources(0, 1, views);
+    m_context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
+    m_context->PSSetShader(m_cubeMapping.pixelShader.Get(), 0, 0);
+
+
     m_context->DrawIndexed(m_cubeMapping.cubeMesh->m_indexCount, 0, 0);
 
     // 물체들
