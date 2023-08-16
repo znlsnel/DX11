@@ -399,10 +399,10 @@ MeshData GeometryGenerator::SubdivideToSphere(const float radius,
     using namespace DirectX;
     using DirectX::SimpleMath::Matrix;
     using DirectX::SimpleMath::Vector3;
-
+ {
     // 원점이 중심이라고 가정
     // 입력 받은 구 모델의 반지름 조절
-    for (auto &v : meshData.vertices) {
+    for (auto &v : meshData.vertices)
         v.position = v.normal * radius;
     }
 
@@ -435,26 +435,49 @@ MeshData GeometryGenerator::SubdivideToSphere(const float radius,
 
         Vertex v3;
         // 위치와 텍스춰 좌표 결정
+        v3.position = v0.position * 0.5f + v1.position * 0.5f;
+        v3.texcoord = v0.texcoord * 0.5f + v1.texcoord * 0.5f;
 
         Vertex v4;
         // 위치와 텍스춰 좌표 결정
+        v4.position = v1.position * 0.5f + v2.position * 0.5f;
+        v4.texcoord = v1.texcoord * 0.5f + v2.texcoord * 0.5f;
 
         Vertex v5;
+        v5.position = v2.position * 0.5f + v0.position * 0.5f;
+        v5.texcoord = v2.texcoord * 0.5f + v0.texcoord * 0.5f;
         // 위치와 텍스춰 좌표 결정
 
+        //ProjectVertex(v0);
+        //ProjectVertex(v1);
+        //ProjectVertex(v2);
         ProjectVertex(v3);
         ProjectVertex(v4);
         ProjectVertex(v5);
 
         // 모든 버텍스 새로 추가
-        // newMesh.vertices.push_back(...);
+         newMesh.vertices.push_back(v0);
+         newMesh.vertices.push_back(v3);
+         newMesh.vertices.push_back(v5);
+
+         newMesh.vertices.push_back(v3);
+         newMesh.vertices.push_back(v1);
+         newMesh.vertices.push_back(v4);
+
+         newMesh.vertices.push_back(v5);
+         newMesh.vertices.push_back(v4);
+         newMesh.vertices.push_back(v2);
+
+         newMesh.vertices.push_back(v3);
+         newMesh.vertices.push_back(v4);
+         newMesh.vertices.push_back(v5);
         // ...
 
-        // 인덱스 업데이트
-        // for (uint16_t j = 0; j < 12; j++) {
-        //     newMesh.indices.push_back(j + count);
-        // }
-        // count += 12;
+         //인덱스 업데이트
+         for (uint16_t j = 0; j < 12; j++) {
+             newMesh.indices.push_back(j + count);
+         }
+         count += 12;
     }
 
     return newMesh;
