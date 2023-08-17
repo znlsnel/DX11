@@ -50,7 +50,20 @@ float4 main(PixelShaderInput input) : SV_TARGET
     // IBL과 다른 쉐이딩 기법(예: 퐁 쉐이딩)을 같이 사용할 수도 있습니다.
     // 참고: https://www.shadertoy.com/view/lscBW4
     
-
+    float4 diffuse = g_diffuseCube.Sample(g_sampler, input.normalWorld);
+    float4 specular = g_specularCube.Sample(g_sampler, reflect(-toEye, input.normalWorld));
     
-    return useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, input.texcoord) : float4(color, 1.0);
+    specular.xyz *= pow(specular.xyz, material.shininess);
+    diffuse.xyz *= material.diffuse;
+    specular.xyz *= material.specular;
+    
+    if (useTexture)
+    {
+        diffuse *= g_texture0.Sample(g_sampler, input.texcoord);
+    }
+    
+    return specular + diffuse;
+   
+    
+  //  return useTexture ? float4(color, 1.0) * g_texture0.Sample(g_sampler, input.texcoord) : float4(color, 1.0);
 }

@@ -8,7 +8,11 @@
 
 namespace hlab {
 
+
+
 using Microsoft::WRL::ComPtr;
+
+
 
 struct CubeMapping {
 
@@ -20,5 +24,8 @@ struct CubeMapping {
     ComPtr<ID3D11VertexShader> vertexShader;
     ComPtr<ID3D11PixelShader> pixelShader;
     ComPtr<ID3D11InputLayout> inputLayout;
+
+
+
 };
 } // namespace hlab
