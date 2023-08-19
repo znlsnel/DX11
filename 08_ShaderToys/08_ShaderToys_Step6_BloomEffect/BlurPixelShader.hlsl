@@ -1,4 +1,5 @@
 Texture2D g_texture0 : register(t0);
+Texture2D g_texture1 : register(t1);
 SamplerState g_sampler : register(s0);
 
 cbuffer SamplingPixelConstantData : register(b0)
@@ -18,12 +19,9 @@ struct SamplingPixelShaderInput
 
 float4 main(SamplingPixelShaderInput input) : SV_TARGET
 {
-    float4 color = g_texture0.Sample(g_sampler, input.texcoord);
-    
-    color = (color.x + color.y + color.z) / 3.0 <= threshold ?
-        float4(0.0, 0.0, 0.0, 1.0)
-        : color;
-    
-    return float4(color.rgb, 1.0);
-    
+    // Compute Shader X
+    float3 originTexture = g_texture0.Sample(g_sampler, input.texcoord).xyz;
+    float3 gausianTexture = g_texture1.Sample(g_sampler, input.texcoord).xyz * strength;
+
+    return float4(originTexture + gausianTexture, 1.0);
 }

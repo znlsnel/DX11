@@ -108,5 +108,6 @@
     <FxCompile Include="BlurXPixelShader.hlsl" />
     <FxCompile Include="BlurYPixelShader.hlsl" />
     <FxCompile Include="CombinePixelShader.hlsl" />
+    <FxCompile Include="BlurPixelShader.hlsl" />
   </ItemGroup>
 </Project>

@@ -28,7 +28,7 @@ bool ExampleApp::Initialize() {
     m_meshGroupSphere.m_diffuseResView = m_cubeMapping.m_diffuseResView;
     m_meshGroupSphere.m_specularResView = m_cubeMapping.m_specularResView;
 
-    m_meshGroupCharacter.Initialize(m_device, "c:/zelda/", "zeldaPosed001.fbx");
+    m_meshGroupCharacter.Initialize(m_device, "C:/DEVELOPMENT/GIT/DX11_HongLab/models/glTF-Sample-Models-master/2.0/Lantern/glTF/", "Lantern.gltf");
     m_meshGroupCharacter.m_diffuseResView = m_cubeMapping.m_diffuseResView;
     m_meshGroupCharacter.m_specularResView = m_cubeMapping.m_specularResView;
 
@@ -87,6 +87,8 @@ void ExampleApp::Update(float dt) {
 
     visibleMeshGroup.m_basicPixelConstantData.eyeWorld = eyeWorld;
 
+
+
     visibleMeshGroup.m_basicPixelConstantData.material.diffuse =
         Vector3(m_materialDiffuse);
     visibleMeshGroup.m_basicPixelConstantData.material.specular =
@@ -100,14 +102,21 @@ void ExampleApp::Update(float dt) {
                                             .Transpose(),
                                         projRow.Transpose());
 
-    //if (m_dirtyflag) {
-    //    m_filters[1]->m_pixelConstData.threshold = m_threshold;
-    //    m_filters[1]->UpdateConstantBuffers(m_device, m_context);
-    //    m_filters.back()->m_pixelConstData.strength = m_strength;
-    //    m_filters.back()->UpdateConstantBuffers(m_device, m_context);
 
-    //    m_dirtyflag = 0;
-    //}
+
+
+    if (m_dirtyflag) {
+
+        m_filters[1]->m_pixelConstData.dx = 1.0f / m_screenWidth;
+        m_filters[1]->m_pixelConstData.dy = 1.0f / m_screenHeight;
+        m_filters[1]->m_pixelConstData.threshold = m_threshold;
+        m_filters.back()->m_pixelConstData.strength = m_strength;
+        m_filters[1]->UpdateConstantBuffers(m_device, m_context);
+        m_filters.back()->UpdateConstantBuffers(m_device, m_context);
+
+
+        m_dirtyflag = 0;
+    }
 }
 
 void ExampleApp::Render() {
@@ -138,6 +147,7 @@ void ExampleApp::Render() {
     // 큐브매핑
     m_cubeMapping.Render(m_context);
 
+
     // 물체들
     if (m_visibleMeshIndex == 0) {
         m_meshGroupSphere.Render(m_context);
@@ -147,13 +157,72 @@ void ExampleApp::Render() {
 
     // 후처리 필터
     for (auto &f : m_filters) {
+
         f->Render(m_context);
     }
 }
 
 void ExampleApp::BuildFilters() {
 
+
     m_filters.clear();
+
+
+    auto copyFilter =
+        make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"Sampling",
+                                 m_screenWidth, m_screenHeight);
+    copyFilter->SetShaderResources({m_shaderResourceView});
+    m_filters.push_back(copyFilter);
+
+        auto downFilter =
+        make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"Sampling", m_screenWidth / m_down,
+        m_screenHeight / m_down);
+    downFilter->SetShaderResources({m_shaderResourceView});
+    downFilter->m_pixelConstData.threshold = m_threshold;
+        downFilter->UpdateConstantBuffers(m_device, m_context);
+        m_filters.push_back(downFilter);
+
+      
+
+        for (int down = m_down; down >= 1; down /= 2)
+          for (int i =0; i < 5; i++){
+
+
+              auto &preResource =  m_filters.back()->m_shaderResourceView;
+                m_filters.push_back(make_shared<ImageFilter>(
+                  m_device, m_context, L"Sampling", L"BlurX",
+                  m_screenWidth / down, m_screenHeight / down));
+              m_filters.back()->SetShaderResources({preResource});
+
+                auto &preResource2 = m_filters.back()->m_shaderResourceView;
+              m_filters.push_back(make_shared<ImageFilter>(
+                    m_device, m_context, L"Sampling", L"BlurY",
+                    m_screenWidth / down, m_screenHeight / down));
+              m_filters.back()->SetShaderResources({preResource2});
+   
+                if (down > 1) {
+                          auto &upFilter = m_filters.back()->m_shaderResourceView;
+                          m_filters.push_back(make_shared<ImageFilter>(
+                              m_device, m_context, L"Sampling", L"BlurY",
+                              m_screenWidth / down * 2, m_screenHeight / down * 2));
+                          m_filters.back()->SetShaderResources({upFilter});
+                }
+            }
+
+
+
+        auto finalBlurFilter =
+        make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"Blur",
+                                 m_screenWidth, m_screenHeight);
+    // copyFilter의 출력이 FinalFilter의 입력으로 들어가는거
+    finalBlurFilter->SetShaderResources(
+            {copyFilter->m_shaderResourceView,
+             m_filters.back()->m_shaderResourceView}
+    );
+        finalBlurFilter->SetRenderTargets({this->m_renderTargetView});
+        finalBlurFilter->m_pixelConstData.strength = m_strength;
+        finalBlurFilter->UpdateConstantBuffers(m_device, m_context);
+    m_filters.push_back(finalBlurFilter);
 
 }
 

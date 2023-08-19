@@ -20,5 +20,12 @@ struct SamplingPixelShaderInput
 
 float4 main(SamplingPixelShaderInput input) : SV_TARGET
 {
-    return float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float3 color = float3(0.0, 0.0, 0.0);
+    
+    for (int i = 0; i < 5; i++)
+    {
+        color += weights[i] * g_texture0.Sample(g_sampler, input.texcoord + float2(0.0, dy) * float(i - 2)).rgb;
+    }
+
+    return float4(color, 1.0);
 }
