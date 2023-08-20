@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "09_UserInteraction_Step3_MousePickingRayCollision", "09_UserInteraction_Step3_MousePickingRayCollision.vcxproj", "{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Debug|x64.ActiveCfg = Debug|x64
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Debug|x64.Build.0 = Debug|x64
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Debug|x86.ActiveCfg = Debug|Win32
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Debug|x86.Build.0 = Debug|Win32
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Release|x64.ActiveCfg = Release|x64
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Release|x64.Build.0 = Release|x64
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Release|x86.ActiveCfg = Release|Win32
+		{E88743F9-D32F-406A-9ABD-E3D8ECC77D26}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B31EB8A5-349B-4AB6-898B-CD2A18DC3E00}
+	EndGlobalSection
+EndGlobal
