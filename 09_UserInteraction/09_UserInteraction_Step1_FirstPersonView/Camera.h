@@ -16,8 +16,9 @@ class Camera {
     void UpdateMouse(float mouseNdcX, float mouseNdcY);
     void MoveForward(float dt);
     void MoveRight(float dt);
+    void MoveUp(float dt);
     void SetAspectRatio(float aspect);
-
+    void SetSpeed(float speed) { m_speed = speed; };
   private:
     // 1인칭 시점은 FPS 게임을 떠올리시면 됩니다.
     // 가상 세계에 1인칭 시점 게임 캐릭터가 서있는 상황입니다.

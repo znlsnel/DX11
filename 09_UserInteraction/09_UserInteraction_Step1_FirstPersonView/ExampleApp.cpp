@@ -47,10 +47,17 @@ bool ExampleApp::Initialize() {
 
     return true;
 }
-
+#define Key_Q 81
+#define Key_E 69
+#define Key_Shift 16
 void ExampleApp::Update(float dt) {
 
     // 카메라의 이동
+    if (m_keyPressed[Key_Shift]) {
+        m_camera.SetSpeed(2.0f);
+    } else
+        m_camera.SetSpeed(1.0f);
+
     if (m_keyPressed[87])
         m_camera.MoveForward(dt);
     if (m_keyPressed[83])
@@ -59,6 +66,15 @@ void ExampleApp::Update(float dt) {
         m_camera.MoveRight(dt);
     if (m_keyPressed[65])
         m_camera.MoveRight(-dt);
+    if (m_keyPressed[Key_Q]) {
+        m_camera.MoveUp(dt);
+    }
+    if (m_keyPressed[Key_E]) {
+        m_camera.MoveUp(-dt);
+    }
+    
+
+
 
     Matrix viewRow = m_camera.GetViewRow();
     Matrix projRow = m_camera.GetProjRow();

@@ -1,4 +1,5 @@
 ﻿#include "Camera.h"
+#include <iostream>
 
 namespace hlab {
 
@@ -12,7 +13,10 @@ Matrix Camera::GetViewRow() {
     // m_pitch가 고개를 숙이는 회전이라서 -가 두번 붙어서 생략
 
     // TODO:
-    return Matrix::CreateTranslation(-m_position);
+    return Matrix::CreateTranslation(-m_position) *
+           Matrix::CreateRotationY(-m_yaw) *
+            Matrix::CreateRotationX(m_pitch);
+    
 }
 
 Vector3 Camera::GetEyePos() { return m_position; }
@@ -25,9 +29,18 @@ void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
 
     // 이동할 때 기준이 되는 정면/오른쪽 방향 계산
 
-    //TODO:
-    //m_viewDir = ...;  // m_yaw만큼 회전
-    //m_rightDir = ...; // Cross product 사용
+    ////TODO:
+    Matrix viewM =
+         Matrix::CreateRotationX(-m_pitch) * Matrix::CreateRotationY(m_yaw);
+    ;
+
+    m_viewDir = Vector3::Transform(Vector3(0.f, 0.f, 1.f), viewM); // m_yaw만큼 회전
+    m_rightDir = DirectX::XMVector3Cross(m_upDir, m_viewDir);
+    m_rightDir.Normalize();
+    
+    std::cout << "m_viewDir x :" << m_viewDir.x << "   y : " << m_viewDir.y
+              << "   x : " << m_viewDir.z
+              << std::endl;
 }
 
 void Camera::MoveForward(float dt) {
@@ -39,6 +52,8 @@ void Camera::MoveRight(float dt) {
     // 이동후의_위치 = 현재_위치 + 이동방향 * 속도 * 시간차이;
     m_position += m_rightDir * m_speed * dt;
 }
+
+void Camera::MoveUp(float dt) { m_position += m_upDir * m_speed * dt; }
 
 void Camera::SetAspectRatio(float aspect) { m_aspect = aspect; }
 
