@@ -79,7 +79,7 @@ int AppBase::Run() {
 
             m_guiWidth = 0;
             // 화면을 크게 쓰기 위해 기능 정지
-            // ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+            // ImGui::SetWindowPos(Imfloat2(0.0f, 0.0f));
             // m_guiWidth = int(ImGui::GetWindowWidth());
 
             ImGui::End();

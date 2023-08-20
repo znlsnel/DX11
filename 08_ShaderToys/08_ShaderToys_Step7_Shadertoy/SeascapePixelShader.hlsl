@@ -146,9 +146,9 @@ float3 getSeaColor(float3 p, float3 n, float3 l, float3 eye, float3 dist)
     fresnel = pow(fresnel, 3.0) * 0.5;
         
     float3 reflected = getSkyColor(reflect(eye, n));
-    float3 refracted = SEA_BASE + diffuse(n, l, 80.0) * SEA_WATER_COLOR * 0.12;
+    float3 refraced = SEA_BASE + diffuse(n, l, 80.0) * SEA_WATER_COLOR * 0.12;
     
-    float3 color = lerp(refracted, reflected, fresnel);
+    float3 color = lerp(refraced, reflected, fresnel);
     
     float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
     color += SEA_WATER_COLOR * (p.y - SEA_HEIGHT) * 0.18 * atten;

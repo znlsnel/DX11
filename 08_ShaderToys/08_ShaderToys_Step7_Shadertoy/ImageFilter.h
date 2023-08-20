@@ -109,7 +109,8 @@ class ImageFilter {
 
         m_pixelConstData.dx = 1.0f / width;
         m_pixelConstData.dy = 1.0f / height;
-
+        m_pixelConstData.iResolution[0] = width;
+        m_pixelConstData.iResolution[1] = height;
         D3D11Utils::CreateConstantBuffer(device, m_pixelConstData,
                                          m_mesh->pixelConstantBuffer);
 
@@ -184,7 +185,8 @@ class ImageFilter {
         float threshold;
         float strength;
         float iTime;
-        float dummy[3];
+        float iResolution[2];
+        float dummy;
     };
 
     SamplingPixelConstantData m_pixelConstData;

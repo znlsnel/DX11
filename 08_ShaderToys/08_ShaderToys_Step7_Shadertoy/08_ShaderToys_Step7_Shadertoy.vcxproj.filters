@@ -110,5 +110,9 @@
     <FxCompile Include="CombinePixelShader.hlsl" />
     <FxCompile Include="SeascapePixelShader.hlsl" />
     <FxCompile Include="StarPixelShader.hlsl" />
+    <FxCompile Include="FiresPixelShader.hlsl" />
+    <FxCompile Include="WaterToonPixelShader.hlsl" />
+    <FxCompile Include="FlamePixelShader.hlsl" />
+    <FxCompile Include="BomlkaPixelShader.hlsl" />
   </ItemGroup>
 </Project>

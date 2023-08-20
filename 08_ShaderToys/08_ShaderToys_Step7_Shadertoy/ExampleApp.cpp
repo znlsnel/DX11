@@ -100,6 +100,7 @@ void ExampleApp::Update(float dt) {
     //                                        .Transpose(),
     //                                    projRow.Transpose());
 
+
     static float time = 0.0f;
 
     m_filters.back()->m_pixelConstData.iTime = time;
@@ -163,9 +164,22 @@ void ExampleApp::BuildFilters() {
     //    make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"Seascape",
     //                             m_screenWidth, m_screenHeight);
 
-    auto shaderToy =
-        make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"Star",
-                                 m_screenWidth, m_screenHeight);
+    //auto shaderToy =
+    //    make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"Fires",
+    //                             m_screenWidth, m_screenHeight);
+     //auto shaderToy =
+     //   make_shared<ImageFilter>(m_device, m_context, L"Sampling", L"WaterToon",
+     //                            m_screenWidth, m_screenHeight);
+     // 
+     //auto shaderToy =
+     //  make_shared<ImageFilter>(m_device, m_context, L"Sampling",
+     //  L"Flame",
+                                //m_screenWidth, m_screenHeight);
+
+          auto shaderToy =
+       make_shared<ImageFilter>(m_device, m_context, L"Sampling",
+       L"Bomlka",
+                                m_screenWidth, m_screenHeight);
 
     shaderToy->SetShaderResources({textureResourceView});
     shaderToy->SetRenderTargets({m_renderTargetView});
