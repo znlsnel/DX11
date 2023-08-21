@@ -105,5 +105,9 @@ class AppBase {
     int m_cursorY = 0;
     float m_cursorNdcX = 0.0f;
     float m_cursorNdcY = 0.0f;
+
+    Vector3 RotateAxis;
+    bool OnRotate = false;
+    float rotateTheta = 0.0f;
 };
 } // namespace hlab

@@ -103,17 +103,23 @@ void ExampleApp::Update(float dt) {
     Vector3 translation = m_mainSphere.m_modelWorldRow.Translation();
 
     // Euler Angles
-    m_mainSphere.UpdateModelWorld(Matrix::CreateRotationX(m_eulerAlpha) *
-                                  Matrix::CreateRotationY(m_eulerBeta) *
-                                  Matrix::CreateRotationZ(m_eulerGamma) *
-                                  Matrix::CreateTranslation(translation));
+    //m_mainSphere.UpdateModelWorld(Matrix::CreateRotationX(m_eulerAlpha) *
+    //                              Matrix::CreateRotationY(m_eulerBeta) *
+    //                              Matrix::CreateRotationZ(m_eulerGamma) *
+    //                              Matrix::CreateTranslation(translation));
 
     // TODO: Euler Angles 대신에 Quaternion을 이용해서 회전 구현하기
     // 힌트:
-    // - Quaternion(const Vector3& v, float scalar) 생성자
-    // - Matrix::CreateFromQuaternion() 사용
-    // - Normalize()
+     //- Quaternion(const Vector3& v, float scalar) 생성자
 
+    Vector3 n = Vector3(m_quatX, m_quatY, m_quatZ);
+    n.Normalize();
+   Quaternion temp =  Quaternion(n * sin(m_quatTheta * 0.5f), cos(m_quatTheta * 0.5f));
+
+     m_mainSphere.UpdateModelWorld(
+     Matrix::CreateFromQuaternion(temp) * Matrix::CreateTranslation(translation));
+     //- Normalize()
+    //Quaternion()
 
 
     m_mainSphere.m_basicVertexConstantData.view = viewRow.Transpose();
