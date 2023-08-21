@@ -147,13 +147,24 @@ void ExampleApp::Update(float dt) {
                 m_dragStartFlag = false;
                 prevRatio = dist / (cursorWorldFar - cursorWorldNear).Length();
                 prevPos = pickPoint;
+
             } else {
                 //TODO:
+                
+                float currDist  = prevRatio * (cursorWorldFar - cursorWorldNear).Length();
+                Vector3 currPickPoint = cursorWorldNear + dir * currDist;
+               
+                dragTranslation = currPickPoint - prevPos;
+
+               prevPos = currPickPoint;               
+
             }
         }
     }
 
     // 물체 이동
+    //m_mainSphere.m_modelWorldRow.Translation(Vector3(0.0f));
+
     m_mainSphere.UpdateModelWorld(m_mainSphere.m_modelWorldRow *
                                   Matrix::CreateTranslation(dragTranslation));
 
