@@ -26,6 +26,7 @@ void BillboardPoints::Initialize(ComPtr<ID3D11Device> &device,
     m_constantData.width = 0.1f;
     D3D11Utils::CreateConstantBuffer(device, m_constantData, m_constantBuffer);
 
+
     // Geometry shader 초기화하기
     D3D11Utils::CreateGeometryShader(
         device, L"BillboardPointsGeometryShader.hlsl", m_geometryShader);

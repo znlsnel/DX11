@@ -187,6 +187,9 @@ void ExampleApp::Update(float dt) {
 
     m_billboardPoints.m_constantData.eyeWorld = eyeWorld;
     m_billboardPoints.m_constantData.view = viewRow.Transpose();
+
+    
+
     m_billboardPoints.m_constantData.proj = projRow.Transpose();
     D3D11Utils::UpdateBuffer(m_device, m_context,
                              m_billboardPoints.m_constantData,

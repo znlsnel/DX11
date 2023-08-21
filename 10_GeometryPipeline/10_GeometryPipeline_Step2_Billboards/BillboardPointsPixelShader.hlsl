@@ -21,14 +21,14 @@ PixelShaderOutput main(PixelShaderInput input)
     // clip(x)에서 x가 0보다 작으면 이 픽셀의 색은 버린다.     
     
     // alpha 값이 있는 이미지에서 불투명도가 0.9보다 작으면 clip
-    //clip(pixelColor.a - 0.9f);
+    clip(pixelColor.a - 0.9f);
     
     // 픽셀의 값이 흰색에 가까운 배경 색이면 clip
     //TODO: clip(...)
-    //float i = (pixelColor.r + pixelColor.g + pixelColor.b) / 3.0;
-    //clip((i > 0.8) ? -1 : 1);
+    float i = (pixelColor.r + pixelColor.g + pixelColor.b) / 3.0;
+    clip((i > 0.7) ? -1 : 1);
     
-    clip((pixelColor.a < 0.9f) || (pixelColor.r + pixelColor.g + pixelColor.b) > 2.4 ? -1 : 1);
+    //clip((pixelColor.a < 0.9f) || (pixelColor.r + pixelColor.g + pixelColor.b) > 2.4 ? -1 : 1);
     
     PixelShaderOutput output;
     
