@@ -17,6 +17,7 @@ class Camera {
     void MoveForward(float dt);
     void MoveRight(float dt);
     void SetAspectRatio(float aspect);
+    void GetCameraFrustumZ(float &nearZ, float &farZ);
 
   private:
     // 1인칭 시점은 FPS 게임을 떠올리시면 됩니다.

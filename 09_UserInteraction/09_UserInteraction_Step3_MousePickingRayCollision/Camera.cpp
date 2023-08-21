@@ -37,6 +37,13 @@ void Camera::MoveRight(float dt) { m_position += m_rightDir * m_speed * dt; }
 
 void Camera::SetAspectRatio(float aspect) { m_aspect = aspect; }
 
+void Camera::GetCameraFrustumZ(float &nearZ, float &farZ) {
+    nearZ = m_nearZ;
+    farZ = m_farZ;
+}
+
+
+
 Matrix Camera::GetProjRow() {
     return m_usePerspectiveProjection
                ? XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
