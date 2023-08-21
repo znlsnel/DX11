@@ -25,6 +25,7 @@ struct BasicPixelConstantData {
     bool useTexture;          // bool 1 + 3 padding
     Material material;        // 48
     Light lights[MAX_LIGHTS]; // 48 * MAX_LIGHTS
+    Vector4 indexColor;
     //TODO:
 };
 

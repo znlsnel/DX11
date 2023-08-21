@@ -44,6 +44,8 @@ class AppBase {
 
     void SetViewport();
     bool CreateRenderTargetView();
+    void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
+                             ComPtr<ID3D11DeviceContext> &context);
 
   public:
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
@@ -93,10 +95,12 @@ class AppBase {
     };
 
     // 다음 렌더링할 때 화면 캡쳐
+    bool m_leftMousePress = false;
     bool m_captureFlag = false;
 
     // 마우스 커서 위치 저장 (Picking에 사용)
     int m_cursorX = 0;
     int m_cursorY = 0;
+    float m_cursorDir[2]{0};
 };
 } // namespace hlab

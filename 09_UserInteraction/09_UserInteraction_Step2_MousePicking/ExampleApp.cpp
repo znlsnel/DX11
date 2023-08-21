@@ -62,6 +62,8 @@ bool ExampleApp::Initialize() {
             Vector3(0.5f, 0.5f, 0.5f);
         m_meshGroupSphere.m_basicPixelConstantData.material.specular =
             Vector3(0.0f);
+        m_meshGroupSphere.m_basicPixelConstantData.indexColor =
+            Vector4(1.0f, 0.0f, 0.0f, 1.0f);
         m_meshGroupSphere.UpdateConstantBuffers(m_device, m_context);
     }
 
@@ -110,6 +112,36 @@ void ExampleApp::Update(float dt) {
 
     // TODO:
 
+   if (true) {
+            m_context->ResolveSubresource(m_indexTempTexture.Get(), 0,
+                                          m_indexTexture.Get(),
+                                          0,
+                                          DXGI_FORMAT_R8G8B8A8_UNORM);
+
+           ReadPixelOfMousePos(m_device, m_context);
+
+            std::cout << "m_pickColor : " << (int)m_pickColor[0] << "  " << (int)m_pickColor[1]
+                      << "  " << (int)m_pickColor[2] << "  " << (int)m_pickColor[3] << endl;
+
+            if (m_pickColor[0] == 255) {
+                m_meshGroupSphere.m_basicPixelConstantData.material.diffuse =
+                    Vector3(1.0f, 0.1f, 0.1f);
+
+            }
+            else 
+                m_meshGroupSphere.m_basicPixelConstantData.material.diffuse =
+                    Vector3(0.5f);    
+   } else
+         m_meshGroupSphere.m_basicPixelConstantData.material.diffuse = Vector3(0.5f);    
+
+   // m_meshGroupGround.m_basicPixelConstantData.pickingColor =
+   //     Vector4((float)m_pickColor[0] / 255, (float)m_pickColor[1] / 255,
+   //             (float)m_pickColor[2] / 255, (float)m_pickColor[3] / 255);
+
+   //m_meshGroupSphere.m_basicPixelConstantData.pickingColor =
+   //     Vector4((float)m_pickColor[0] / 255, (float)m_pickColor[1] / 255,
+   //             (float)m_pickColor[2] / 255, (float)m_pickColor[3] / 255);
+
     m_meshGroupSphere.UpdateConstantBuffers(m_device, m_context);
 
     // TODO:
@@ -144,9 +176,13 @@ void ExampleApp::Render() {
                                      D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
                                      1.0f, 0);
     // Multiple render targets
+    // 
     // 인덱스를 저장할 RenderTarget을 추가
-    ID3D11RenderTargetView *targets[] = {m_renderTargetView.Get(),
-                                         m_indexRenderTargetView.Get()};
+    ID3D11RenderTargetView *targets[] = {
+        m_renderTargetView.Get(),
+                                         m_indexRenderTargetView.Get()
+        
+    };
     m_context->OMSetRenderTargets(2, targets, m_depthStencilView.Get());
     m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
 

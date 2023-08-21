@@ -252,6 +252,7 @@ void D3D11Utils::WriteToFile(ComPtr<ID3D11Device> &device,
         memcpy(&pixels[h * desc.Width * 4], &pData[h * ms.RowPitch],
                desc.Width * sizeof(uint8_t) * 4);
     }
+ 
 
     context->Unmap(stagingTexture.Get(), NULL);
 

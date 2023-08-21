@@ -1,5 +1,6 @@
 ﻿#include "AppBase.h"
 
+#include <iostream>
 #include <algorithm>
 
 #include "D3D11Utils.h"
@@ -187,24 +188,38 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         break;
+      
     case WM_SYSCOMMAND:
         if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
             return 0;
         break;
-    case WM_MOUSEMOVE: // WM_MOUSEFIRST와 WM_MOUSEMOVE가 같음
+    case WM_MOUSEMOVE: {
+        // WM_MOUSEFIRST와 WM_MOUSEMOVE가 같음
 
         // cout << "Mouse BtnState " << wParam << endl;
         // cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
 
         // 마우스의 위치 저장
+        float preX = m_cursorX;
+        float preY = m_cursorY;
         m_cursorX = LOWORD(lParam);
         m_cursorY = HIWORD(lParam);
 
-        OnMouseMove(wParam, LOWORD(lParam), HIWORD(lParam));
+        preX = m_cursorX - preX;
+        preY = m_cursorY - preY;
+        float len = std::sqrt(preX * preX + preY * preY);
+        m_cursorDir[0] = preX / len;
+        m_cursorDir[1] = preY / len;
 
+        OnMouseMove(wParam, LOWORD(lParam), HIWORD(lParam));
+    }
+        break;
+    case WM_LBUTTONDOWN:
+                m_leftMousePress = true;
         break;
     case WM_LBUTTONUP:
         // cout << "WM_LBUTTONUP Left mouse button" << endl;
+                m_leftMousePress = false;
         break;
     case WM_RBUTTONUP:
         // cout << "WM_RBUTTONUP Right mouse button" << endl;
@@ -558,6 +573,58 @@ bool AppBase::CreateRenderTargetView() {
     }
 
     return true;
+}
+
+void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
+                                  ComPtr<ID3D11DeviceContext> &context) {
+
+        /*
+            // Picking을 위한 Index를 저장할 텍스춰
+    ComPtr<ID3D11Texture2D> m_indexTexture;
+    ComPtr<ID3D11Texture2D> m_indexTempTexture;    // Texture2DMS -> Texture2D
+    ComPtr<ID3D11Texture2D> m_indexStagingTexture; // 1x1 작은 크기
+    ComPtr<ID3D11RenderTargetView> m_indexRenderTargetView;
+    uint8_t m_pickColor[4] = {
+        0,
+    }; // 이 색을 이용해서 물체가 선택(pick)되었는지 판단
+        */
+
+        D3D11_TEXTURE2D_DESC desc;
+    m_indexTempTexture->GetDesc(&desc);
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.BindFlags = 0;
+    desc.MiscFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // CPU에서 읽기 가능
+    desc.Usage = D3D11_USAGE_STAGING; // GPU에서 CPU로 보낼 데이터를 임시 보관
+
+        if (FAILED(device->CreateTexture2D(&desc, nullptr,
+                m_indexStagingTexture.GetAddressOf()))) {
+                cout << "Failed()" << endl;
+        }
+
+            D3D11_BOX box;
+        box.left = std::clamp(m_cursorX-1, 0, (int)desc.Width - 1);
+         box.right = m_cursorX;
+        box.top = std::clamp(m_cursorY-1, 0, (int)desc.Height - 1);
+        box.bottom = m_cursorY;
+        box.front = 0;
+        box.back = 1;
+        context->CopySubresourceRegion(m_indexStagingTexture.Get(), 0, 0, 0, 0,
+                                       m_indexTempTexture.Get(), 0, &box);
+
+        D3D11_MAPPED_SUBRESOURCE ms;
+        context->Map(m_indexStagingTexture.Get(), NULL, D3D11_MAP_READ, NULL,
+                     &ms); // D3D11_MAP_READ 주의
+              
+        uint8_t *pData = (uint8_t *)ms.pData;
+       
+
+        memcpy(&m_pickColor[0], &pData[0],
+               sizeof(uint8_t) * 4);
+
+        //cout << pData[3] << endl;
+    context->Unmap(m_indexStagingTexture.Get(), NULL);
 }
 
 } // namespace hlab
