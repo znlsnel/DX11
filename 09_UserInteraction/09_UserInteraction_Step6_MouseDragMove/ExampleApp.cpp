@@ -105,9 +105,13 @@ void ExampleApp::Update(float dt) {
     //     Quaternion::CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), 0.0f);
     Vector3 dragTranslation(0.0f);
 
+    static Vector3 prevVector(0.0f);
+    Quaternion q =
+        Quaternion::CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), 0.0f);
+
     // 마우스 선택했을 때만 업데이트
     if (m_leftButton) {
-
+        OnRotate = false;
         // ViewFrustum에서 가까운 면 위의 커서 위치
         // ViewFrustum에서 먼 면 위의 커서 위치
         Vector3 cursorNdcNear = Vector3(m_cursorNdcX, m_cursorNdcY, 0.0f);
@@ -154,19 +158,123 @@ void ExampleApp::Update(float dt) {
                 float currDist  = prevRatio * (cursorWorldFar - cursorWorldNear).Length();
                 Vector3 currPickPoint = cursorWorldNear + dir * currDist;
                
-                dragTranslation = currPickPoint - prevPos;
+                if ((currPickPoint - prevPos).Length() > 1e-3) {
+                        dragTranslation = currPickPoint - prevPos;
 
-               prevPos = currPickPoint;               
+                       prevPos = currPickPoint;               
+                }
 
             }
         }
     }
 
+    else if (m_RightButton) {
+        // mainSphere의 회전 계산용
+
+
+        // 마우스 선택했을 때만 업데이트
+
+         Vector3 cursorNdcNear{m_cursorNdcX, m_cursorNdcY, 0.f};
+        Vector3 cursorNdcFar{m_cursorNdcX, m_cursorNdcY, 1.f};
+
+        Matrix inverseProjView = (viewRow * projRow).Invert();
+
+        Vector3 cursorWorldNear =
+            Vector3::Transform(cursorNdcNear, inverseProjView);
+
+        Vector3 cursorWorldFar =
+            Vector3::Transform(cursorNdcFar, inverseProjView);
+
+        Vector3 dir = cursorWorldFar - cursorWorldNear;
+        dir.Normalize();
+
+        SimpleMath::Ray r = SimpleMath::Ray(cursorWorldNear, dir);
+        float dist = 0.0f;
+        m_selected = r.Intersects(m_mainBoundingSphere, dist);
+            if (m_selected) 
+            {
+               OnRotate = false;
+               Vector3 pickPoint = cursorWorldNear + dist * dir;
+
+               // 충돌 지점에 작은 구 그리기
+
+                m_cursorSphere.UpdateModelWorld(
+                   Matrix::CreateTranslation(pickPoint));
+               m_cursorSphere.m_basicVertexConstantData.view =
+                   viewRow.Transpose();
+               m_cursorSphere.m_basicVertexConstantData.projection =
+                   projRow.Transpose();
+               m_cursorSphere.m_basicPixelConstantData.eyeWorld = eyeWorld;
+               m_cursorSphere.UpdateConstantBuffers(m_device, m_context);
+
+               // mainSphere를 어떻게 회전시킬지 결정
+               if (m_dragStartFlag) { // 드래그를 시작하는 경우
+                   m_dragStartFlag = false;
+
+                   // m_mainBoundingSphere.Center
+                   // Quaternion()
+                   prevVector = pickPoint - m_mainBoundingSphere.Center;
+                   prevVector.Normalize();
+
+               } 
+               else 
+               {
+                   Vector3 currentVector =
+                       pickPoint - m_mainBoundingSphere.Center;
+                   currentVector.Normalize();
+
+                   rotateTheta = acos(prevVector.Dot(currentVector));
+                   // 마우스가 조금이라도 움직였을 경우에만 회전시키기
+                   if (rotateTheta > 3.141592f / 180.f) 
+                   {
+                       OnRotate = true;
+                       RotateAxis = prevVector.Cross(currentVector);
+                       RotateAxis.Normalize();
+                       // q =
+                       //     Quaternion::FromToRotation(prevVector,
+                       //     currentVector);
+                       q = Quaternion::CreateFromAxisAngle(RotateAxis,
+                                                           rotateTheta);
+                       // TODO: Quaternion::FromToRotation() 사용
+
+                       // Matrix::CreateFromQuaternion(temp) *
+
+                       prevVector = currentVector;
+                   }
+               }
+            
+        }
+
+
+
+    }
+
+    if (OnRotate) {
+        if (rotateTheta <= 1.0f / 180.f) {
+               OnRotate = false;
+               rotateTheta = 0.0f;
+        } else {
+               q = Quaternion::CreateFromAxisAngle(RotateAxis, rotateTheta);
+               rotateTheta *= 0.99f;
+        }
+    }
+
+    // 원점의 위치를 옮기지 않기 위해 Translation 추출
+    Vector3 translation = m_mainSphere.m_modelWorldRow.Translation();
+    m_mainSphere.m_modelWorldRow.Translation(Vector3(0.0f));
+    // 쿼터니언을 이용한 회전
+    // TODO:
+
+    m_mainSphere.UpdateModelWorld(m_mainSphere.m_modelWorldRow *
+                                  Matrix::CreateFromQuaternion(q) *
+                                  Matrix::CreateTranslation(translation) *
+                                  Matrix::CreateTranslation(dragTranslation)
+    );
     // 물체 이동
     //m_mainSphere.m_modelWorldRow.Translation(Vector3(0.0f));
 
-    m_mainSphere.UpdateModelWorld(m_mainSphere.m_modelWorldRow *
-                                  Matrix::CreateTranslation(dragTranslation));
+    //m_mainSphere.UpdateModelWorld(m_mainSphere.m_modelWorldRow *
+    //                              Matrix::CreateTranslation(dragTranslation));
 
     // Bounding Sphere도 같이 이동
     m_mainBoundingSphere.Center = m_mainSphere.m_modelWorldRow.Translation();
@@ -220,7 +328,7 @@ void ExampleApp::Render() {
 
     m_mainSphere.Render(m_context);
 
-    if (m_leftButton && m_selected)
+    if ((m_leftButton || m_RightButton) && m_selected)
         m_cursorSphere.Render(m_context);
 
     // 물체 렌더링 후 큐브매핑

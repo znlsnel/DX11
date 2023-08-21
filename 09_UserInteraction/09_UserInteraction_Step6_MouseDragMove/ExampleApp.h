@@ -42,6 +42,10 @@ class ExampleApp : public AppBase {
     float m_threshold = 0.0f;
     float m_strength = 0.8f;
 
+Vector3 RotateAxis;
+    bool OnRotate = false;
+    float rotateTheta = 0.0f;
+
     // 후처리 필터
     std::vector<shared_ptr<ImageFilter>> m_filters;
 };

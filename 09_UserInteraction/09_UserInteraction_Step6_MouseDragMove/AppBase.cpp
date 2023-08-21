@@ -238,6 +238,15 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONUP:
         m_leftButton = false;
         break;
+    case WM_RBUTTONDOWN:
+        if (!m_leftButton)
+            m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
+        m_RightButton = true;
+        break;
+    case WM_RBUTTONUP:
+        m_RightButton = false;
+        break;
+
     case WM_KEYDOWN:
         // 키에 대응하는 wParam이 궁금하다면 출력해보세요.
         // 'W' 87, 'S' 83, 'SHIFT' 16, 'A' 65, 'D' 68

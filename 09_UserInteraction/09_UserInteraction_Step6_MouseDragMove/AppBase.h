@@ -94,6 +94,7 @@ class AppBase {
     };
 
     bool m_leftButton = false;
+    bool m_RightButton = false;
     bool m_dragStartFlag = false;
     bool m_selected = false;
 

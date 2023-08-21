@@ -1,0 +1,57 @@
+#pragma once
+
+#include <directxtk/SimpleMath.h>
+
+#include "Light.h"
+#include "Material.h"
+
+namespace hlab {
+
+using DirectX::SimpleMath::Matrix;
+using DirectX::SimpleMath::Vector2;
+using DirectX::SimpleMath::Vector3;
+
+struct BasicVertexConstData {
+    Matrix modelWorld;
+    Matrix invTranspose;
+    // Matrix view;  // 다른 Const로 분리
+    // Matrix projection; // 다른 Const로 분리
+    int useHeightMap = 0;
+    float heightScale = 0.0f;
+    Vector2 dummy;
+};
+
+struct EyeViewProjConstData {
+    // View와 Proj를 미리 곱한 형태
+    Matrix viewProj;
+    Vector3 eyeWorld; // Eye도 분리 가능
+    
+    // Depth 전용 쉐이더를 별도로 만드는 것이 더 효율적이지만
+    // 여기서는 구조를 단순하게 유지하기 위해 옵션 사용
+    int depthPass = 0; // 1이면 Depth 출력
+};
+
+struct BasicPixelConstData {
+    Material material;        // 48
+    Light lights[MAX_LIGHTS]; // 48 * MAX_LIGHTS
+
+    // 여러 옵션들에 uint 플래그 하나만 사용할 수도 있습니다.
+    int useAlbedoMap = 0;
+    int useNormalMap = 0;
+    int useAOMap = 0;         // Ambient Occlusion
+    int invertNormalMapY = 0; // 16
+    int useMetallicMap = 0;
+    int useRoughnessMap = 0;
+    int useEmissiveMap = 0;
+    float expose = 1.0f; // 16
+    float gamma = 1.0f;
+    float mipmapLevel = 0.0f;
+    Vector2 dummy; // 16
+};
+
+struct NormalVertexConstantData {
+    float scale = 0.5f;
+    float dummy[3];
+};
+
+} // namespace hlab
