@@ -19,7 +19,7 @@ struct BillboardPointsConstantData {
     Matrix view;  // Vertex shader
     Matrix proj;  // Pixel shader
     float time = 0.0f;
-    Vector3 padding;
+    Vector3 MoveDir{0.0f, 0.0f, 0.0f};
 };
 
 static_assert((sizeof(BillboardPointsConstantData) % 16) == 0,
@@ -40,6 +40,7 @@ class BillboardPoints {
 
     // 편의상 ConstantBuffer를 하나만 사용
     ComPtr<ID3D11Buffer> m_constantBuffer;
+  
 
   protected:
     ComPtr<ID3D11Buffer> m_vertexBuffer;
@@ -53,5 +54,6 @@ class BillboardPoints {
 
     ComPtr<ID3D11Texture2D> m_texArray;
     ComPtr<ID3D11ShaderResourceView> m_texArraySRV;
+
 };
 } // namespace hlab

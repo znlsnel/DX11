@@ -6,7 +6,7 @@ cbuffer BillboardPointsConstantData : register(b0)
     Matrix view; // For vertex shader
     Matrix proj; // For vertex shader
     float time;
-    float3 padding;
+    float3 moveDir;
 };
 
 Texture2DArray g_texArray : register(t0);
@@ -80,11 +80,18 @@ float intersect_ray_sphere(float3 origin, float3 direction, float3 center, float
 PixelShaderOutput main(PixelShaderInput input)
 {
     // TODO: 
-    float3 eye = float3(0.5, 0.5, -1.9);
-    float3 dir = normalize(float3(input.texCoord.x, input.texCoord.y, 0.0) - eye);
-    float3 sphere_pos = float3(0.5, 0.5, 0.0);
-    float radiusScale = 1.0;
-    float currentTime = 1.0;
+    
+    //float3 eye = float3(0.5, 0.5, -1.9);
+    //float3 dir = normalize(float3(input.texCoord.x, input.texCoord.y, 0.0) - eye);
+    //float3 sphere_pos = float3(0.5, 0.5, 0.0);
+    
+    
+    float3 eye = eyeWorld;
+    float3 dir = normalize(input.posWorld.xyz - eye);
+    float3 sphere_pos = input.center.xyz;
+    
+    float radiusScale = width;
+    float currentTime = time + input.primID;
         
     float intensity = 0.;
     
@@ -116,6 +123,9 @@ PixelShaderOutput main(PixelShaderInput input)
     PixelShaderOutput output;
     output.pixelColor = float4(.09 * glow + 0.8 * color, 1.0);
     
+    if ((output.pixelColor.x + output.pixelColor.y +
+        output.pixelColor.z) / 3 < 0.1)
+        clip(-1.0);
     // TODO:
     
     return output;

@@ -40,12 +40,13 @@ bool ExampleApp::Initialize() {
     // Shadertoy Media Files
     // https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
 
-    m_fireballs.Initialize(m_device,
-                           {{-0.7f, 0.5f, 1.2f, 1.0f},
-                            {0.0f, 0.5f, 1.3f, 1.0f},
-                            {0.7f, 0.5f, 1.2f, 1.0f}},
-                           0.7f, L"FireballPixelShader.hlsl",
-                           {"../Assets/Textures/shadertoy_fireball.jpg"});
+    //BillboardPoints tempFireBall;
+    //tempFireBall.Initialize(m_device,
+    //                       {{-0.7f, 0.5f, 1.2f, 1.0f},
+    //                        {0.0f, 0.5f, 1.3f, 1.0f},
+    //                        {0.7f, 0.5f, 1.2f, 1.0f}},
+    //                       0.7f, L"FireballPixelShader.hlsl",
+    //                       {"../Assets/Textures/shadertoy_fireball.jpg"});
 
     m_cubeMapping.Initialize(
         m_device, L"../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
@@ -129,7 +130,22 @@ void ExampleApp::Update(float dt) {
             m_camera.MoveRight(dt);
         if (m_keyPressed[65])
             m_camera.MoveRight(-dt);
+
+        if (m_keyPressed[32]) {
+
+             Vector3 fbSpawnPos = m_camera.GetEyePos() + m_camera.GetForwardVector() * 1;
+             BillboardPoints tempFireBall;
+             tempFireBall.Initialize(m_device, {{fbSpawnPos.x, fbSpawnPos.y, fbSpawnPos.z, 1.0f}},
+                                    0.7f, L"FireballPixelShader.hlsl",
+                                    {"../Assets/Textures/shadertoy_fireball.jpg"});
+             tempFireBall.m_constantData.MoveDir = m_camera.GetForwardVector();
+             m_fireBalls.push_back(tempFireBall);
+             m_keyPressed[32] = false;
+        }
+
     }
+
+
 
     Matrix viewRow = m_camera.GetViewRow();
     Matrix projRow = m_camera.GetProjRow();
@@ -275,12 +291,14 @@ void ExampleApp::Update(float dt) {
                              m_billboardPoints.m_constantData,
                              m_billboardPoints.m_constantBuffer);
 
-    m_fireballs.m_constantData.eyeWorld = eyeWorld;
-    m_fireballs.m_constantData.view = viewRow.Transpose();
-    m_fireballs.m_constantData.proj = projRow.Transpose();
-    m_fireballs.m_constantData.time += dt;
-    D3D11Utils::UpdateBuffer(m_device, m_context, m_fireballs.m_constantData,
-                             m_fireballs.m_constantBuffer);
+    for (auto &m_fireball : m_fireBalls) {
+        m_fireball.m_constantData.eyeWorld = eyeWorld;
+        m_fireball.m_constantData.view = viewRow.Transpose();
+        m_fireball.m_constantData.proj = projRow.Transpose();
+        m_fireball.m_constantData.time += dt;
+        D3D11Utils::UpdateBuffer(m_device, m_context, m_fireball.m_constantData,
+                                m_fireball.m_constantBuffer);    
+    }
 
     // 물체 이동
     // 원점의 위치를 옮기지 않기 위해 Translation 추출
@@ -347,7 +365,9 @@ void ExampleApp::Render() {
     }
 
     m_billboardPoints.Render(m_context);
-    m_fireballs.Render(m_context);
+
+    for (auto &m_fireball : m_fireBalls)
+        m_fireball.Render(m_context);
 
     m_mainSphere.Render(m_context);
 

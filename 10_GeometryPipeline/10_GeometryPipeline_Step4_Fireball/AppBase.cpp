@@ -254,7 +254,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN:
         // 키에 대응하는 wParam이 궁금하다면 출력해보세요.
         // 'W' 87, 'S' 83, 'SHIFT' 16, 'A' 65, 'D' 68
-        // cout << "WM_KEYDOWN " << (int)wParam << endl;
+         cout << "WM_KEYDOWN " << (int)wParam << endl;
 
         // 키보드가 눌린 상태인지 아닌지 저장
         m_keyPressed[wParam] = true;

@@ -12,7 +12,6 @@ void CubeMapping::Initialize(ComPtr<ID3D11Device> &device,
     D3D11Utils::CreateCubemapTexture(device, diffuseFilename, m_diffuseResView);
     D3D11Utils::CreateCubemapTexture(device, specularFilename,
                                      m_specularResView);
-
     m_cubeMesh = std::make_shared<Mesh>();
 
     D3D11Utils::CreateConstantBuffer(device, vertexConstantData,

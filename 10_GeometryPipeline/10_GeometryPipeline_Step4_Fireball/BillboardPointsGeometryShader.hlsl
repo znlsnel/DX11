@@ -11,6 +11,8 @@ cbuffer BillboardPointsConstantData : register(b0)
     Matrix model; // For vertex shader
     Matrix view; // For vertex shader
     Matrix proj; // For vertex shader
+    float time;
+    float3 moveDir;
 };
 
 struct GeometryShaderInput
@@ -31,6 +33,8 @@ struct PixelShaderInput
 void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
                               inout TriangleStream<PixelShaderInput> outputStream)
 {
+    input[0].pos = float4(input[0].pos.xyz + moveDir * time, input[0].pos.w); // 빌보드의 중심
+    
     float hw = 0.5 * width;
     
     float4 up = float4(0.0, 1.0, 0.0, 0.0);
@@ -44,8 +48,9 @@ void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
     PixelShaderInput output;
     
     output.center = input[0].pos; // 빌보드의 중심
+    //output.center = input[0].pos; // 빌보드의 중심
     
-    output.posWorld = input[0].pos - hw * right - hw * up;
+    output.posWorld = output.center - hw * right - hw * up;
     output.pos = output.posWorld;
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, proj);
@@ -54,7 +59,7 @@ void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
     
     outputStream.Append(output);
 
-    output.posWorld = input[0].pos - hw * right + hw * up;
+    output.posWorld = output.center - hw * right + hw * up;
     output.pos = output.posWorld;
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, proj);
@@ -63,7 +68,7 @@ void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
     
     outputStream.Append(output);
     
-    output.posWorld = input[0].pos + hw * right - hw * up;
+    output.posWorld = output.center + hw * right - hw * up;
     output.pos = output.posWorld;
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, proj);
@@ -72,7 +77,7 @@ void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
     
     outputStream.Append(output);
     
-    output.posWorld = input[0].pos + hw * right + hw * up;
+    output.posWorld = output.center + hw * right + hw * up;
     output.pos = output.posWorld;
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, proj);

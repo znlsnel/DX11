@@ -30,7 +30,8 @@ class ExampleApp : public AppBase {
 
   protected:
     BillboardPoints m_billboardPoints;
-    BillboardPoints m_fireballs;
+
+    std::vector<BillboardPoints> m_fireBalls;
     BasicMeshGroup m_mainSphere;
     BoundingSphere m_mainBoundingSphere;
     BasicMeshGroup m_cursorSphere;
