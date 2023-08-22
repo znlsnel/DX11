@@ -13,6 +13,7 @@ using namespace std;
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
+
 ExampleApp::ExampleApp() : AppBase() {}
 
 bool ExampleApp::Initialize() {
@@ -472,11 +473,12 @@ void ExampleApp::UpdateGUI() {
         m_mainSphere.m_drawNormalsDirtyFlag = true;
     }
 
+
     int flag = 0;
     flag += ImGui::SliderFloat4(
-        "Edges", &m_tesselatedQuad.m_constantData.edges.x, 1, 8);
+        "Edges", &m_tesselatedQuad.m_constantData.edges.x, 1, 64);
     flag += ImGui::SliderFloat2(
-        "Inside", &m_tesselatedQuad.m_constantData.inside.x, 1, 8);
+        "Inside", &m_tesselatedQuad.m_constantData.inside.x, 1, 64);
     if (flag) {
         D3D11Utils::UpdateBuffer(m_device, m_context,
                                  m_tesselatedQuad.m_constantData,

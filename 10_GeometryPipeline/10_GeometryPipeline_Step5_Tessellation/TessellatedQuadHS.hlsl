@@ -33,12 +33,19 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOut, 4> patch,
 {
     PatchConstOutput pt;
     
-    pt.edges[0] = edges[0];
-    pt.edges[1] = edges[1];
-    pt.edges[2] = edges[2];
-    pt.edges[3] = edges[3];	
-    pt.inside[0] = inside[0];
-    pt.inside[1] = inside[1];
+    float len = length(eyeWorld - patch[0].pos.xyz);
+    len = len > 2.5 ? 2.5
+    : len < 0.0 ? 0.0 : len;
+    
+    len /= 2.5;
+    len = 1.0 - len;
+    
+    pt.edges[0] = lerp(1.0, edges[0], len);
+    pt.edges[1] = lerp(1.0, edges[1], len);
+    pt.edges[2] = lerp(1.0, edges[2], len);
+    pt.edges[3] = lerp(1.0, edges[3], len);
+    pt.inside[0] = lerp(1.0, inside[0], len);
+    pt.inside[1] = lerp(1.0, inside[1], len);
 	
     return pt;
 }
