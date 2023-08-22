@@ -153,4 +153,7 @@ struct PixelShaderInput
     float3 color : COLOR; // Normal lines 쉐이더에서 사용
 };
 
+
+
+
 #endif // __COMMON_HLSLI__

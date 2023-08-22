@@ -36,4 +36,6 @@ struct NormalVertexConstantData {
     float dummy[3];
 };
 
+
+
 } // namespace hlab

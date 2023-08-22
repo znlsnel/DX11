@@ -1,4 +1,8 @@
-#include "Common.hlsli" // 쉐이더에서도 include 사용 가능
+struct PixelShaderInput
+{
+    float4 pos : SV_POSITION; //모델 좌표계의 위치 position
+    float3 color : COLOR; // 모델 좌표계의 normal    
+};
 
 float4 main(PixelShaderInput input) : SV_TARGET
 {

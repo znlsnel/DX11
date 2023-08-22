@@ -22,6 +22,7 @@ class BasicMeshGroup {
 
     void UpdateModelWorld(const Matrix &modelToWorldRow);
 
+
   public:
     // Model/World 행렬: 원점에 정의된 모델을 월드 좌표계에서 그려질 위치로
     // 변환해주는 행렬
@@ -60,10 +61,11 @@ class BasicMeshGroup {
     ComPtr<ID3D11Buffer> m_pixelConstantBuffer;
 
     // 메쉬의 노멀 벡터 그리기
+    ComPtr<ID3D11GeometryShader> m_normalGeometryShader;
     ComPtr<ID3D11VertexShader> m_normalVertexShader;
     ComPtr<ID3D11PixelShader> m_normalPixelShader;
 
-    shared_ptr<Mesh> m_normalLines;
+  //  shared_ptr<Mesh> m_normalLines;
 
     ComPtr<ID3D11Buffer> m_normalVertexConstantBuffer;
     ComPtr<ID3D11Buffer> m_normalPixelConstantBuffer;

@@ -19,6 +19,7 @@ PixelShaderInput main(VertexShaderInput input)
     // 뷰 좌표계는 NDC이기 때문에 월드 좌표를 이용해서 조명 계산
     
     PixelShaderInput output;
+    
     float4 pos = float4(input.posModel, 1.0f);
     pos = mul(pos, modelWorld);
     
