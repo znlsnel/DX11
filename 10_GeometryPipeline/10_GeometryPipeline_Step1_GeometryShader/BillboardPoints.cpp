@@ -19,6 +19,7 @@ void BillboardPoints::Initialize(ComPtr<ID3D11Device> &device,
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
+
     D3D11Utils::CreateVertexBuffer(device, points, m_vertexBuffer);
 
     m_indexCount = uint32_t(points.size());

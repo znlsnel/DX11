@@ -76,6 +76,7 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device,
          D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
+
     D3D11Utils::CreateVertexShaderAndInputLayout(
         device, L"BasicVertexShader.hlsl", basicInputElements,
         m_basicVertexShader, m_basicInputLayout);

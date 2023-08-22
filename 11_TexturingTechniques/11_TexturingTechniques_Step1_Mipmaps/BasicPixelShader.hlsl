@@ -98,7 +98,11 @@ PixelShaderOutput main(PixelShaderInput input)
     if (useTexture)
     {
         // diffuse *= g_texture0.Sample(g_sampler, input.texcoord);
-        diffuse *= g_texture0.SampleLevel(g_sampler, input.texcoord, mipmapLevel);
+        float len = length(input.posWorld - eyeWorld);
+        len = len > 5 ? 5.0 :
+        len < 1.0 ? 0.0 : len;
+        
+        diffuse *= g_texture0.SampleLevel(g_sampler, input.texcoord, 0);
 
         // Specular texture를 별도로 사용할 수도 있습니다.
     }

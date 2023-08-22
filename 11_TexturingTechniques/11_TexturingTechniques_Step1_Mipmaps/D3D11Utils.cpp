@@ -393,6 +393,7 @@ void D3D11Utils::CreateTextureArray(
         ComPtr<ID3D11Texture2D> stagingTexture =
             CreateStagingTexture(device, context, width, height, image, 1, 1);
 
+
         // 스테이징 텍스춰를 텍스춰 배열의 해당 위치에 복사합니다.
         UINT subresourceIndex =
             D3D11CalcSubresource(0, UINT(i), txtDesc.MipLevels);
