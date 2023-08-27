@@ -54,6 +54,7 @@ struct PixelShaderOutput
     float4 indexColor : SV_Target1;
 };
 
+
 PixelShaderOutput main(PixelShaderInput input)
 {
     float3 toEye = normalize(eyeWorld - input.posWorld);
@@ -66,14 +67,14 @@ PixelShaderOutput main(PixelShaderInput input)
     
     if (useNormalMap) // NormalWorld를 교체
     {
-        // float3 normalTex = g_normalTexture.SampleLevel(g_sampler, input.texcoord, 0.0).rgb;
-        // normalTex = 2.0 * normalTex - 1.0; // 범위 조절 [-1.0, 1.0]
-
-        // 반지름이 0.3이고 원점이 (0.5, 0.5, 0.3)인 구의 normal만 이용해서 렌더링 해보기
-        // x가 u이고 y가 v라면 z는 sqrt(0.3*0.3 - x*x - y*y)
-        // z의 방향 주의
+        float3 normalTex = g_normalTexture.SampleLevel(g_sampler, input.texcoord, 0.0).rgb;
+         normalTex = 2.0 * normalTex - 1.0; // 범위 조절 [-1.0, 1.0]
+        float3 N = normalWorld;
+        float3 T = normalize(input.tangentWorld - dot(input.tangentWorld, N) * N);
+        float3 B = cross(N, T);
         
-        normalWorld = float3(0, 0, -1);
+        float3x3 TBN = float3x3(T, B, N);
+        normalWorld = normalize(mul(normalTex, TBN));
     }
     
     [unroll] 

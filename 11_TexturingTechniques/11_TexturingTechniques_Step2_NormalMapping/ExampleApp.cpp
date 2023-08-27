@@ -127,18 +127,18 @@ bool ExampleApp::Initialize() {
     {
         MeshData ground = GeometryGenerator::MakeSquare(1.0f, {1.0f, 1.0f});
         ground.albedoTextureFilename =
-            "../Assets/Textures/PBR/Bricks075A_1K-PNG/Bricks075A_1K_Color.png";
+            "../Assets/Textures/PBR/Gravel023_1K-JPG/Gravel023_1K_Color.jpg";
 
         ground.normalTextureFilename =
-            "../Assets/Textures/PBR/Bricks075A_1K-PNG/"
-            "Bricks075A_1K_NormalDX.png";
+            "../Assets/Textures/PBR/Gravel023_1K-JPG/"
+            "Gravel023_1K_NormalDX.jpg";
 
         ground.heightTextureFilename =
-            "../Assets/Textures/PBR/Bricks075A_1K-PNG/"
-            "Bricks075A_1K_Displacement.png";
+            "../Assets/Textures/PBR/Gravel023_1K-JPG/"
+            "Gravel023_1K_Displacement.jpg";
 
-        ground.aoTextureFilename = "../Assets/Textures/PBR/Bricks075A_1K-PNG/"
-                                   "Bricks075A_1K_AmbientOcclusion.png";
+        ground.aoTextureFilename = "../Assets/Textures/PBR/Gravel023_1K-JPG/"
+                                   "Gravel023_1K_AmbientOcclusion.jpg";
 
         m_meshGroupGround.Initialize(m_device, m_context, {ground});
         m_meshGroupGround.m_diffuseResView = m_cubeMapping.m_diffuseResView;
