@@ -126,23 +126,25 @@ bool ExampleApp::Initialize() {
         m_cursorSphere.UpdateConstantBuffers(m_device, m_context);
     }
 
+
     // Ground
     {
         //MeshData ground = GeometryGenerator::MakeSquare(20.0f, {40.0f, 40.0f});
-        MeshData ground = GeometryGenerator::MakeSquareGrid(1, 1, 20.0f, {40.0f, 40.0f});
+        MeshData ground = GeometryGenerator::MakeSquareGrid(2048, 2048, 20.0f,
+                                                            {40.0f, 40.0f});
         ground.albedoTextureFilename =
-            "../Assets/Textures/PBR/Bricks075A_1K-PNG/Bricks075A_1K_Color.png";
+            "../Assets/Textures/PBR/Rock053_1K-JPG/Rock053_1K_Color.jpg";
 
         ground.normalTextureFilename =
-            "../Assets/Textures/PBR/Bricks075A_1K-PNG/"
-            "Bricks075A_1K_NormalDX.png";
+            "../Assets/Textures/PBR/Rock053_1K-JPG/"
+            "Rock053_1K_NormalDX.jpg";
 
         ground.heightTextureFilename =
-            "../Assets/Textures/PBR/Bricks075A_1K-PNG/"
-            "Bricks075A_1K_Displacement.png";
+            "../Assets/Textures/PBR/Rock053_1K-JPG/"
+            "Rock053_1K_Displacement.jpg";
 
-        ground.aoTextureFilename = "../Assets/Textures/PBR/Bricks075A_1K-PNG/"
-                                   "Bricks075A_1K_AmbientOcclusion.png";
+        ground.aoTextureFilename = "../Assets/Textures/PBR/Rock053_1K-JPG/"
+                                   "Rock053_1K_AmbientOcclusion.jpg";
 
         m_meshGroupGround.Initialize(m_device, m_context, {ground});
         m_meshGroupGround.m_diffuseResView = m_cubeMapping.m_diffuseResView;

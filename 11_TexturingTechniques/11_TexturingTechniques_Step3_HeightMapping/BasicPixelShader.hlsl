@@ -61,8 +61,8 @@ PixelShaderOutput main(PixelShaderInput input)
     float dist = length(eyeWorld - input.posWorld);
     float distMin = 3.0;
     float distMax = 10.0;
-    //float lod = 10.0 * saturate(dist / (distMax - distMin));
-    float lod = 0.0;
+    float lod = 10.0 * saturate(dist / (distMax - distMin));
+    //float lod = 0.0;
     
     float3 color = float3(0.0, 0.0, 0.0);
 

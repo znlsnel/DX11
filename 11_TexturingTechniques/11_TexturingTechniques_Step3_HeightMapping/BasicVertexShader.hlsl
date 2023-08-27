@@ -42,7 +42,10 @@ PixelShaderInput main(VertexShaderInput input)
     if (useHeightMap)
     {
         // VertexShader에서는 SampleLevel 사용
-        // pos += ...;
+        float height = g_heightTexture.SampleLevel(g_sampler, input.texcoord, 0).r;
+        height = height * 2.0 - 1.0;
+        pos += float4(output.normalWorld * heightScale * height, 0.0) ;
+
     }
 
     output.posWorld = pos.xyz; // 월드 위치 따로 저장
