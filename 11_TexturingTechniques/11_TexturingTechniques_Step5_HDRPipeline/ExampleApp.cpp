@@ -59,9 +59,9 @@ bool ExampleApp::Initialize() {
     //     L"../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/HDRI/OutdoorEnvHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/OutdoorDiffuseHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/OutdoorSpecularHDR.dds");
+        m_device, L"../Assets/Textures/Cubemaps/HDRI/testEnvHDR.dds",
+        L"../Assets/Textures/Cubemaps/HDRI/testDiffuseHDR.dds",
+        L"../Assets/Textures/Cubemaps/HDRI/testSpecularHDR.dds");
 
     // Main Sphere
     {
@@ -144,7 +144,7 @@ bool ExampleApp::Initialize() {
         ground.albedoTextureFilename =
             //    "../Assets/Textures/Cubemaps/HDRI/"
             //    "OutdoorHDRI024_4K-HDR.exr";
-            "../Assets/Textures/PBR/Bricks075A_4K-PNG/Bricks075A_4K_Color.png";
+            "../Assets/Textures/PBR/Bricks075A_1K-PNG/Bricks075A_1K_Color.png";
         //"../Assets/Textures/earth.jpg";
         // ground.albedoTextureFilename = "color_test_image.png";
 

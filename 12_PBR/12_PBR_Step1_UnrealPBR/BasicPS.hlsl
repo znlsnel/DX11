@@ -4,7 +4,7 @@
 // https://github.com/Nadrin/PBR/blob/master/data/shaders/hlsl/pbr.hlsl
 
 TextureCube specularIBLTex : register(t0);
-TextureCube irradianceIBLTex : register(t1);
+TextureCube irradianceIBLTex : register(t1); // diffuse 역할
 Texture2D brdfTex : register(t2);
 Texture2D albedoTex : register(t3);
 Texture2D normalTex : register(t4);
@@ -35,8 +35,9 @@ cbuffer BasicPixelConstData : register(b0)
 
 float3 SchlickFresnel(float3 F0, float NdotH)
 {
-    // TODO: 방정식 (5)
-    return float3(1, 1, 1);
+    
+    return F0 + (1.0 - F0) * pow(2.0, (-5.55473 * NdotH - 6.98316) * NdotH);
+
 }
 
 struct PixelShaderOutput
@@ -76,23 +77,28 @@ float3 DiffuseIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
     float3 kd = lerp(1.0 - F, 0.0, metallic);
     
     // 앞에서 사용했던 방법과 동일
-    // float3 irradiance = ... TODO
+    float3 irradiance = irradianceIBLTex.Sample(linearSampler, normalWorld);
     
-    return kd * albedo;
+    return kd * albedo * irradiance;
 }
 
 float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
                    float metallic, float roughness)
 {
+    
+    // LUT - LookUp Table
+    // cosV - ToEye dot normal
     // TODO: 슬라이드 Environment BRDF
-    // float2 specularBRDF = brdfTex.Sample(clampSampler, float2(... , ...)).rg;
+    float2 specularPos = float2(dot(pixelToEye, normalWorld), 1.0 - roughness);
+    float2 specularBRDF = brdfTex.Sample(clampSampler, specularPos).rg;
     
     // 앞에서 사용했던 방법과 동일
-    // float3 specularIrradiance = specularIBLTex.SampleLevel(linearSampler, TODO, roughness * 10.0f).rgb;
+   float3 specularIrradiance = specularIBLTex.SampleLevel(linearSampler, 
+                            reflect(-pixelToEye, normalWorld), roughness * 5.0f).rgb;
     const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
     float3 F0 = lerp(Fdielectric, albedo, metallic);
 
-    return float3(1, 1, 1);
+    return (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
 
 }
 
@@ -110,13 +116,22 @@ float3 AmbientLightingByIBL(float3 albedo, float3 normalW, float3 pixelToEye, fl
 float NdfGGX(float NdotH, float roughness)
 {
     // TODO: 방정식 (3)
-    return 1.0;
+    float a2 = pow(roughness, 2);
+    float denominator = pow(3.141592 * (pow(NdotH, 2) * (a2 - 1) + 1), 2);
+    
+    return a2 / denominator;
+}
+
+float SchlickG1(float NdotV, float k)
+{
+    return NdotV / (NdotV * (1.0 - k) + k);
 }
 
 // TODO: 방정식 (4)
 float SchlickGGX(float NdotI, float NdotO, float roughness)
 {
-    return 1.0;
+    float k = pow((roughness + 1), 2) / 8.0;
+    return SchlickG1(NdotI, k) * SchlickG1(NdotO, k);
 }
 
 PixelShaderOutput main(PixelShaderInput input)

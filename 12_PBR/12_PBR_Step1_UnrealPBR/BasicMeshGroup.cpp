@@ -64,6 +64,7 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device,
                 newMesh->albedoTexture, newMesh->albedoSRV);
         }
 
+
         if (!meshData.normalTextureFilename.empty()) {
             D3D11Utils::CreateTexture(
                 device, context, meshData.normalTextureFilename, false,

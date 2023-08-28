@@ -21,10 +21,10 @@ bool ExampleApp::Initialize() {
         return false;
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/HDRI/OutdoorEnvHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/OutdoorSpecularHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/OutdoorDiffuseHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/OutdoorBrdf.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyEnvHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskySpecularHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyDiffuseHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyBrdf.dds");
 
     // m_cubeMapping.Initialize(
     //    m_device, L"../Assets/Textures/Cubemaps/HDRI/SampleEnvHDR.dds",
@@ -41,22 +41,22 @@ bool ExampleApp::Initialize() {
 
         // PBR 텍스춰들
         sphere.albedoTextureFilename =
-            "../Assets/Textures/PBR/worn-painted-metal-ue/"
+            "../../Assets/Textures/PBR/worn-painted-metal-ue/"
             "worn-painted-metal_albedo.png";
         sphere.normalTextureFilename =
-            "../Assets/Textures/PBR/worn-painted-metal-ue/"
+            "../../Assets/Textures/PBR/worn-painted-metal-ue/"
             "worn-painted-metal_normal-dx.png";
         sphere.heightTextureFilename =
-            "../Assets/Textures/PBR/worn-painted-metal-ue/"
+            "../../Assets/Textures/PBR/worn-painted-metal-ue/"
             "worn-painted-metal_height.png";
         sphere.aoTextureFilename =
-            "../Assets/Textures/PBR/worn-painted-metal-ue/"
+            "../../Assets/Textures/PBR/worn-painted-metal-ue/"
             "worn-painted-metal_ao.png";
         sphere.metallicTextureFilename =
-            "../Assets/Textures/PBR/worn-painted-metal-ue/"
+            "../../Assets/Textures/PBR/worn-painted-metal-ue/"
             "worn-painted-metal_metallic.png";
         sphere.roughnessTextureFilename =
-            "../Assets/Textures/PBR/worn-painted-metal-ue/"
+            "../../Assets/Textures/PBR/worn-painted-metal-ue/"
             "worn-painted-metal_roughness.png";
 
         m_mainSphere.Initialize(m_device, m_context, {sphere});

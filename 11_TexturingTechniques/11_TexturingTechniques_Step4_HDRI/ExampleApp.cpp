@@ -53,10 +53,17 @@ bool ExampleApp::Initialize() {
                            {"../Assets/Textures/shadertoy_fireball.jpg"});
     */
 
-    m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
-        L"../Assets/Textures/Cubemaps/skybox/cubemap_diffuse.dds",
-        L"../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
+    //m_cubeMapping.Initialize(
+    //    m_device, L"../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
+    //    L"../Assets/Textures/Cubemaps/skybox/cubemap_diffuse.dds",
+    //    L"../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
+
+         m_cubeMapping.Initialize(
+        m_device, L"../Assets/Textures/Cubemaps/HDRI/testEnvHDR.dds",
+        L"../Assets/Textures/Cubemaps/HDRI/testDiffuseHDR.dds",
+        L"../Assets/Textures/Cubemaps/HDRI/testSpecularHDR.dds"
+         
+         );
 
     // Main Sphere
     {
@@ -137,7 +144,7 @@ bool ExampleApp::Initialize() {
 
         // HDRI 테스트
         ground.albedoTextureFilename =
-            "../Assets/Textures/Cubemaps/HDRI/OutdoorHDRI024_4K-HDR.exr";
+            "../Assets/Textures/Cubemaps/HDRI/IndoorEnvironmentHDRI004_2K-HDR.exr";
             //"../Assets/Textures/Cubemaps/HDRI/OutdoorHDRI024_1K-TONEMAPPED.jpg";
 
         /*

@@ -402,10 +402,12 @@ void AppBase::CreateBuffers() {
     ThrowIfFailed(
         m_device->CreateTexture2D(&desc, NULL, m_floatBuffer.GetAddressOf()));
 
-    ThrowIfFailed(m_device->CreateShaderResourceView(
+    ThrowIfFailed(
+            m_device->CreateShaderResourceView(
         m_floatBuffer.Get(), NULL, m_floatSRV.GetAddressOf()));
 
-    ThrowIfFailed(m_device->CreateRenderTargetView(m_floatBuffer.Get(), NULL,
+    ThrowIfFailed(
+            m_device->CreateRenderTargetView(m_floatBuffer.Get(), NULL,
                                                    m_floatRTV.GetAddressOf()));
 
     // D3D11_RENDER_TARGET_VIEW_DESC viewDesc;
@@ -418,11 +420,16 @@ void AppBase::CreateBuffers() {
     // FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
-    ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL,
+    ThrowIfFailed(
+            m_device->CreateTexture2D(&desc, NULL,
                                             m_resolvedBuffer.GetAddressOf()));
-    ThrowIfFailed(m_device->CreateShaderResourceView(
+
+    ThrowIfFailed(
+            m_device->CreateShaderResourceView(
         m_resolvedBuffer.Get(), NULL, m_resolvedSRV.GetAddressOf()));
-    ThrowIfFailed(m_device->CreateRenderTargetView(
+
+    ThrowIfFailed(
+            m_device->CreateRenderTargetView(
         m_resolvedBuffer.Get(), NULL, m_resolvedRTV.GetAddressOf()));
 
     // m_resolvedRTV->GetDesc(&viewDesc);

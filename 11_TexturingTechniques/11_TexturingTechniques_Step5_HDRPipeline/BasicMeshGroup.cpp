@@ -50,6 +50,7 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device,
         newMesh->m_indexCount = UINT(meshData.indices.size());
         newMesh->m_vertexCount = UINT(meshData.vertices.size());
 
+
         D3D11Utils::CreateIndexBuffer(device, meshData.indices,
                                       newMesh->indexBuffer);
 
