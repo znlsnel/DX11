@@ -22,10 +22,10 @@ bool ExampleApp::Initialize() {
         return false;
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/HDRI/SampleEnvHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleSpecularHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleDiffuseHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleBrdf.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampEnvHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampSpecularHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampDiffuseHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampBrdf.dds");
 
     // 조명 설정
     {
@@ -57,7 +57,7 @@ bool ExampleApp::Initialize() {
     {
         auto mesh = GeometryGenerator::MakeSquare(2.0);
         mesh.albedoTextureFilename =
-            "../Assets/Textures/blender_uv_grid_2k.png";
+            "../../Assets/Textures/wall.jpg";
         m_ground =
             make_shared<BasicMeshGroup>(m_device, m_context, vector{mesh});
         m_ground->m_basicPixelConstData.material.albedo = Vector3(0.2f);
@@ -77,11 +77,11 @@ bool ExampleApp::Initialize() {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
-        // auto meshes = GeometryGenerator::ReadFromFile(
-        //     "../Assets/Models/medieval_vagrant_knights/", "scene.gltf");
+         auto meshes = GeometryGenerator::ReadFromFile(
+             "../../Models/ToyCar/glTF/", "ToyCar.gltf");
 
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeBox(0.15f)};
+        //vector<MeshData> meshes = {GeometryGenerator::MakeBox(0.15f)};
 
         // string path = "../Assets/Characters/armored-female-future-soldier/";
         // auto meshes = GeometryGenerator::ReadFromFile(path,
@@ -357,20 +357,25 @@ void ExampleApp::Render() {
 
     // 두 번째 UINT StencilRef = 1 사용
     // ClearDepthStencilView(..., 0)에서는 다른 숫자 0 사용
-    // TODO: m_context->OMSetDepthStencilState(..., ...);
+    m_context->OMSetDepthStencilState(m_maskDSS.Get(), 1);
 
     // 거울을 그릴 때 색은 필요 없기 때문에 간단한 PS 사용 가능
     m_mirror->Render(m_context, AppBase::m_eyeViewProjConstBuffer, m_useEnv);
 
     /* 거울 3. 거울 위치에 반사된 물체들을 렌더링 */
-    // TODO: m_context->ClearDepthStencilView(...);
-    // TODO: m_context->OMSetDepthStencilState(..., ...);
+    m_context
+        ->ClearDepthStencilView(m_depthStencilView.Get(),
+                                     D3D11_CLEAR_DEPTH ,
+                                     1.0f, 0);
+    m_context->OMSetDepthStencilState(m_drawMaskedDSS.Get(), 1); // 1인 곳에만 그림
 
     // 반사되면 삼각형 정점들의 순서(Winding)가 반대로 -> 반시계
-    // TODO: m_context->RSSetState(...);
+    m_context->RSSetState(m_drawAsWire == false ? m_solidCCWRS.Get() : m_wireCCWRS.Get());
 
     // 반사된 위치에 그려야 함
-    // TODO: AppBase::m_mirrorEyeViewProjConstBuffer 사용
+    for (auto &i : m_basicList) {
+        i->Render(m_context, m_mirrorEyeViewProjConstBuffer, m_useEnv);
+    }
 
     // 환경맵도 뒤집어서 그리기
     if (m_useEnv) {
@@ -378,11 +383,15 @@ void ExampleApp::Render() {
     }
 
     /* 거울 4. 거울 자체의 재질을 "Blend"로 그림 */
-
-    // TODO: m_context->OMSetBlendState(..., ..., 0xffffffff);
-
+    const float t = 1.0f - m_mirrorAlpha;
+    const float blendColor[] = {t, t, t, 1.0f};
+    //TODO: m_context->OMSetBlendState(..., ..., 0xffffffff);
+    m_context->OMSetBlendState(m_mirrorBS.Get(), blendColor, 0xffffffff);
     // TODO: m_context->RSSetState(...); // 다시 시계 방향
+    m_context->RSSetState(m_drawAsWire ? m_wireRS.Get() : m_solidRS.Get());
     // TODO: 거울 그리기
+    m_mirror->Render(m_context, AppBase::m_eyeViewProjConstBuffer,
+                     m_useEnv);
 
     // 후처리는 Blend X
     m_context->OMSetBlendState(NULL, NULL, 0xffffffff);
