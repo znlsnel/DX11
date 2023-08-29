@@ -87,7 +87,7 @@ float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
 {
     float2 specularBRDF = brdfTex.Sample(clampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness)).rg;
     float3 specularIrradiance = specularIBLTex.SampleLevel(linearSampler, reflect(-pixelToEye, normalWorld), 
-                                                            3 + roughness * 5.0f).rgb;
+                                                            roughness * 5.0f).rgb;
     const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
     float3 F0 = lerp(Fdielectric, albedo, metallic);
 
@@ -135,10 +135,12 @@ PixelShaderOutput main(PixelShaderInput input)
 
     float3 albedo = useAlbedoMap ? albedoTex.Sample(linearSampler, input.texcoord).rgb 
                                  : material.albedo;
-    float ao = useAOMap ? aoTex.SampleLevel(linearSampler, input.texcoord, 0.0).r : 1.0;
-    float metallic = useMetallicMap ? metallicTex.Sample(linearSampler, input.texcoord).r
+
+    float ao = useAOMap ? aoTex.SampleLevel(linearSampler, input.texcoord, 0.0).r + 0.2: 1.0;
+    
+    float metallic = useMetallicMap ? metallicTex.Sample(linearSampler, input.texcoord).b 
                                     : material.metallic;
-    float roughness = useRoughnessMap ? roughnessTex.Sample(linearSampler, input.texcoord).r
+    float roughness = useRoughnessMap ? roughnessTex.Sample(linearSampler, input.texcoord).g
                                       : material.roughness;
     float3 emission = useEmissiveMap ? emissiveTex.Sample(linearSampler, input.texcoord).rgb 
                                      : float3(0, 0, 0);

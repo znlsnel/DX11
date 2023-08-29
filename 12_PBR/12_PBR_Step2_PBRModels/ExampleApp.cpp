@@ -27,30 +27,32 @@ bool ExampleApp::Initialize() {
     //     L"../Assets/Textures/Cubemaps/HDRI/OutdoorBrdf.dds");
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/HDRI/SampleEnvHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleSpecularHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleDiffuseHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleBrdf.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyEnvHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskySpecularHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyDiffuseHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyBrdf.dds");
 
     // Main Object
     {
+
+
          //auto meshes = GeometryGenerator::ReadFromFile(
          //    "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
          //auto meshes = GeometryGenerator::ReadFromFile(
          //    "../Assets/Models/medieval_vagrant_knights/", "scene.gltf");
 
-        string path = "../Assets/Characters/armored-female-future-soldier/";
-        auto meshes = GeometryGenerator::ReadFromFile(path, "angel_armor.fbx");
-        meshes[0].albedoTextureFilename = path + "angel_armor_albedo.jpg";
-        meshes[0].emissiveTextureFilename = path + "angel_armor_e.jpg";
-        meshes[0].metallicTextureFilename = path + "angel_armor_metalness.jpg";
-        meshes[0].normalTextureFilename = path + "angel_armor_normal.jpg";
-        meshes[0].roughnessTextureFilename =
-            path + "angel_armor_roughness.jpg";
+        string path = "../../Assets/Characters/umbra_marauder_rig/";
+        auto meshes = GeometryGenerator::ReadFromFile(path, "scene.gltf");
+        //meshes[0].albedoTextureFilename = path + "Default_albedo.jpg";
+        //meshes[0].emissiveTextureFilename = path + "Default_emissive.jpg";
+        //meshes[0].metallicTextureFilename = path + "Material_baseColor.png";
+        //meshes[0].normalTextureFilename = path + "AttireMain_normal.png";
+        //meshes[0].roughnessTextureFilename =
+        //    path + "Material_metallicRoughness.png";
 
         Vector3 center(0.0f, 0.0f, 1.0f);
-        m_mainObj.m_basicPixelConstData.invertNormalMapY = false;
+        m_mainObj.m_basicPixelConstData.invertNormalMapY = true;
         m_mainObj.Initialize(m_device, m_context, meshes);
         m_mainObj.m_irradianceSRV = m_cubeMapping.m_irradianceSRV;
         m_mainObj.m_specularSRV = m_cubeMapping.m_specularSRV;
@@ -100,6 +102,8 @@ void ExampleApp::Update(float dt) {
             m_camera.MoveUp(-dt);
     }
 
+
+
     Matrix viewRow = m_camera.GetViewRow();
     Matrix projRow = m_camera.GetProjRow();
     Vector3 eyeWorld = m_camera.GetEyePos();
@@ -110,6 +114,8 @@ void ExampleApp::Update(float dt) {
     m_cubeMapping.UpdateVertexConstBuffer(
         m_device, m_context, viewEnvRow.Transpose(), projRow.Transpose());
 
+
+
     // mainSphere의 회전 계산용
     static float prevRatio = 0.0f;
     static Vector3 prevPos(0.0f);
@@ -117,6 +123,7 @@ void ExampleApp::Update(float dt) {
     Quaternion q =
         Quaternion::CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), 0.0f);
     Vector3 dragTranslation(0.0f);
+
 
     // 마우스 왼쪽 버튼으로 회전
     if (m_leftButton) {

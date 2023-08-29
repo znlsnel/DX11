@@ -165,8 +165,8 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
         vertex.normalModel.x = mesh->mNormals[i].x;
         vertex.normalModel.y = mesh->mNormals[i].y;
         vertex.normalModel.z = mesh->mNormals[i].z;
-         //vertex.normalModel.y = mesh->mNormals[i].z;
-         //vertex.normalModel.z = -mesh->mNormals[i].y;
+        //vertex.normalModel.y = mesh->mNormals[i].z;
+        //vertex.normalModel.z = -mesh->mNormals[i].y;
         vertex.normalModel.Normalize();
 
         if (mesh->mTextureCoords[0]) {
@@ -207,6 +207,7 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
         newMesh.aoTextureFilename =
             ReadFilename(material, aiTextureType_AMBIENT_OCCLUSION);
     }
+
 
     return newMesh;
 }
