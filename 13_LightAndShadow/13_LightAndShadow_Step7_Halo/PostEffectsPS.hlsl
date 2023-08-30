@@ -35,14 +35,17 @@ float4 TexcoordToView(float2 texcoord)
     return posView;
 }
 
-int RaySphereIntersection(in float3 start, in float3 dir, in float3 center, in float radius,
-                            out float t1, out float t2)
+int RaySphereIntersection(in float3 start, in float3 dir, in float3 center, in float radius, in float3 posView,
+                            out float result)
 {
     float3 p = start - center;
     float pdotv = dot(p, dir);
     float p2 = dot(p, p);
     float r2 = radius * radius;
     float m = pdotv * pdotv - (p2 - r2);
+    float t1 = 0.0;
+    float t2 = 0.0;
+    
     
     if (m < 0.0)
     {
@@ -55,6 +58,18 @@ int RaySphereIntersection(in float3 start, in float3 dir, in float3 center, in f
         m = sqrt(m);
         t1 = -pdotv - m;
         t2 = -pdotv + m;
+
+        if (t1 > posView.z)
+            return 0;
+        t2 = min(posView.z, t2);
+        
+        float a = (1.0 - (p2 / r2)) * (t2 - t1);
+        float b = (pdotv / r2) * (pow(t2, 2) - pow(t1, 2));
+        float c = (dot(dir, dir) / (3.0 * r2)) * (pow(t2, 3) - pow(t1, 3));
+        
+        result = (a - b - c);
+        result /= (4 * radius / 3.0);
+        
         return 1;
     }
 }
@@ -68,11 +83,11 @@ float HaloEmission(float3 posView, float radius)
 
     float3 center = mul(float4(lights[1].position, 1.0), view).xyz; // View 공간으로 변환
 
-    float t1 = 0.0;
-    float t2 = 0.0;
-    if (RaySphereIntersection(rayStart, dir, center, radius, t1, t2))
+    float result = 0.0;
+    if (RaySphereIntersection(rayStart, dir, center, radius, posView, result))
     {
-        return 1.0;
+      
+        return result;
     }
     else
     {

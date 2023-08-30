@@ -136,7 +136,9 @@ float N2V(float ndcDepth, matrix invProj)
     return pointView.z / pointView.w;
 }
 
+
 #define NEAR_PLANE 0.1
+
 // #define LIGHT_WORLD_RADIUS 0.001
 #define LIGHT_FRUSTUM_WIDTH 0.34641 // <- 계산해서 찾은 값
 
