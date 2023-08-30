@@ -22,7 +22,7 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/",
                           L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
                           L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
@@ -44,7 +44,7 @@ bool ExampleApp::Initialize() {
     {
         auto mesh = GeometryGenerator::MakeSquare(5.0);
         mesh.albedoTextureFilename =
-            "../Assets/Textures/blender_uv_grid_2k.png";
+            "../../Assets/Textures/blender_uv_grid_2k.png";
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConstsCPU.albedoFactor = Vector3(0.5f);
         m_ground->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
@@ -56,9 +56,9 @@ bool ExampleApp::Initialize() {
                                  Matrix::CreateTranslation(position));
 
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
-        m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
+       m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
 
-        // m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
+         //m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
     }
 
     // Main Object
@@ -66,12 +66,12 @@ bool ExampleApp::Initialize() {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
-        // auto meshes = GeometryGenerator::ReadFromFile(
-        //     "../Assets/Models/medieval_vagrant_knights/", "scene.gltf",
-        //     true);
+         auto meshes = GeometryGenerator::ReadFromFile(
+             "../../Models/ToyCar/glTF/", "ToyCar.gltf",
+             true);
 
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
+  //    vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
 
         // string path = "../Assets/Characters/armored-female-future-soldier/";
         // auto meshes = GeometryGenerator::ReadFromFile(path,
@@ -179,6 +179,9 @@ bool ExampleApp::Initialize() {
 
     return true;
 }
+
+
+
 
 void ExampleApp::Update(float dt) {
 

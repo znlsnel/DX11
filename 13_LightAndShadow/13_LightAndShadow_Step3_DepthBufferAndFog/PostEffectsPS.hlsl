@@ -41,9 +41,18 @@ float4 main(SamplingPixelShaderInput input) : SV_TARGET
         float4 posView = TexcoordToView(input.texcoord);
         float dist = length(posView.xyz); // 눈의 위치가 원점인 좌표계
 
-     
+        float3 fogColor = float3(1, 1, 1);
+        float fogMin = 1.0;
+        float fogMax = 10.0;
+        
+        float distFog = saturate((dist - fogMin) / (fogMax - fogMin));
+        float fogFactor = exp(-distFog * fogStrength);
+        
+        float3 color =  renderTex.Sample(linearClampSampler, input.texcoord).rgb;
+        color = lerp(fogColor, color, fogFactor);
         // TODO: Fog
-        return renderTex.Sample(linearClampSampler, input.texcoord);
+        return float4(color, 1.0);
+        //return renderTex.Sample(linearClampSampler, input.texcoord);
     }
     else // if (mode == 2)
     {

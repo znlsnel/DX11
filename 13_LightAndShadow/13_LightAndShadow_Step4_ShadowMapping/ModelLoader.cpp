@@ -182,8 +182,8 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
         vertex.normalModel.x = mesh->mNormals[i].x;
         if (m_isGLTF) {
-            vertex.normalModel.y = mesh->mNormals[i].z;
-            vertex.normalModel.z = -mesh->mNormals[i].y;
+            vertex.normalModel.y = -mesh->mNormals[i].z;
+            vertex.normalModel.z = mesh->mNormals[i].y;
         } else {
             vertex.normalModel.y = mesh->mNormals[i].y;
             vertex.normalModel.z = mesh->mNormals[i].z;

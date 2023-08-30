@@ -27,10 +27,10 @@ bool ExampleApp::Initialize() {
     //     L"../Assets/Textures/Cubemaps/HDRI/OutdoorBrdf.dds");
 
     m_cubeMapping.Initialize(
-        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyEnvHDR.dds",
-        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskySpecularHDR.dds",
-        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyDiffuseHDR.dds",
-        L"../../Assets/Textures/Cubemaps/HDRI/DaySky/dayskyBrdf.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleEnvHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleSpecularHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleDiffuseHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleBrdf.dds");
 
     // Main Object
     {
@@ -42,8 +42,8 @@ bool ExampleApp::Initialize() {
          //auto meshes = GeometryGenerator::ReadFromFile(
          //    "../Assets/Models/medieval_vagrant_knights/", "scene.gltf");
 
-        string path = "../../Assets/Characters/umbra_marauder_rig/";
-        auto meshes = GeometryGenerator::ReadFromFile(path, "scene.gltf");
+        string path = "../../Models/ToyCar/glTF/";
+        auto meshes = GeometryGenerator::ReadFromFile(path, "ToyCar.gltf");
         //meshes[0].albedoTextureFilename = path + "Default_albedo.jpg";
         //meshes[0].emissiveTextureFilename = path + "Default_emissive.jpg";
         //meshes[0].metallicTextureFilename = path + "Material_baseColor.png";

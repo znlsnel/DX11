@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include <memory>
 #include <windows.h>
-
 #include "ExampleApp.h"
 
 using namespace std;

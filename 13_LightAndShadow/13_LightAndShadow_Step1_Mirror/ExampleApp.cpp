@@ -22,10 +22,10 @@ bool ExampleApp::Initialize() {
         return false;
 
     m_cubeMapping.Initialize(
-        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampEnvHDR.dds",
-        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampSpecularHDR.dds",
-        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampDiffuseHDR.dds",
-        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/dayCampBrdf.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleEnvHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleSpecularHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleDiffuseHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleBrdf.dds");
 
     // 조명 설정
     {

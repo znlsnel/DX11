@@ -9,6 +9,7 @@ Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
     this->Initialize(device, context, basePath, filename);
 }
 
+
 Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
              const std::vector<MeshData> &meshes) {
     this->Initialize(device, context, meshes);
@@ -116,7 +117,6 @@ void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                  m_materialConstsGPU);
     }
 }
-
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
     if (m_isVisible) {
         for (const auto &mesh : m_meshes) {
@@ -139,7 +139,7 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
 
             context->IASetIndexBuffer(mesh->indexBuffer.Get(),
                                       DXGI_FORMAT_R32_UINT, 0);
-            context->DrawIndexed(mesh->indexCount, 0, 0);
+           context->DrawIndexed(mesh->indexCount, 0, 0);
         }
     }
 }

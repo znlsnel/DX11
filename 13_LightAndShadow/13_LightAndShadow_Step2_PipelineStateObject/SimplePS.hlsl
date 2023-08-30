@@ -3,6 +3,7 @@
 struct PixelShaderOutput
 {
     float4 pixelColor : SV_Target0;
+    
 };
 
 PixelShaderOutput main(PixelShaderInput input)

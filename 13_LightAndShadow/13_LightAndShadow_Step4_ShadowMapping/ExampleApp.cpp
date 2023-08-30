@@ -22,7 +22,7 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/",
                           L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
                           L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
@@ -66,12 +66,12 @@ bool ExampleApp::Initialize() {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
-        // auto meshes = GeometryGenerator::ReadFromFile(
-        //     "../Assets/Models/medieval_vagrant_knights/", "scene.gltf",
-        //     true);
-
+         auto meshes = GeometryGenerator::ReadFromFile(
+             "../../Models/ToyCar/glTF/", "ToyCar.gltf",
+             true);
+        
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
+        //vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
 
         // string path = "../Assets/Characters/armored-female-future-soldier/";
         // auto meshes = GeometryGenerator::ReadFromFile(path,
@@ -326,6 +326,7 @@ void ExampleApp::Render() {
     m_skybox->Render(m_context);
     m_mirror->Render(m_context);
 
+
     // 그림자맵 만들기
     AppBase::SetShadowViewport(); // 그림자맵 해상도
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
@@ -385,7 +386,7 @@ void ExampleApp::Render() {
 
     m_skybox->Render(m_context);
 
-    // 거울 2. 거울 위치만 StencilBuffer에 1로 표기
+     //거울 2. 거울 위치만 StencilBuffer에 1로 표기
     AppBase::SetPipelineState(Graphics::stencilMaskPSO);
 
     m_mirror->Render(m_context);
@@ -406,7 +407,7 @@ void ExampleApp::Render() {
                                            : Graphics::reflectSkyboxSolidPSO);
     m_skybox->Render(m_context);
 
-    // 거울 4. 거울 자체의 재질을 "Blend"로 그림
+    //// 거울 4. 거울 자체의 재질을 "Blend"로 그림
     AppBase::SetPipelineState(m_drawAsWire ? Graphics::mirrorBlendWirePSO
                                            : Graphics::mirrorBlendSolidPSO);
     AppBase::SetGlobalConsts(m_globalConstsGPU);
@@ -416,7 +417,7 @@ void ExampleApp::Render() {
     m_context->ResolveSubresource(m_resolvedBuffer.Get(), 0,
                                   m_floatBuffer.Get(), 0,
                                   DXGI_FORMAT_R16G16B16A16_FLOAT);
-
+    
     // PostEffects
     AppBase::SetPipelineState(Graphics::postEffectsPSO);
 

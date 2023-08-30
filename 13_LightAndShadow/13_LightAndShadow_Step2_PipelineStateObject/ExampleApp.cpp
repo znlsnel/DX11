@@ -22,9 +22,9 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
-                          L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
-                          L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/",
+                          L"dayCampEnvHDR.dds", L"dayCampSpecularHDR.dds",
+                          L"dayCampDiffuseHDR.dds", L"dayCampBrdf.dds");
 
     // 환경 박스 초기화
     {
@@ -61,7 +61,7 @@ bool ExampleApp::Initialize() {
     {
         auto mesh = GeometryGenerator::MakeSquare(2.0);
         mesh.albedoTextureFilename =
-            "../Assets/Textures/blender_uv_grid_2k.png";
+            "../../Assets/Textures/blender_uv_grid_2k.png";
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConstsCPU.albedoFactor = Vector3(0.2f);
         m_ground->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
@@ -85,14 +85,14 @@ bool ExampleApp::Initialize() {
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
         // vector<MeshData> meshes = {GeometryGenerator::MakeBox(0.15f)};
 
-        string path = "../Assets/Characters/armored-female-future-soldier/";
-        auto meshes = GeometryGenerator::ReadFromFile(path, "angel_armor.fbx");
-        meshes[0].albedoTextureFilename = path + "/angel_armor_albedo.jpg";
-        meshes[0].emissiveTextureFilename = path + "/angel_armor_e.jpg";
-        meshes[0].metallicTextureFilename = path + "/angel_armor_metalness.jpg";
-        meshes[0].normalTextureFilename = path + "/angel_armor_normal.jpg";
-        meshes[0].roughnessTextureFilename =
-            path + "/angel_armor_roughness.jpg";
+        string path = "../../Assets/Characters/umbra_marauder_rig/";
+        auto meshes = GeometryGenerator::ReadFromFile(path, "scene.gltf");
+        //meshes[0].albedoTextureFilename = path + "/angel_armor_albedo.jpg";
+        //meshes[0].emissiveTextureFilename = path + "/angel_armor_e.jpg";
+        //meshes[0].metallicTextureFilename = path + "/angel_armor_metalness.jpg";
+        //meshes[0].normalTextureFilename = path + "/angel_armor_normal.jpg";
+        //meshes[0].roughnessTextureFilename =
+        //    path + "/angel_armor_roughness.jpg";
 
         Vector3 center(0.0f, 0.0f, 2.0f);
         m_mainObj = make_shared<Model>(m_device, m_context, meshes);
@@ -230,16 +230,50 @@ void ExampleApp::Render() {
             i->RenderNormals(m_context);
     }
 
+
     AppBase::SetPipelineState(m_drawAsWire ? Graphics::skyboxWirePSO
                                            : Graphics::skyboxSolidPSO);
 
     m_skybox->Render(m_context);
 
+
+
     // 거울 2. 거울 위치만 StencilBuffer에 1로 표기
 
-    // 거울 3. 거울 위치에 반사된 물체들을 렌더링
+    AppBase::SetPipelineState(Graphics::stencilMaskPSO);
+    m_mirror->Render(m_context);
+
+
+    //// 거울 3. 거울 위치에 반사된 물체들을 렌더링
+
+    AppBase::SetPipelineState(m_drawAsWire ? Graphics::reflectWirePSO
+                                           : Graphics::reflectSolidPSO);
+    AppBase::SetGlobalConsts(m_reflectGlobalConstsGPU);
+    m_context->ClearDepthStencilView(m_depthStencilView.Get(),
+                                     D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+    for (auto &i : m_basicList) {
+         
+        i->Render(m_context);
+    }
+
+AppBase::SetPipelineState(m_drawAsWire ? Graphics::reflectSkyboxWirePSO
+                                           : Graphics::reflectSkyboxSolidPSO);
+    m_skybox->Render(m_context);
+
 
     // 거울 4. 거울 자체의 재질을 "Blend"로 그림
+    AppBase::SetPipelineState(m_drawAsWire ? Graphics::mirrorBlendWirePSO
+                                           : Graphics::mirrorBlendSolidPSO);
+    m_context->ClearDepthStencilView(m_depthStencilView.Get(),
+                                     D3D11_CLEAR_DEPTH, 1.0f, 0);
+    m_mirror->Render(m_context);
+
+
+
+    //AppBase::SetGlobalConsts(m_globalConstsGPU);
+
+
 
     // 후처리
     m_context->ResolveSubresource(m_resolvedBuffer.Get(), 0,

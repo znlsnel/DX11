@@ -149,20 +149,22 @@ float3 LightRadiance(Light light, float3 posWorld, float3 normalWorld, Texture2D
         
         // 1. Project posWorld to light screen
         // light.viewProj 사용
-        // float4 lightScreen = ...;
-        
+        float4 lightScreen = mul(float4(posWorld, 1.0), light.viewProj);
+        lightScreen.xyz /= lightScreen.w;
         // 2. 카메라(광원)에서 볼 때의 텍스춰 좌표 계산
         // [-1, 1]x[-1, 1] -> [0, 1]x[0, 1]
         // 주의: 텍스춰 좌표와 NDC는 y가 반대
-        // float2 lightTexcoord = ... lightScreen ... ;
+        float2 lightTexcoord = float2(lightScreen.x, -lightScreen.y);
+        lightTexcoord += 1.0;
+        lightTexcoord *= 0.5;
         
         // 3. 쉐도우맵에서 값 가져오기
-        // float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
+         float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
         
         // 4. 가려져 있다면 그림자로 표시
         // 힌트: 작은 bias (0.001 정도) 필요
-        // if (...)
-        //    shadowFactor = 0.0; // <- 0.0의 의미는?
+        if (depth + 0.001< lightScreen.z )
+            shadowFactor = 0.0; // <- 0.0의 의미는?
     }
 
     float3 radiance = light.radiance * spotFator * att * shadowFactor;

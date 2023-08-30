@@ -22,10 +22,10 @@ bool ExampleApp::Initialize() {
         return false;
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/HDRI/SampleEnvHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleSpecularHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleDiffuseHDR.dds",
-        L"../Assets/Textures/Cubemaps/HDRI/SampleBrdf.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleEnvHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleSpecularHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleDiffuseHDR.dds",
+        L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/SampleBrdf.dds");
 
     // 조명 설정
     {
@@ -59,7 +59,7 @@ bool ExampleApp::Initialize() {
     {
         auto mesh = GeometryGenerator::MakeSquare(5.0);
         mesh.albedoTextureFilename =
-            "../Assets/Textures/blender_uv_grid_2k.png";
+            "../../Assets/Textures/blender_uv_grid_2k.png";
 
         m_ground =
             make_shared<BasicMeshGroup>(m_device, m_context, vector{mesh});
@@ -91,12 +91,12 @@ bool ExampleApp::Initialize() {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
-        // auto meshes = GeometryGenerator::ReadFromFile(
-        //     "../Assets/Models/medieval_vagrant_knights/", "scene.gltf",
-        //     true);
+         auto meshes = GeometryGenerator::ReadFromFile(
+             "../../Models/ToyCar/glTF/", "ToyCar.gltf",
+             true);
 
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
+        //vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
 
         // string path = "../Assets/Characters/armored-female-future-soldier/";
         // auto meshes = GeometryGenerator::ReadFromFile(path,
