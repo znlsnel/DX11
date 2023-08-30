@@ -22,9 +22,9 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
-                          L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
-                          L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/",
+                          L"testEnvHDR.dds", L"testSpecularHDR.dds",
+                          L"testDiffuseHDR.dds", L"testBrdf.dds");
 
     // 후처리용 화면 사각형
     {
@@ -69,9 +69,10 @@ bool ExampleApp::Initialize() {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/medieval_vagrant_knights/", "scene.gltf",
         //     true);
-
+        auto meshes = GeometryGenerator::ReadFromFile(
+            "../../Assets/Characters/umbra_marauder_rig/", "scene.gltf", true);
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
+       // vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
 
         // string path = "../Assets/Characters/armored-female-future-soldier/";
         // auto meshes = GeometryGenerator::ReadFromFile(path,
@@ -320,8 +321,13 @@ void ExampleApp::Render() {
 
     // 공용 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
     vector<ID3D11ShaderResourceView *> commonSRVs = {
-        m_envSRV.Get(), m_specularSRV.Get(), m_irradianceSRV.Get(),
-        m_brdfSRV.Get()};
+        m_envSRV.Get(), 
+        m_specularSRV.Get(), 
+        m_irradianceSRV.Get(),
+        m_brdfSRV.Get()
+    };
+
+
     m_context->PSSetShaderResources(10, UINT(commonSRVs.size()),
                                     commonSRVs.data());
 

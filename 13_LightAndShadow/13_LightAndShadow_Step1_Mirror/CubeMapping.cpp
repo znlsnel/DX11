@@ -109,10 +109,12 @@ void CubeMapping::Render(ComPtr<ID3D11DeviceContext> &context,
     std::vector<ID3D11Buffer *> vertexCB = {
         mirror ? m_mirrorViewProjConstBuffer.Get()
                : m_viewProjConstBuffer.Get()};
+
     context->VSSetConstantBuffers(0, UINT(vertexCB.size()), vertexCB.data());
 
     std::vector<ID3D11ShaderResourceView *> srvs = {
         m_envSRV.Get(), m_specularSRV.Get(), m_irradianceSRV.Get()};
+
     context->PSSetShaderResources(0, UINT(srvs.size()), srvs.data());
     context->PSSetShader(m_pixelShader.Get(), 0, 0);
     context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());

@@ -42,7 +42,7 @@ struct PixelShaderOutput
 
 float3 GetNormal(PixelShaderInput input)
 {
-    float3 normalWorld = normalize(input.normalWorld);
+    float3 normalWorld = input.normalWorld;
     
     if (useNormalMap) // NormalWorld를 교체
     {
@@ -71,6 +71,8 @@ float3 DiffuseIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
     float3 F = SchlickFresnel(F0, max(0.0, dot(normalWorld, pixelToEye)));
     float3 kd = lerp(1.0 - F, 0.0, metallic);
     float3 irradiance = irradianceIBLTex.SampleLevel(linearWrapSampler, normalWorld, 0).rgb;
+   
+   //float3 irradiance = float3(1.0, 1.0, 1.0);
     
     return kd * albedo * irradiance;
 }
@@ -81,6 +83,10 @@ float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
     float2 specularBRDF = brdfTex.SampleLevel(linearClampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness), 0.0f).rg;
     float3 specularIrradiance = specularIBLTex.SampleLevel(linearWrapSampler, reflect(-pixelToEye, normalWorld),
                                                             2 + roughness * 5.0f).rgb;
+    
+    
+    //float3 specularIrradiance = float3(1.0, 1.0, 1.0);
+    
     const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
     float3 F0 = lerp(Fdielectric, albedo, metallic);
 

@@ -172,6 +172,8 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
+
+
     // Walk through each of the mesh's vertices
     for (UINT i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -182,6 +184,7 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
         vertex.normalModel.x = mesh->mNormals[i].x;
         if (m_isGLTF) {
+
             vertex.normalModel.y = mesh->mNormals[i].z;
             vertex.normalModel.z = -mesh->mNormals[i].y;
         } else {

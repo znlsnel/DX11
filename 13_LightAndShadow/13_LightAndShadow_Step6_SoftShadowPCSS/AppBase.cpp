@@ -598,6 +598,8 @@ void AppBase::SetMainViewport() {
     m_context->RSSetViewports(1, &m_screenViewport);
 }
 
+
+
 void AppBase::SetShadowViewport() {
 
     // Set the viewport

@@ -22,9 +22,9 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
-                          L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
-                          L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/",
+                          L"testEnvHDR.dds", L"testSpecularHDR.dds",
+                          L"testDiffuseHDR.dds", L"testBrdf.dds");
 
     // 후처리용 화면 사각형
     {
@@ -61,26 +61,27 @@ bool ExampleApp::Initialize() {
         // m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
     }
 
+
     // Main Object
     {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
-         //auto meshes = GeometryGenerator::ReadFromFile(
-         //    "../Assets/Models/medieval_vagrant_knights/", "scene.gltf",
-         //    true);
+         auto meshes = GeometryGenerator::ReadFromFile(
+             "../../Assets/Characters/umbra_marauder_rig/", "scene.gltf",
+             true);
 
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
+        //vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
 
-        // string path = "../Assets/Characters/armored-female-future-soldier/";
-        // auto meshes = GeometryGenerator::ReadFromFile(path,
-        // "angel_armor.fbx"); meshes[0].albedoTextureFilename = path +
-        // "/angel_armor_albedo.jpg"; meshes[0].emissiveTextureFilename = path +
-        // "/angel_armor_e.jpg"; meshes[0].metallicTextureFilename = path +
-        // "/angel_armor_metalness.jpg"; meshes[0].normalTextureFilename = path
-        // + "/angel_armor_normal.jpg"; meshes[0].roughnessTextureFilename =
-        //     path + "/angel_armor_roughness.jpg";
+       //string path = "../Assets/Characters/armored-female-future-soldier/";
+       //  auto meshes = GeometryGenerator::ReadFromFile(path,
+       //  "angel_armor.fbx"); meshes[0].albedoTextureFilename = path +
+       //  "/angel_armor_albedo.jpg"; meshes[0].emissiveTextureFilename = path +
+       //  "/angel_armor_e.jpg"; meshes[0].metallicTextureFilename = path +
+       //  "/angel_armor_metalness.jpg"; meshes[0].normalTextureFilename = path
+       //  + "/angel_armor_normal.jpg"; meshes[0].roughnessTextureFilename =
+       //      path + "/angel_armor_roughness.jpg";
 
         Vector3 center(0.0f, 0.0f, 2.0f);
         m_mainObj = make_shared<Model>(m_device, m_context, meshes);
@@ -308,6 +309,8 @@ void ExampleApp::Render() {
 
     AppBase::SetMainViewport();
 
+
+
     // 모든 샘플러들을 공통으로 사용 (뒤에서 더 추가됩니다.)
     m_context->VSSetSamplers(0, UINT(Graphics::sampleStates.size()),
                              Graphics::sampleStates.data());
@@ -323,6 +326,7 @@ void ExampleApp::Render() {
 
     const float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     vector<ID3D11RenderTargetView *> rtvs = {m_floatRTV.Get()};
+
 
     // Depth Only Pass (RTS 생략 가능)
     m_context->OMSetRenderTargets(0, NULL, m_depthOnlyDSV.Get());

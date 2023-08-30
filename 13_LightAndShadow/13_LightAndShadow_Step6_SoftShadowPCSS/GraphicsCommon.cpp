@@ -79,6 +79,7 @@ void Graphics::InitCommonStates(ComPtr<ID3D11Device> &device) {
     InitPipelineStates(device);
 }
 
+
 void Graphics::InitSamplers(ComPtr<ID3D11Device> &device) {
 
     D3D11_SAMPLER_DESC sampDesc;

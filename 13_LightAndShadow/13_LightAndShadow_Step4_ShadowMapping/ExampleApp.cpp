@@ -22,9 +22,9 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/DayCamp/",
-                          L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
-                          L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/",
+                          L"testEnvHDR.dds", L"testSpecularHDR.dds",
+                          L"testDiffuseHDR.dds", L"testBrdf.dds");
 
     // 후처리용 화면 사각형
     {

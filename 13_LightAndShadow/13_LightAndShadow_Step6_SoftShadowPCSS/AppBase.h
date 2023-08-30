@@ -28,6 +28,7 @@ class AppBase {
     AppBase();
     virtual ~AppBase();
 
+
     int Run();
     float GetAspectRatio() const;
 
@@ -117,6 +118,7 @@ class AppBase {
     // 렌더링 -> PostEffects -> PostProcess
     PostEffectsConstants m_postEffectsConstsCPU;
     ComPtr<ID3D11Buffer> m_postEffectsConstsGPU;
+
 
     PostProcess m_postProcess;
 
