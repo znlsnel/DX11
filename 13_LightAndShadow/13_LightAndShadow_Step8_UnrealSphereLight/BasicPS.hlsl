@@ -291,7 +291,12 @@ PixelShaderOutput main(PixelShaderInput input)
         if (lights[i].type)
         {
             // TODO: 여기서 SphereLight 구현
-            float3 representativePoint = lights[i].position;
+            float3 reflectDir = normalize(reflect(eyeWorld - input.posWorld, normalWorld));
+            float3 toLight = lights[i].position - input.posWorld;
+            
+            float3 CenterToRay = dot(reflectDir, toLight) * reflectDir - toLight;
+            float3 representativePoint = toLight + CenterToRay * saturate(lights[i].radius / length(CenterToRay));
+            representativePoint += input.posWorld;
             
             float3 lightVec = representativePoint - input.posWorld;
             //float3 lightVec = lights[i].position - input.posWorld;

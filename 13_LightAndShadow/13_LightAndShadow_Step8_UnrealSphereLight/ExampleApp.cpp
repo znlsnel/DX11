@@ -22,9 +22,9 @@ bool ExampleApp::Initialize() {
     if (!AppBase::Initialize())
         return false;
 
-    AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
-                          L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
-                          L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+    AppBase::InitCubemaps(L"../../Assets/Textures/Cubemaps/HDRI/",
+                          L"testEnvHDR.dds", L"testSpecularHDR.dds",
+                          L"testDiffuseHDR.dds", L"testBrdf.dds");
 
     // 후처리용 화면 사각형
     {
@@ -66,12 +66,12 @@ bool ExampleApp::Initialize() {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");
 
-        // auto meshes = GeometryGenerator::ReadFromFile(
-        //     "../Assets/Models/medieval_vagrant_knights/", "scene.gltf",
-        //     true);
+         auto meshes = GeometryGenerator::ReadFromFile(
+             "../../Models/ToyCar/glTF/", "ToyCar.gltf",
+             true);
 
         // 컴퓨터가 느릴 때는 간단한 물체로 테스트 하세요.
-        vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
+       // vector<MeshData> meshes = {GeometryGenerator::MakeSphere(0.4f, 50, 50)};
 
         // string path = "../Assets/Characters/armored-female-future-soldier/";
         // auto meshes = GeometryGenerator::ReadFromFile(path,
@@ -81,6 +81,9 @@ bool ExampleApp::Initialize() {
         // "/angel_armor_metalness.jpg"; meshes[0].normalTextureFilename = path
         // + "/angel_armor_normal.jpg"; meshes[0].roughnessTextureFilename =
         //     path + "/angel_armor_roughness.jpg";
+
+
+
 
         Vector3 center(0.0f, 0.0f, 2.0f);
         m_mainObj = make_shared<Model>(m_device, m_context, meshes);
