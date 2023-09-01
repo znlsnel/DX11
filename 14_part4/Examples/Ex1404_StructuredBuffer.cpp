@@ -64,7 +64,7 @@ bool Ex1404_StructuredBuffer::Initialize() {
 void Ex1404_StructuredBuffer::Update(float dt) {
     // 입자들의 위치를 바꿔주는 작업도 GPU에서 진행
     D3D11Utils::UpdateBuffer(m_context, m_CSConstsCPU, m_CSConstsGPU);
-}
+} 
 
 void Ex1404_StructuredBuffer::Render() {
 

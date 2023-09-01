@@ -83,8 +83,8 @@ void Ex1406_DensityField::Render() {
     // Timer timer(m_device);
     // timer.Start(m_context, true);
 
-    DissipateDensity();
     AdvectParticles();
+    DissipateDensity();
     DrawSprites();
 
     ComPtr<ID3D11Texture2D> backBuffer;
@@ -134,7 +134,9 @@ void Ex1406_DensityField::DrawSprites() {
     m_context->PSSetShader(m_pixelShader.Get(), 0, 0);
     m_context->CSSetShader(NULL, 0, 0);
     // TODO: m_context->OMSetBlendState(...)
-
+    const float blendColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_context->OMSetBlendState(Graphics::accumulateBS.Get(), blendColor,
+                               0xfffffff);
     m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
     m_context->VSSetShaderResources(0, 1, m_particles.GetAddressOfSRV());
     m_context->Draw(UINT(m_particles.m_cpu.size()), 0);

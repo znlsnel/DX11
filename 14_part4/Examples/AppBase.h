@@ -156,16 +156,16 @@ class AppBase {
     GlobalConstants m_reflectGlobalConstsCPU;
     GlobalConstants m_shadowGlobalConstsCPU[MAX_LIGHTS];
     ComPtr<ID3D11Buffer> m_globalConstsGPU;
-    ComPtr<ID3D11Buffer> m_reflectGlobalConstsGPU;
+    ComPtr<ID3D11Buffer> m_reflectGlobalConstsGPU; 
     ComPtr<ID3D11Buffer> m_shadowGlobalConstsGPU[MAX_LIGHTS];
-
+      
     // 공통으로 사용하는 텍스춰들
     ComPtr<ID3D11ShaderResourceView> m_envSRV;
-    ComPtr<ID3D11ShaderResourceView> m_irradianceSRV;
+    ComPtr<ID3D11ShaderResourceView> m_irradianceSRV; 
     ComPtr<ID3D11ShaderResourceView> m_specularSRV;
     ComPtr<ID3D11ShaderResourceView> m_brdfSRV;
-
-    bool m_lightRotate = false;
+         
+    bool m_lightRotate = false;  
     bool m_pauseAnimation = false;
 
     // 여러 예제들 공용

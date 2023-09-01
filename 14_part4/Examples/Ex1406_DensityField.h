@@ -22,14 +22,14 @@ class Ex1406_DensityField : public AppBase {
     virtual void Render() override;
 
     void DissipateDensity();
-    void AdvectParticles();
+    void AdvectParticles(); 
     void DrawSprites();
-
+     
   protected:
     StructuredBuffer<Particle> m_particles;
-    Texture2D m_densityTex;
+    Texture2D m_densityTex; 
 
-    // Shaders
+    // Shaders 
     ComPtr<ID3D11VertexShader> m_vertexShader;
     ComPtr<ID3D11PixelShader> m_pixelShader;
     ComPtr<ID3D11InputLayout> m_inputLayout;
@@ -38,4 +38,4 @@ class Ex1406_DensityField : public AppBase {
     ComPtr<ID3D11GeometryShader> m_spriteGS;
 };
 
-} // namespace hlab
+} // namespace hlab    

@@ -21,5 +21,8 @@ float4 main(PixelShaderInput input) : SV_TARGET
 {
     float dist = length(float2(0.5, 0.5) - input.texCoord) * 2;
     float scale = smootherstep(1 - dist);
-    return float4(input.color.rgb * scale, 1);
+    float4 returnV = float4(input.color.rgb * scale, 1);
+
+    return returnV;
+
 }
