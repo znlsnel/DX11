@@ -37,7 +37,9 @@ class AppBase {
 
     virtual bool Initialize();
     virtual bool InitScene();
-    virtual void UpdateGUI() {}
+    virtual void UpdateGUI() {
+    
+    }
     virtual void Update(float dt);
     virtual void UpdateLights(float dt);
     virtual void RenderDepthOnly();

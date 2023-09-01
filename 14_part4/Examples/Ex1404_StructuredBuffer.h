@@ -13,6 +13,11 @@ class Ex1404_StructuredBuffer : public AppBase {
         Vector3 color;
     };
 
+    struct CSData {
+        float velocity = 0.0f;
+        Vector3 dummy;
+    };
+
     Ex1404_StructuredBuffer();
 
     virtual bool Initialize() override;
@@ -23,6 +28,9 @@ class Ex1404_StructuredBuffer : public AppBase {
   protected:
     // Vertex Buffer (Compute Shader에서도 사용)
     StructuredBuffer<Particle> m_particles;
+    CSData m_CSConstsCPU; 
+    
+    ComPtr<ID3D11Buffer> m_CSConstsGPU;
 
     // Shaders
     ComPtr<ID3D11VertexShader> m_vertexShader;

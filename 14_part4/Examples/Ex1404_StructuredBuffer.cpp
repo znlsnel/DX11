@@ -56,12 +56,14 @@ bool Ex1404_StructuredBuffer::Initialize() {
     // Compute shader
     D3D11Utils::CreateComputeShader(m_device, L"Ex1404_StructuredBufferCS.hlsl",
                                     m_computeShader);
+    D3D11Utils::CreateConstBuffer(m_device, m_CSConstsCPU, m_CSConstsGPU);
 
     return true;
 }
 
 void Ex1404_StructuredBuffer::Update(float dt) {
     // 입자들의 위치를 바꿔주는 작업도 GPU에서 진행
+    D3D11Utils::UpdateBuffer(m_context, m_CSConstsCPU, m_CSConstsGPU);
 }
 
 void Ex1404_StructuredBuffer::Render() {
@@ -73,6 +75,8 @@ void Ex1404_StructuredBuffer::Render() {
     m_context->CSSetUnorderedAccessViews(0, 1, m_particles.GetAddressOfUAV(),
                                          NULL);
     m_context->CSSetShader(m_computeShader.Get(), 0, 0);
+    m_context->CSSetConstantBuffers(0, 1, m_CSConstsGPU.GetAddressOf());
+
     m_context->Dispatch(UINT(ceil(m_particles.m_cpu.size() / 256.0f)), 1, 1);
     AppBase::ComputeShaderBarrier();
 
@@ -89,15 +93,21 @@ void Ex1404_StructuredBuffer::Render() {
     m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), NULL);
     m_context->VSSetShader(m_vertexShader.Get(), 0, 0);
     m_context->PSSetShader(m_pixelShader.Get(), 0, 0);
-    m_context->CSSetShader(NULL, 0, 0);
-
+    m_context->CSSetShader(NULL, 0, 0);   
+     
     m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-    // StructuredBuffer<Particle> particles : register(t0);
+    // StructuredBuffer<Particle> particles : register(t0); 
     m_context->VSSetShaderResources(0, 1, m_particles.GetAddressOfSRV());
     m_context->Draw(UINT(m_particles.m_cpu.size()), 0);
+} 
+    
+void Ex1404_StructuredBuffer::UpdateGUI() {
+    // ImGui::SliderFloat("earthAngularVelocity",
+    //            &example->rasterization.earthAngularVelocity, 0.0f, 2.0f);
+    ImGui::SliderFloat("speed", &this->m_CSConstsCPU.velocity, 0.0f, 5.0f);
 }
 
-void Ex1404_StructuredBuffer::UpdateGUI() {}
+} // namespace hlab 
 
-} // namespace hlab
+// 밑/ 빗 == cos    
