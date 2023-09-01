@@ -16,10 +16,14 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     float sum = 0.0;
     for (uint i = 0; i < width; i++)
     {
-        // TODO:
+        float4 m = matTex[uint2(i, r)];
+        float4 v = vecTex[uint2(i, 0)];
+        
+        sum += dot(m, v);
     }
 
     // outputTex[dtID.xy].r = sum; // 행렬 벡터 곱하기
 
-    outputTex[dtID.xy].r += sum; // 반복 누적 테스트
-}
+    outputTex[dtID.xy].
+        r += sum; // 반복 누적 테스트
+    }

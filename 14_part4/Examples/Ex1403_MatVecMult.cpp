@@ -106,6 +106,7 @@ void Ex1403_MatVecMult::TestCPU() {
         size_t offset = 0;
         for (int r = 0; r < m_numRows; r++) {
 
+
             // 행렬 벡터 곱하기 테스트
             // m_myResult[r] = DotProduct(&m_myMat[offset], &m_myVec[0],
             // m_numCols));
