@@ -18,6 +18,19 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
           uint3 dtID : SV_DispatchThreadID)
 {
     // 힌트: (value 말고) key로 정렬하시면 됩니다.
+    uint i = dtID.x;
+        uint l = i ^ j; 
+        if (l > i)
+        {
+            if (((i & k) == 0) && (arr[i].key > arr[l].key) ||
+                        ((i & k) != 0) && (arr[i].key < arr[l].key))
+            {
+                Element temp = arr[i];
+                arr[i] = arr[l];
+                arr[l] = temp;
+               
+            }
+        }
     
     
 }

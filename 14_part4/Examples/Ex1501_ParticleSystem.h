@@ -39,6 +39,8 @@ class Ex1501_ParticleSystem : public AppBase {
 
     ComPtr<ID3D11ShaderResourceView> m_particlesSRV;
     ComPtr<ID3D11UnorderedAccessView> m_particlesUAV;
+
+    float particleTheta = -3.141592f;
 };
 
 } // namespace hlab

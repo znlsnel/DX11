@@ -541,6 +541,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONDOWN:
         if (!m_leftButton) {
             m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
+            
         }
         m_leftButton = true;
         OnMouseClick(LOWORD(lParam), HIWORD(lParam));

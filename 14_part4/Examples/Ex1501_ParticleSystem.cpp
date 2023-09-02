@@ -27,7 +27,7 @@ bool Ex1501_ParticleSystem::Initialize() {
         return false;
 
     // 1. 데이터 초기화 (최대 Particle 수가 정해져있는 구조)
-    m_particlesCPU.resize(2048);
+    m_particlesCPU.resize(8192);
 
     vector<Vector3> rainbow = {
         {1.0f, 0.0f, 0.0f},  // Red
@@ -83,32 +83,62 @@ void Ex1501_ParticleSystem::Update(float dt) {
     mt19937 gen(rd());
     uniform_real_distribution<float> randomTheta(-3.141592f, 3.141592f);
     uniform_real_distribution<float> randomSpeed(1.5f, 2.0f);
-    uniform_real_distribution<float> randomLife(0.0f, 1.0f);
+    uniform_real_distribution<float> randomLife(0.01f, 1.0f);
+    uniform_real_distribution<float> randomDir(-0.5f, 0.5f);
+
 
     // 마우스 클릭시 추가
-    int newCount = 50; // 한 프레임에 새로 만들어질 수 있는 파티클 개수
+    int mouseCount = 10; // 한 프레임에 새로 만들어질 수 있는 파티클 개수
     for (auto &p : m_particlesCPU) {
         // TODO:
-    }
+        if (m_leftButton && mouseCount > 0 && p.life < 0.0f) {
 
-    // 항상 추가하는 Source
-    newCount = 10;
-    for (auto &p : m_particlesCPU) {
+            Vector3 mousePos(m_mouseX / (float)m_screenWidth,
+                             m_mouseY / (float)m_screenHeight, 0.0f);
+                mousePos = mousePos * 2 - Vector3(1.0f, 1.0f, 0.0f);
+            mousePos.y *= -1;
+                mousePos.x = std::clamp(mousePos.x, -0.6f, 0.6f);
+                mousePos.y = std::clamp(mousePos.y, -0.6f, 0.6f);
 
-        // 비활성화되어 있는 입자를 찾으면 활성화하는 방식
-        if (p.life < 0.0f && newCount > 0) {
+                std::cout << "mouse X : " << mousePos.x << " Y : " << mousePos.y
+                      << std::endl;
 
             const float theta = randomTheta(gen);
             p.position =
                 Vector3(cos(theta), -sin(theta), 0.0) * randomLife(gen) * 0.1f +
+                mousePos;
+            p.velocity =
+                Vector3(randomDir(gen),0.0f, 0.0f) * randomSpeed(gen);
+            p.life = randomLife(gen) * 1.5f; // 수명 추가
+            mouseCount--;
+        }
+    }
+
+    // 항상 추가하는 Source
+    int newCount = 10;
+    particleTheta += 0.03;
+    if (particleTheta > 3.141592f)
+        particleTheta = -3.141592f;
+
+    for (auto &p : m_particlesCPU) {
+
+        // 비활성화되어 있는 입자를 찾으면 활성화하는 방식
+        if (p.life < 0.0f && newCount > 0) {
+            std::cout << "NEWEWEW" << std::endl;
+            const float theta = randomTheta(gen);
+            p.position =
+                Vector3(cos(theta), -sin(theta), 0.0) *
+                             randomLife(gen) * 0.1f +
                 Vector3(0.0f, -0.3f, 0.0f);
-            p.velocity = Vector3(-1.0f, 0.0f, 0.0) * randomSpeed(gen);
+
+            p.velocity = Vector3(cos(particleTheta), -sin(particleTheta), 0.0) *
+                         randomSpeed(gen);
             p.life = randomLife(gen) * 1.5f; // 수명 추가
             newCount--;
         }
     }
 
-    const Vector3 gravity = Vector3(0.0f, -9.8f, 0.0f);
+    const Vector3 gravity = Vector3(0.0f, -5.8f, 0.0f);
     const float cor = 0.5f; // Coefficient Of Restitution
     const float groundHeight = -0.8f;
 
@@ -121,8 +151,16 @@ void Ex1501_ParticleSystem::Update(float dt) {
         p.position += p.velocity * dt;
         p.life -= dt;
 
-        if (p.position.y < groundHeight && p.velocity.y < 0.0f) {
+        if (p.position.y < groundHeight ) {
             // TODO: ...
+            p.velocity.y *= -1;
+            p.velocity *= 0.95f;
+        }
+
+        if (p.position.x < groundHeight || p.position.x > 0.8f) {
+            // TODO: ...
+            p.velocity.x *= -1;
+            p.velocity *= 0.95f;
         }
 
         // TODO: ...

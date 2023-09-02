@@ -90,19 +90,19 @@ void BitonicSort::SortGPU(ComPtr<ID3D11Device> &device,
     context->CSSetUnorderedAccessViews(0, 2, nullUAV, NULL);
 }
 
-void BitonicSort::SortCPU(vector<Element> &arr) {
+void BitonicSort::SortCPU(vector<Element> &arr) { 
 
-    const size_t numElements = arr.size();
+    const size_t numElements = arr.size(); 
 
     for (uint32_t k = 2; k <= numElements; k *= 2)
         for (uint32_t j = k / 2; j > 0; j /= 2) {
 
-#pragma omp parallel for
+#pragma omp parallel for 
 
             for (int32_t i = 0; i < int32_t(numElements); i++) {
                 int32_t l = i ^ j;
                 if (l > i) {
-                    if (((i & k) == 0) && (arr[i].key > arr[l].key) ||
+                    if (((i & k) == 0) && (arr[i].key > arr[l].key) || 
                         ((i & k) != 0) && (arr[i].key < arr[l].key))
                         std::swap(arr[i], arr[l]);
                 }

@@ -24,7 +24,6 @@ void SphSimulation::Update(float dt) {
 }
 
 void SphSimulation::UpdateDensity() {
-
 #pragma omp parallel for
     for (int i = 0; i < m_particlesCpu.size(); i++) {
 
@@ -90,7 +89,7 @@ void SphSimulation::UpdateForces() {
             const Vector3 &v_j = m_particlesCpu[j].velocity;
 
             const float dist = (x_i - x_j).Length();
-
+            
             if (dist >= m_radius)
                 continue;
 
@@ -98,9 +97,19 @@ void SphSimulation::UpdateForces() {
                 continue;
 
             // 힌트: SphKernels::CubicSplineGrad() 사용
-            const Vector3 gradPressure = Vector3(0.0f);
+            const Vector3 gradPressure =
+                rho_i * m_mass *
+                (p_i / (rho_i * rho_i) + p_j / (rho_j * rho_j)) *
+                SphKernels::CubicSplineGrad(dist * 2.0f / m_radius) *
+                (x_i - x_j) / dist;
 
-            const Vector3 laplacianVelocity = Vector3(0.0f);
+            const Vector3 laplacianVelocity =
+                2.0f * m_mass / rho_i * (v_i - v_j) /
+                (x_ij.LengthSquared() + 0.01f * m_radius * m_radius) *
+                SphKernels::CubicSplineGrad(dist * 2.0f / m_radius) *
+                x_ij.Dot(x_ij / dist);
+            //const Vector3 gradPressure = Vector3(0.0f, 0.0f, 0.0f);
+            //const Vector3 laplacianVelocity = Vector3(0.0f, 0.0f, 0.0f);
 
             pressureForce -= m_mass / rho_i * gradPressure;
             viscosityForce += m_mass * m_viscosity * laplacianVelocity;

@@ -26,7 +26,7 @@ void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
     float3 right = float3(1, 0, 0);
 
     PixelShaderInput output;
-    output.pos.w = 1;
+    output.pos.w = 1; 
     output.color = input[0].color;
     
     output.pos.xyz = input[0].pos.xyz - hw * right - hw * up;

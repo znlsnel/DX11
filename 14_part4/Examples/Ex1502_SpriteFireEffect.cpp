@@ -77,13 +77,21 @@ void Ex1502_SpriteFireEffect::Update(float dt) {
     uniform_real_distribution<float> randomTheta(-3.141592f, 3.141592f);
     uniform_real_distribution<float> randomSpeed(1.5f, 2.0f);
     uniform_real_distribution<float> randomLife(0.0f, 1.0f);
+    uniform_real_distribution<float> randomDir(-1.0f, 1.0f);
 
     int newCount = 20; // 한 프레임에 새로 만들어질 수 있는 파티클 개수
     for (auto &p : m_particlesCPU) {
         if (p.life < 0.0f && newCount > 0) {
-
-            // TODO:
-
+            std::cout << "NNN" << std::endl;
+     //        TODO:
+            const float theta = randomTheta(gen);
+            p.position =
+                Vector3(cos(theta), -sin(theta), 0.0) * randomLife(gen) * 0.1f +
+                Vector3(0.0f, 0.0f, 0.0f);
+            p.velocity = Vector3(randomDir(gen), 0.0f, 0.0f) *
+                         randomSpeed(gen);
+            p.life = randomLife(gen);
+            p.radius = randomLife(gen);
             newCount--;
         }
     }
@@ -94,6 +102,11 @@ void Ex1502_SpriteFireEffect::Update(float dt) {
         if (AppBase::m_leftButton && p.life < 0.0f && newCount > 0) {
 
             // TODO:
+            const float theta = randomTheta(gen);
+            p.position = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
+            p.velocity = Vector3(cos(theta), -sin(theta), 0.0f) * randomSpeed(gen);
+            p.life = randomLife(gen);
+            p.radius = randomLife(gen) * 0.3f;
 
             newCount--;
         }
@@ -101,13 +114,15 @@ void Ex1502_SpriteFireEffect::Update(float dt) {
 
     // const Vector3 gravity = Vector3(0.0f, -9.8f, 0.0f);
     const Vector3 buoyancy = Vector3(0.0f, 2.0f, 0.0f);
-
+    const float speed = 0.3f * dt;
     int countActive = 0;
     for (auto &p : m_particlesCPU) {
 
         if (p.life < 0.0f)
             continue;
 
+        p.position += (p.velocity + buoyancy) * speed;
+        p.life -= dt*2.0F;
         // TODO:
 
         countActive++;
@@ -155,6 +170,8 @@ void Ex1502_SpriteFireEffect::DrawSprites() {
     m_context->VSSetShaderResources(0, 1, m_particlesSRV.GetAddressOf());
 
     // TODO:
+    m_context->PSSetShaderResources(0, 1, m_spriteSRV.GetAddressOf());
+
 
     m_context->PSSetSamplers(0, 1, Graphics::linearWrapSS.GetAddressOf());
     m_context->Draw(UINT(m_particlesCPU.size()), 0);
