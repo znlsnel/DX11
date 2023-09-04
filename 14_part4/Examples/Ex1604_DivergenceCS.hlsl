@@ -34,9 +34,9 @@ void main(uint3 dtID : SV_DispatchThreadID)
     if (bc[dtID.xyz] >= 0) // 가장자리 조건 주의
     {
         float div = 0.0;
-
+         
         [unroll]
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 6; i++) 
         {
             if (bc[dtID.xyz + offset[i]] == -1) // Dirichlet
             {
@@ -45,12 +45,14 @@ void main(uint3 dtID : SV_DispatchThreadID)
             if (bc[dtID.xyz + offset[i]] == -2) // Neumann
             {
                 // TODO:
-                // div += ...;                
+                div += dot(2 * velocity[dtID.xyz + offset[i]].xyz - velocity[dtID.xyz].xyz, float3(offset[i]));
+
             }
             else
             {
-                // TODO:
-                // div += ...;                
+                // TODO: 
+                div += dot(velocity[dtID.xyz + offset[i]].xyz, float3(offset[i]));
+
             }
         }
 

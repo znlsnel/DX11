@@ -4,7 +4,7 @@ namespace hlab {
 
 void StableFluids::Initialize(ComPtr<ID3D11Device> &device, const UINT width,
                               const UINT height) {
-        
+         
     m_width = width;
     m_height = height; 
 

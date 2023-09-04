@@ -109,9 +109,9 @@ int AppBase::Run() {
 bool AppBase::Initialize() {
 
     if (!InitMainWindow())
-        return false;
+        return false;  
 
-    if (!InitDirect3D())
+    if (!InitDirect3D())    
         return false;
 
     if (!InitGUI())
@@ -230,7 +230,7 @@ void AppBase::Update(float dt) {
                 std::max(0.01f, m_globalConstsCPU.lights[i].radius)) *
             Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
 
-    ProcessMouseControl();
+    //ProcessMouseControl();
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }

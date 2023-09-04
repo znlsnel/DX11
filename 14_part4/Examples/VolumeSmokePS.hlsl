@@ -96,7 +96,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         float3 uvw = GetUVW(posModel); // +uvwOffset; 미사용 
 
         // 물체 렌더링
-        /*{
+        {
             float3 objCenter = float3(0.15, 0.3, 0.5);
             float objRadius = 0.06;
             float dist = length((uvw - objCenter) * float3(2, 1, 1)) / objRadius;
@@ -106,21 +106,21 @@ float4 main(PixelShaderInput input) : SV_TARGET
                 color.rgb += float3(0, 0, 1) * color.a; // Blue ball
                 color.a = 0;
             
-                // 참고: 물체들을 레스터화로 먼저 렌더링 하고 깊이를 참고해서 블렌딩할 수도 있습니다.
+                 // 참고: 물체들을 레스터화로 먼저 렌더링 하고 깊이를 참고해서 블렌딩할 수도 있습니다.
             
                 break;
             }
-        }*/
+        }
         
-        float density = densityTex.SampleLevel(linearClampSampler, uvw, 0).r;
+     float density = densityTex.SampleLevel(linearClampSampler, uvw, 0).r;
 
-        float f1 = length(posModel + float3(-0.2, 0.0, 0.0)) - 0.3;
-        float f2 = length(posModel + float3(0.2, 0.0, 0.0)) - 0.3;
-        float sdf = min(f1, f2);
+    //    float f1 = length(posModel + float3(-0.2, 0.0, 0.0)) - 0.3;
+    //    float f2 = length(posModel + float3(0.2, 0.0, 0.0)) - 0.3;
+    //    float sdf = min(f1, f2);
         
-    //    float sdf = length(posModel) - 0.5;
-        if (sdf > 0.0)
-            density *= saturate(1.0 - sdf * 20.0);
+    ////    float sdf = length(posModel) - 0.5;
+    //    if (sdf > 0.0)
+    //        density *= saturate(1.0 - sdf * 20.0);
         
         
         // float lighting = lightingTex.SampleLevel(linearClampSampler, uvw, 0).r;

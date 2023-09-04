@@ -32,10 +32,11 @@ void main(uint3 dtID : SV_DispatchThreadID)
     float4 velOld = velocityOld.SampleLevel(linearClampSS, uvw, 0);
     float4 velNew = velocityNew.SampleLevel(linearClampSS, uvw, 0);
     // TODO:
-    // velocityUp[dtID] = ...
+    velocityUp[dtID] = lerp(velNew, velocityUp[dtID] + velNew - velOld, coeff);
     
     float denOld = densityOld.SampleLevel(linearClampSS, uvw, 0);
     float denNew = densityNew.SampleLevel(linearClampSS, uvw, 0);
     // TODO:
-    // densityUp[dtID] = ...    
+    densityUp[dtID] = lerp(denNew, densityUp[dtID] + denNew - denOld, coeff);
+
 }

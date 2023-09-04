@@ -22,14 +22,17 @@ void main(uint3 dtID : SV_DispatchThreadID)
     float4 velocitySum = float4(0, 0, 0, 0);
     float densitySum = 0.0;
     
+    uint3 dtIdUp = dtID * upScale;
     // [loop]
     for (int k = 0; k < upScale; k++)
         for (int j = 0; j < upScale; j++)
             for (int i = 0; i < upScale; i++)
             {
                 // TODO:
-                // velocitySum += ...;
-                // densitySum += ...; 
+                
+                velocitySum += velocityUp[dtIdUp + float3(i, j, k)];
+                densitySum += densityUp[dtIdUp + float3(i, j, k)];
+              //  // densitySum += ...; 
             }
     
     float scale = 1.0 / (upScale * upScale * upScale);

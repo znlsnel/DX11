@@ -33,14 +33,17 @@ void main(uint3 dtID : SV_DispatchThreadID)
 
     // TODO:
     // 주의: 샘플링된 속도에 dx를 곱해줘야 함
-    // float3 vel = ...;
+    float3 vel = velocityTemp[dtID.xyz].xyz * dx;
    
     // TODO:
     // 속도의 기준은 BaseGrid 해상도이고 Advection은 UpGrid에서 하기때문에 
     // 속도에 upScale을 곱해줍니다.
-    // float3 uvwBack = ...;
+    
+    float3 uvwBack = uvw - vel * dt * upScale;
+
     
     // TODO:
-    // density[dtID.xyz] = ...;
+    density[dtID.xyz] = densityTemp.SampleLevel(linearClampSS, uvwBack, 0) * 0.999;
+    velocity[dtID.xyz] = velocityTemp.SampleLevel(linearClampSS, uvwBack, 0) * 0.999;
     // velocity[dtID.xyz] = ...;
 }

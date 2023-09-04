@@ -29,10 +29,24 @@ void main(uint3 dtID : SV_DispatchThreadID)
     {
         float temp = 0.0;
 
+        [unroll]
         for (int i = 0; i < 6; i++)
-            temp += pressureTemp[dtID.xyz + offset[i]];
+        {
+            if (bc[dtID.xyz + offset[i]] == -1)
+            {
+                temp += -pressure[dtID.xyz];
+            }
+            else if (bc[dtID.xyz + offset[i]] == -2)
+            {
+                temp += pressure[dtID.xyz];
+                
+            }
+            else
+                temp += pressure[dtID.xyz + offset[i]];
+        }
 
         // TODO:
-        // pressure[dtID.xyz] = ...;
+        pressure[dtID.xyz] = (-divergence[dtID.xyz] + temp) / 6.0;
+
     }
 }

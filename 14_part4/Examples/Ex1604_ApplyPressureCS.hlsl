@@ -31,12 +31,13 @@ void main(uint3 dtID : SV_DispatchThreadID)
             if (bc[dtID.xyz + offset[i]] == -1) // Dirichlet
             {
                 // TODO:
-                // p[i] = ...;                
+                p[i] = -pressure[dtID.xyz];
             }
             else if (bc[dtID.xyz + offset[i]] == -2) // Neumann
             {
                 // TODO:
-                // p[i] = ...;                
+                // p[i] = ...;             
+                p[i] = pressure[dtID.xyz];
             }
             else
                 p[i] = pressure[dtID.xyz + offset[i]];

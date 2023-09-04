@@ -19,12 +19,12 @@ bool Ex1604_RealtimeSmoke::InitScene() {
 
     AppBase::m_camera.Reset(Vector3(0.0f, 0.0f, -4.22895f), 0.0f, 0.0f);
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
     AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
     AppBase::InitScene();
-
+     
     m_upScale = 2;
 
     // 컴퓨터가 느리면 해상도를 낮추세요 (예: 128/2, 64/2, 64/2)
