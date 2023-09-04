@@ -15,8 +15,9 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     uint2 down = uint2(dtID.x, dtID.y == 0 ? height - 1 : dtID.y - 1);
     
     // TODO: 압력의 gradient 계산
-    float2 dp = float2(0, 0);
+    float2 dp = float2(pressure[right] - pressure[left], pressure[up] - pressure[down]);
 
     // TODO: velocity 업데이트
+    velocity[dtID.xy] = velocity[dtID.xy] - dp * 0.5;
 }
 

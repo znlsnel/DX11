@@ -15,7 +15,7 @@ class SphSimulation {
         Vector3 velocity = Vector3(0.0f);
         Vector3 force = Vector3(0.0f);
         float density = 0.0f;
-        float pressure = 0.0f;
+        float pressure = 0.0f; 
 
         Vector3 color = Vector3(1.0f);
         float life = 0.0f;

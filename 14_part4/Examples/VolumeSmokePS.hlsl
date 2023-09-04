@@ -113,6 +113,16 @@ float4 main(PixelShaderInput input) : SV_TARGET
         }*/
         
         float density = densityTex.SampleLevel(linearClampSampler, uvw, 0).r;
+
+        float f1 = length(posModel + float3(-0.2, 0.0, 0.0)) - 0.3;
+        float f2 = length(posModel + float3(0.2, 0.0, 0.0)) - 0.3;
+        float sdf = min(f1, f2);
+        
+    //    float sdf = length(posModel) - 0.5;
+        if (sdf > 0.0)
+            density *= saturate(1.0 - sdf * 20.0);
+        
+        
         // float lighting = lightingTex.SampleLevel(linearClampSampler, uvw, 0).r;
         float lighting = 1.0; // 라이트맵이 없는 예제
 

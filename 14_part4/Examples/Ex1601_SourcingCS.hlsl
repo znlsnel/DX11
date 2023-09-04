@@ -20,7 +20,7 @@ float smootherstep(float x, float edge0 = 0.0f, float edge1 = 1.0f)
     return x * x * x * (3 * x * (2 * x - 5) + 10.0f);
 }
 
-[numthreads(32, 32, 1)]
+[numthreads(32, 32, 1)] 
 void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
           uint3 dtID : SV_DispatchThreadID)
 {
@@ -28,7 +28,7 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     density.GetDimensions(width, height);
 
     // 약간의 Dissipation
-    density[dtID.xy] = max(0.0, density[dtID.xy] - 0.001);
+   // density[dtID.xy] = max(0.0, density[dtID.xy] - 0.001); 
     
     // unsigned int라서 마우스 입력이 없을 경우 CPU 코드에서 i = -1
     // 오버플로우로 인해 width 보다 큰 값으로 설정

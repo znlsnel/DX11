@@ -25,13 +25,15 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     uint2 up = uint2(dtID.x, dtID.y == height - 1 ? 0 : dtID.y + 1);
     uint2 down = uint2(dtID.x, dtID.y == 0 ? height - 1 : dtID.y - 1);
 
-    // float2 eta = ... ;
-
-    //if (length(eta) < 1e-5)
-    //    return;
+    float2 eta = float2((abs(vorticity[right]) - abs(vorticity[left])) / (2.0 * dx.x),
+    -(abs(vorticity[up]) - abs(vorticity[down])) / (2.0 * dx.y));
     
-    // float3 psi = ..;
-    // float3 omega = ...;
+    float etaLength = length(eta);
+    if (etaLength < 1e-5)
+        return;
+    
+    float3 psi = float3(normalize(eta).xy, 0.0);
+    float3 omega = float3(0, 0, vorticity[dtID.xy]);
 
-    // velocity[dtID.xy] += ...;
+    velocity[dtID.xy] += (0.2 * cross(psi, omega).xy * dx);
 }

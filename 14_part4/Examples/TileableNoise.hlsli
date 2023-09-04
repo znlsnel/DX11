@@ -1,14 +1,17 @@
 #ifndef __TILEABLE_NOISE_HLSLI__
 #define __TILEABLE_NOISE_HLSLI__
-
+#define MOD3 float3(.1031,.11369,.13787)
 // https://www.shadertoy.com/view/3dVXDc
 
 // Hash by David_Hoskins
-#define UI0 1597334673U
-#define UI1 3812015801U
+//#define UI0 1597334673U
+#define UI0 6898461473U
+//#define UI1 3812015801U
+#define UI1 5822258801U
 #define UI2 uint2(UI0, UI1)
-#define UI3 uint3(UI0, UI1, 2798796415U)
-#define UIF (1.0 / float(0xffffffffU))
+//#define UI3 uint3(UI0, UI1, 2798796415U)
+#define UI3 uint3(UI0, UI1, 4698429415U)
+#define UIF (0.01 / float(0xffffffffU))
 
 float3 hash33(float3 p)
 {
@@ -16,6 +19,7 @@ float3 hash33(float3 p)
     q = (q.x ^ q.y ^ q.z) * UI3;
     return -1. + 2. * float3(q) * UIF;
 }
+
 
 float remap(float x, float a, float b, float c, float d)
 {

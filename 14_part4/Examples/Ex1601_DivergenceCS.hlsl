@@ -19,10 +19,18 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     uint2 up = uint2(dtID.x, dtID.y == height - 1 ? 0 : dtID.y + 1);
     uint2 down = uint2(dtID.x, dtID.y == 0 ? height - 1 : dtID.y - 1);
 
-    // float2 du = ...;
+    float2 Dleft = velocity.SampleLevel(linearWrapSS, left, 0);
+    float2 DRight = velocity.SampleLevel(linearWrapSS, right, 0);
+    float2 DUp = velocity.SampleLevel(linearWrapSS, up, 0); 
+    float2 DDown = velocity.SampleLevel(linearWrapSS, down, 0);
 
-    // divergence[dtID.xy] = ...;
     
+    
+    //divergence[dtID.xy] = 0.5 * (DRight - Dleft).x
+    //+ (DUp - DDown).y;
+    
+    divergence[dtID.xy] = 0.5 * (velocity[right].x - velocity[left].x + velocity[up].y - velocity[down].y);
+     
     pressure[dtID.xy] = 0.0;
     pressureTemp[dtID.xy] = 0.0;
 }

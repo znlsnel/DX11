@@ -7,22 +7,22 @@
 
 namespace hlab {
 
-using namespace std;
-using namespace DirectX;
-using namespace DirectX::SimpleMath;
-
-Ex1602_CurlNoise::Ex1602_CurlNoise() : AppBase() {}
-
-bool Ex1602_CurlNoise::Initialize() {
+using namespace std; 
+using namespace DirectX;      
+using namespace DirectX::SimpleMath;   
+ 
+Ex1602_CurlNoise::Ex1602_CurlNoise() : AppBase() {} 
+    
+bool Ex1602_CurlNoise::Initialize() { 
     cout << "Ex1602_CurlNoise::Initialize()" << endl;
 
     AppBase::m_screenWidth = 1024;
-    AppBase::m_screenHeight = 1024;
+    AppBase::m_screenHeight = 1024;   
     AppBase::m_backBufferFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
     if (!AppBase::Initialize())
-        return false;
-
+        return false; 
+      
     // 1. 데이터 초기화
     m_particlesCPU.resize(m_screenWidth);
 
@@ -42,13 +42,13 @@ bool Ex1602_CurlNoise::Initialize() {
     for (auto &p : m_particlesCPU) {
         p.position = Vector3(dp(gen), dp(gen), 1.0f);
         p.color = rainbow[dc(gen)];
-    }
-
-    D3D11Utils::CreateStructuredBuffer(
-        m_device, UINT(m_particlesCPU.size()), sizeof(Particle),
-        m_particlesCPU.data(), m_particlesGPU, m_particlesSRV, m_particlesUAV);
-
-    // Vertex Shader
+    }    
+        
+    D3D11Utils::CreateStructuredBuffer( 
+        m_device, UINT(m_particlesCPU.size()), sizeof(Particle),  
+        m_particlesCPU.data(), m_particlesGPU, m_particlesSRV, m_particlesUAV );
+      
+    // Vertex Shader 
     const vector<D3D11_INPUT_ELEMENT_DESC> inputElements = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
          D3D11_INPUT_PER_VERTEX_DATA, 0}}; // Dummy

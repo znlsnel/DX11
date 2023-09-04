@@ -5,19 +5,19 @@
 #include <random>
 
 namespace hlab {
-
+           
 using namespace std;
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-Ex1601_StableFluids::Ex1601_StableFluids() : AppBase() {}
+Ex1601_StableFluids::Ex1601_StableFluids() : AppBase() {} 
 
 bool Ex1601_StableFluids::Initialize() {
-
+         
     cout << "Ex1601_StableFluids::Initialize()" << endl;
-
+     
     m_screenWidth = 1024;
-    m_screenHeight = 1024;
+    m_screenHeight = 1024; 
 
     AppBase::m_backBufferFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
@@ -57,21 +57,21 @@ void Ex1601_StableFluids::Update(float dt) {
             m_stableFluids.m_constsCPU.sourcingDensity = rainbow[(color++) % 7];
             m_stableFluids.m_constsCPU.sourcingVelocity = Vector2(0.0f);
 
-        } else {
+        } else { 
             Vector2 ndcVel = Vector2(m_mouseNdcX, -m_mouseNdcY) -
                              Vector2(m_prevMouseNdcX, -m_prevMouseNdcY);
             m_stableFluids.m_constsCPU.sourcingVelocity = ndcVel * 10.0f;
         }
-    } else {
-        m_stableFluids.m_constsCPU.i = -1; // uint의 Overflow 이용
-    }
-
-    m_prevLeftButton = AppBase::m_leftButton;
+    } else { 
+        m_stableFluids.m_constsCPU.i = -1; // uint의  Overflow 이용
+    }  
+     
+    m_prevLeftButton = AppBase::m_leftButton;  
     m_prevMouseNdcX = AppBase::m_mouseNdcX;
-    m_prevMouseNdcY = AppBase::m_mouseNdcY;
-
-    m_stableFluids.Update(m_device, m_context, dt);
-}
+    m_prevMouseNdcY = AppBase::m_mouseNdcY;      
+        
+    m_stableFluids.Update(m_device, m_context, dt); 
+} 
 
 void Ex1601_StableFluids::Render() {
 

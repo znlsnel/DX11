@@ -26,5 +26,17 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     uint2 up = uint2(dtID.x, dtID.y == height - 1 ? 0 : dtID.y + 1);
     uint2 down = uint2(dtID.x, dtID.y == 0 ? height - 1 : dtID.y - 1);
     
-    // pressureOut[dtID.xy] = ...;
+    //float NeighborValue = pressureTemp.SampleLevel(linearWrapSS, left, 0);
+    //NeighborValue += pressureTemp.SampleLevel(linearWrapSS, right, 0);
+    //NeighborValue += pressureTemp.SampleLevel(linearWrapSS, up, 0);
+    //NeighborValue += pressureTemp.SampleLevel(linearWrapSS, down, 0);
+    
+    float NeighborValue = pressureTemp[left];
+    NeighborValue += pressureTemp[right];
+    NeighborValue += pressureTemp[up];
+    NeighborValue += pressureTemp[down];
+    
+    
+    pressureOut[dtID.xy] = 0.25 * ( -divergence[dtID.xy] + NeighborValue);
+
 }

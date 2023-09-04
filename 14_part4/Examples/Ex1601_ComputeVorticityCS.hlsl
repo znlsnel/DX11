@@ -13,6 +13,12 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     uint2 right = uint2(dtID.x == width - 1 ? 0 : dtID.x + 1, dtID.y);
     uint2 up = uint2(dtID.x, dtID.y == height - 1 ? 0 : dtID.y + 1);
     uint2 down = uint2(dtID.x, dtID.y == 0 ? height - 1 : dtID.y - 1);
-    
-    // TODO: vorticity 계산    
+  
+    //TODO:
+    //vorticity 계산
+
+    vorticity[dtID.xy] = ((velocity[right].y - velocity[left].y) / (2.0 * dx.x)
+    - (velocity[up].x - velocity[down].x) / (2.0 * dx.y));
+  //vorticity[dtID.xy] = 0.0;
+
 }

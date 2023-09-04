@@ -4,20 +4,20 @@ namespace hlab {
 
 void StableFluids::Initialize(ComPtr<ID3D11Device> &device, const UINT width,
                               const UINT height) {
-
+        
     m_width = width;
-    m_height = height;
+    m_height = height; 
 
-    // Update const buffer
+    // Update const buffer 
     m_constsCPU.dt = 0.0f;
-    m_constsCPU.viscosity = 1000.0f;
-    m_constsCPU.sourcingVelocity = Vector2(-0.1f, 0.0f);
-    m_constsCPU.sourcingDensity = Vector4(1.0f);
-    m_constsCPU.i = -1;
+    m_constsCPU.viscosity = 0.1f;  
+    m_constsCPU.sourcingVelocity = Vector2(-0.1f, 0.0f);    
+    m_constsCPU.sourcingDensity = Vector4(1.0f);  
+    m_constsCPU.i = -1;  
     m_constsCPU.j = -1;
-
-    // Initialize const buffer
-    D3D11Utils::CreateConstBuffer(device, m_constsCPU, m_constsGPU);
+      
+    // Initialize const buffer 
+    D3D11Utils::CreateConstBuffer(device, m_constsCPU, m_constsGPU); 
 
     // Initialize shaders
     D3D11Utils::CreateComputeShader(device, L"Ex1601_AdvectionCS.hlsl",
@@ -55,7 +55,7 @@ void StableFluids::Initialize(ComPtr<ID3D11Device> &device, const UINT width,
 void StableFluids::Update(ComPtr<ID3D11Device> &device,
                           ComPtr<ID3D11DeviceContext> &context, float dt) {
 
-    m_constsCPU.dt = dt;
+    m_constsCPU.dt = dt;  
 
     D3D11Utils::UpdateBuffer(context, m_constsCPU, m_constsGPU);
     context->CSSetConstantBuffers(0, 1, m_constsGPU.GetAddressOf());
@@ -64,12 +64,12 @@ void StableFluids::Update(ComPtr<ID3D11Device> &device,
                                             Graphics::linearWrapSS.Get()};
     context->CSSetSamplers(0, 2, samplerStates);
 
-    Sourcing(context);
-    Diffuse(context);
-    Projection(context);
-    Advection(context);
-}
-
+    Sourcing(context); 
+    Diffuse(context); 
+    Projection(context);  
+    Advection(context);   
+} 
+ 
 void StableFluids::ComputeShaderBarrier(ComPtr<ID3D11DeviceContext> &context) {
     ID3D11ShaderResourceView *nullSRV[2] = {0, 0};
     context->CSSetShaderResources(0, 2, nullSRV);
@@ -85,16 +85,16 @@ void StableFluids::Sourcing(ComPtr<ID3D11DeviceContext> &context) {
     context->CSSetShader(m_sourcingCS.Get(), 0, 0);
     context->Dispatch(UINT(ceil(m_width / 32.0f)), UINT(ceil(m_height / 32.0f)),
                       1);
-    ComputeShaderBarrier(context);
-
+    ComputeShaderBarrier(context); 
+      
     // Vorticity confinemenet
     context->CSSetShaderResources(0, 1, m_velocity.GetAddressOfSRV());
     context->CSSetUnorderedAccessViews(0, 1, m_vorticity.GetAddressOfUAV(),
                                        NULL);
-    context->CSSetShader(m_computeVorticityCS.Get(), 0, 0);
+    context->CSSetShader(m_computeVorticityCS.Get(), 0, 0); 
     context->Dispatch(UINT(ceil(m_width / 32.0f)), UINT(ceil(m_height / 32.0f)),
                       1);
-    ComputeShaderBarrier(context);
+    ComputeShaderBarrier(context); 
 
     context->CSSetShaderResources(0, 1, m_vorticity.GetAddressOfSRV());
     context->CSSetUnorderedAccessViews(0, 1, m_velocity.GetAddressOfUAV(),
@@ -133,7 +133,7 @@ void StableFluids::Diffuse(ComPtr<ID3D11DeviceContext> &context) {
 
         ComputeShaderBarrier(context);
     }
-}
+} 
 
 void StableFluids::Projection(ComPtr<ID3D11DeviceContext> &context) {
 
@@ -169,7 +169,7 @@ void StableFluids::Projection(ComPtr<ID3D11DeviceContext> &context) {
         context->Dispatch(UINT(ceil(m_width / 32.0f)),
                           UINT(ceil(m_height / 32.0f)), 1);
         ComputeShaderBarrier(context);
-    }
+    } 
 
     // Apply pressure
     context->CSSetShaderResources(0, 1, m_pressure.GetAddressOfSRV());
@@ -177,10 +177,10 @@ void StableFluids::Projection(ComPtr<ID3D11DeviceContext> &context) {
                                        NULL);
     context->CSSetShader(m_applyPressureCS.Get(), 0, 0);
     context->Dispatch(UINT(ceil(m_width / 32.0f)), UINT(ceil(m_height / 32.0f)),
-                      1);
+                      1); 
     ComputeShaderBarrier(context);
-}
-
+} 
+ 
 void StableFluids::Advection(ComPtr<ID3D11DeviceContext> &context) {
 
     context->CopyResource(m_velocityTemp.GetTexture(), m_velocity.GetTexture());
@@ -189,15 +189,15 @@ void StableFluids::Advection(ComPtr<ID3D11DeviceContext> &context) {
     ID3D11ShaderResourceView *srvs[2] = {m_velocityTemp.GetSRV(),
                                          m_densityTemp.GetSRV()};
     ID3D11UnorderedAccessView *uavs[2] = {m_velocity.GetUAV(),
-                                          m_density.GetUAV()};
+                                          m_density.GetUAV()};  
 
     context->CSSetShaderResources(0, 2, srvs);
     context->CSSetUnorderedAccessViews(0, 2, uavs, NULL);
 
-    context->CSSetShader(m_advectionCS.Get(), 0, 0);
+    context->CSSetShader(m_advectionCS.Get(), 0, 0); 
     context->Dispatch(UINT(ceil(m_width / 32.0f)), UINT(ceil(m_height / 32.0f)),
                       1);
     ComputeShaderBarrier(context);
 }
-
+ 
 } // namespace hlab

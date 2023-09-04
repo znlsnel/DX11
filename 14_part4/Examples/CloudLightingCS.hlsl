@@ -28,7 +28,7 @@ float3 GetUVW(float3 posModel)
 float LightRay(float3 posModel, float3 lightDir)
 {
     // ±ÙÃ³¸¸ Å½»ö
-    int numSteps = 128 / 4;
+    int numSteps = 128 / 1;
     float stepSize = 2.0 / float(numSteps);
     // float absorptionCoeff = 5.0;
 

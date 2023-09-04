@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/simd/common.h>
 
+
 namespace hlab {
 
 using namespace std;
@@ -14,21 +15,21 @@ using namespace DirectX::SimpleMath;
 using namespace glm;
 
 Ex1603_Cloud::Ex1603_Cloud() : AppBase() {}
-
-bool Ex1603_Cloud::InitScene() {
+ 
+bool Ex1603_Cloud::InitScene() { 
 
     cout << "Ex1603_Cloud::InitScene()" << endl;
-
+     
     AppBase::m_camera.Reset(Vector3(0.0f, 0.0f, -2.5f), 0.0f, 0.0f);
-
+      
     // https://polyhaven.com/a/syferfontein_18d_clear_puresky
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds", 
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds"); 
 
     AppBase::InitScene();
-
+      
     // Volume 쉐이더는 별도로 초기화
     Graphics::InitVolumeShaders(m_device);
 
@@ -49,7 +50,7 @@ bool Ex1603_Cloud::InitScene() {
         DXGI_FORMAT_R16_FLOAT, {});
 
     // Generate cloud volume data
-    m_volumeConstsCpu.uvwOffset = Vector3(0.0f);
+    m_volumeConstsCpu.uvwOffset = Vector3(0.0f); 
     D3D11Utils::CreateConstBuffer(m_device, m_volumeConstsCpu,
                                   m_volumeConstsGpu);
     D3D11Utils::CreateComputeShader(m_device, L"CloudDensityCS.hlsl",
