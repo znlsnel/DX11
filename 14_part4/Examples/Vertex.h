@@ -25,6 +25,7 @@ struct SkinnedVertex {
 
     float blendWeights[8] = {0.0f, 0.0f, 0.0f, 0.0f,
                              0.0f, 0.0f, 0.0f, 0.0f};  // BLENDWEIGHT0 and 1
+
     uint8_t boneIndices[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // BLENDINDICES0 and 1
 
     // boneWeights가 최대 8개라고 가정 (Luna 교재에서는 4개)

@@ -26,9 +26,9 @@ bool Ex1701_SkeletalAnimation::InitScene() {
                             0.741502f);
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
 
     AppBase::InitScene();
 
@@ -50,13 +50,13 @@ bool Ex1701_SkeletalAnimation::InitScene() {
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
         auto mesh = GeometryGenerator::MakeSquare(5.0);
-        string path = "../Assets/Textures/PBR/stringy-marble-ue/";
-        mesh.albedoTextureFilename = path + "stringy_marble_albedo.png";
+        string path = "../Assets/Textures/PBR/black-tile1-ue/";
+        mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
         mesh.emissiveTextureFilename = "";
-        mesh.aoTextureFilename = path + "stringy_marble_ao.png";
-        mesh.metallicTextureFilename = path + "stringy_marble_Metallic.png";
-        mesh.normalTextureFilename = path + "stringy_marble_Normal-dx.png";
-        mesh.roughnessTextureFilename = path + "stringy_marble_Roughness.png";
+        mesh.aoTextureFilename = path + "black-tile1_ao.png";
+        mesh.metallicTextureFilename = path + "black-tile1_Metallic.png";
+        mesh.normalTextureFilename = path + "black-tile1_Normal-dx.png";
+        mesh.roughnessTextureFilename = path + "black-tile1_Roughness.png";
 
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.7f);
@@ -79,14 +79,14 @@ bool Ex1701_SkeletalAnimation::InitScene() {
     {
         string path = "../Assets/Characters/Mixamo/";
         vector<string> clipNames = {
-            "CatwalkIdle.fbx", "CatwalkIdleToWalkForward.fbx",
-            "CatwalkWalkForward.fbx", "CatwalkWalkStop.fbx",
-            "BreakdanceFreezeVar2.fbx"};
+            "Idle.fbx", "walk_start.fbx",
+            "walk.fbx", "walk_end.fbx",
+            "dance.fbx"};
 
         AnimationData aniData;
 
         auto [meshes, _] =
-            GeometryGenerator::ReadAnimationFromFile(path, "character.fbx");
+            GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
 
         for (auto &name : clipNames) {
             auto [_, ani] =
@@ -122,7 +122,19 @@ void Ex1701_SkeletalAnimation::UpdateLights(float dt) {
 void Ex1701_SkeletalAnimation::Update(float dt) {
     AppBase::Update(dt);
 
-    static int frameCount = 0;
+    //std::cout << dt << std::endl;
+
+    static float currTime = 0;
+
+    //currTime += dt;
+    //if (currTime < 1.0f / 60.0f)
+    //    return;
+    //
+    //currTime = 0.0f;
+
+
+    static float frameCount = 0;
+    static int state = 0;
 
     // States
     // 0: idle
@@ -131,28 +143,76 @@ void Ex1701_SkeletalAnimation::Update(float dt) {
     // 3: walk to stop
     // 4: dance
 
-    static int state = 0;
+    size_t animSize = m_character->m_aniData.clips[state].keys[0].size();
+    bool isLastFrame = animSize <= frameCount;
+       // /*animSize - frameCount < 20 || */(float)frameCount / (float)animSize > 0.9; 
 
-    // TODO:
-    // 간단한 모션 그래프 구현
-    // "Motion Graphs" by Kovar et al. ACM SIGGRAPH 2002
-
-    // 힌트:
-    // if (AppBase::m_keyPressed[VK_UP]) , VK_RIGHT, VK_LEFT, VK_UP
-    // if (frameCount == m_character->m_aniData.clips[state].keys[0].size())
-    // m_character->m_aniData.accumulatedRootTransform =
-    //     Matrix::CreateRotationY(3.141592f * 60.0f / 180.0f * dt) *
-    //     m_character->m_aniData.accumulatedRootTransform
-
-    // 주의: frameCount = 0;
-
-    if (state == 0) { // 정지 상태
-        // TODO:
+    if (AppBase::m_keyPressed[VK_SPACE] || state == 4) {
+        if (state != 4) {
+            state = 4;
+            isLastFrame = true;
+        } else {
+            if (isLastFrame)
+                state = 0;
+        }
     }
+
+    else if (state == 0) 
+    { // 정지 상태
+        // TODO:
+        if (AppBase::m_keyPressed[VK_UP]) {
+            state = 1;
+            isLastFrame = true;
+        }
+    }  
+    else if (state == 1) 
+    {
+        if (AppBase::m_keyPressed[VK_UP]) {
+            if (isLastFrame)
+                state = 2;
+        } else {
+            state = 3;
+            isLastFrame = true;
+        }
+    } 
+     
+    else if (state == 2)
+    {
+        if (AppBase::m_keyPressed[VK_UP] == false) {
+            state = 3;
+            isLastFrame = true; 
+        } 
+
+        if (AppBase::m_keyPressed[VK_RIGHT]) {
+            m_character->m_aniData.accumulatedRootTransform =
+                Matrix::CreateRotationY(3.141592f * 120.0f / 180.0f * dt) *
+                m_character->m_aniData.accumulatedRootTransform;
+        }
+        if (AppBase::m_keyPressed[VK_LEFT]) {
+            m_character->m_aniData.accumulatedRootTransform =
+                Matrix::CreateRotationY(-3.141592f * 120.0f / 180.0f * dt) *
+                m_character->m_aniData.accumulatedRootTransform;
+        }
+
+    } 
+
+    else if (state == 3) 
+    {
+        if (AppBase::m_keyPressed[VK_UP]) {
+            state = 1;
+            isLastFrame = true;
+        } else if(isLastFrame) {
+            state = 0; 
+        }
+    }
+
+    if (isLastFrame)
+        frameCount = 0;
 
     m_character->UpdateAnimation(m_context, state, frameCount);
 
-    frameCount += 1;
+    frameCount += dt * 60;
+    std::cout << "dt : " << dt << std::endl;
 }
 
 void Ex1701_SkeletalAnimation::Render() {

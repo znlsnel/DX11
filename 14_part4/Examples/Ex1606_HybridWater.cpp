@@ -22,9 +22,9 @@ bool Ex1606_HybridWater::InitScene() {
                             0.00436338f);
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
     AppBase::m_globalConstsCPU.strengthIBL = 0.5f;
     AppBase::InitScene();
 
@@ -209,12 +209,13 @@ void Ex1606_HybridWater::Update(float dt) {
     }
 }
 
+
 void Ex1606_HybridWater::Projection() {
 
     // Backup old
     m_context->CopyResource(m_velocityTemp.GetTexture(),
                             m_velocity.GetTexture());
-
+     
     // Compute divergence and determine boundary conditions
     m_context->CSSetShaderResources(0, 1, m_velocityTemp.GetAddressOfSRV());
     ID3D11UnorderedAccessView *uavs[5] = {

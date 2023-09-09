@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
         cout << argv[1] << " is not a valid example number" << endl;
     }
 
-    if (!app->Initialize()) {
+     if (!app->Initialize()) {
         cout << "Initialization failed." << endl;
         return -1;
     }

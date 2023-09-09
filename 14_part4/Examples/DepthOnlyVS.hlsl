@@ -34,9 +34,10 @@ float4 main(VertexShaderInput input) : SV_POSITION
     for(int i = 0; i < 8; ++i)
     {
         // TODO: 
+    posModel += weights[i] * mul(float4(input.posModel, 1.0), boneTransforms[indices[i]]);
     }
 
-    // input.posModel = posModel;
+     input.posModel = posModel;
 
 #endif
     

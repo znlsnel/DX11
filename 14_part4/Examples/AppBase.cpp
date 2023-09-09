@@ -666,7 +666,7 @@ void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
     m_globalConstsCPU.invViewProj = m_globalConstsCPU.viewProj.Invert();
 
     m_reflectGlobalConstsCPU = m_globalConstsCPU;
-    memcpy(&m_reflectGlobalConstsCPU, &m_globalConstsCPU,
+    memcpy(&m_reflectGlobalConstsCPU, &m_globalConstsCPU, 
            sizeof(m_globalConstsCPU));
     m_reflectGlobalConstsCPU.view = (refl * viewRow).Transpose();
     m_reflectGlobalConstsCPU.viewProj = (refl * viewRow * projRow).Transpose();

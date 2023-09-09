@@ -52,6 +52,11 @@ class Model {
     virtual void Render(ComPtr<ID3D11DeviceContext> &context);
     virtual void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context,
                                  int clipId, int frame);
+    virtual void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context,
+                                 int clipId, float frame);
+    virtual void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context,
+                                 int currClipId, int nextClipId, int frame);
+
     virtual void RenderNormals(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);

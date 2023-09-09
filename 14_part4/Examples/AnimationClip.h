@@ -98,7 +98,7 @@ struct AnimationData {
             }
 
             // TODO: parentMatrix »ç¿ë
-            // boneTransforms[boneId] = ...;
+            boneTransforms[boneId] =  key.GetTransform() *  parentMatrix;
         }
     }
 };

@@ -3,6 +3,7 @@
 // Vertex Shader에서도 텍스춰 사용
 Texture2D g_heightTexture : register(t0);
 
+
 PixelShaderInput main(VertexShaderInput input)
 {
     // 뷰 좌표계는 NDC이기 때문에 월드 좌표를 이용해서 조명 계산
@@ -41,15 +42,17 @@ PixelShaderInput main(VertexShaderInput input)
     // (float3x3)boneTransforms 캐스팅으로 Translation 제외
     for(int i = 0; i < 8; ++i)
     {
-        // TODO:
+        posModel += weights[i] * mul(float4(input.posModel, 1.0), boneTransforms[indices[i]]);
+        normalModel += weights[i] * mul(input.normalModel, (float3x3)boneTransforms[indices[i]]);
+        tangentModel += weights[i] * mul(input.tangentModel, (float3x3)boneTransforms[indices[i]]);
     }
 
-    //input.posModel = posModel;
-    //input.normalModel = normalModel;
-    //input.tangentModel = tangentModel;
+    input.posModel = posModel;
+    input.normalModel = normalModel;
+    input.tangentModel = tangentModel;
 
 #endif
-
+   
     //참고: windTrunk, windLeaves 옵션도 skinnedMesh처럼 매크로 사용 가능
     if (windTrunk != 0.0)
     {

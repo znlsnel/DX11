@@ -32,6 +32,7 @@ class Ex1701_SkeletalAnimation : public AppBase {
     shared_ptr<Model> m_ground;
 
     shared_ptr<SkinnedMeshModel> m_character;
+
 };
 
 } // namespace hlab

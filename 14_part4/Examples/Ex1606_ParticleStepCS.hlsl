@@ -68,6 +68,7 @@ void main(uint3 gId : SV_GroupID, uint3 dtID : SV_DispatchThreadID)
 
             sortElements[dtID.x].key = MinCornerCell(particles[ref.value].pos);
             particles[ref.value] = p;
+           
         }
         else
         {
