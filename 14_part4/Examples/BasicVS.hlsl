@@ -71,10 +71,10 @@ PixelShaderInput main(VertexShaderInput input)
         float3 windVel = float3(sin(input.posModel.x * 100.0 + globalTime * 0.1)
                                 * cos(input.posModel.y * 100 + globalTime * 0.1), 0, 0)
                                 * sin(globalTime * 10.0);
-
-        // float3 coeff = windLeaves * ... ;
         
-        // input.posModel.xyz += coeff;
+        float3 coeff = (1.0 - input.texcoord.y) * windLeaves * dot(input.normalModel, windVel) * input.normalModel;
+        
+        input.posModel.xyz += coeff;
     }
     
     output.posModel = input.posModel;

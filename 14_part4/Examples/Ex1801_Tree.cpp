@@ -20,9 +20,9 @@ bool Ex1801_Tree::InitScene() {
     AppBase::m_postProcess.m_combineFilter.m_constData.strength = 0.3f;
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
 
     AppBase::m_globalConstsCPU.strengthIBL = 1.0f;
 
@@ -32,13 +32,13 @@ bool Ex1801_Tree::InitScene() {
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
         auto mesh = GeometryGenerator::MakeSquare(5.0, {10.0f, 10.0f});
-        string path = "../Assets/Textures/PBR/stringy-marble-ue/";
-        mesh.albedoTextureFilename = path + "stringy_marble_albedo.png";
+        string path = "../Assets/Textures/PBR/black-tile1-ue/";
+        mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
         mesh.emissiveTextureFilename = "";
-        mesh.aoTextureFilename = path + "stringy_marble_ao.png";
-        mesh.metallicTextureFilename = path + "stringy_marble_Metallic.png";
-        mesh.normalTextureFilename = path + "stringy_marble_Normal-dx.png";
-        mesh.roughnessTextureFilename = path + "stringy_marble_Roughness.png";
+        mesh.aoTextureFilename = path + "black-tile1_ao.png";
+        mesh.metallicTextureFilename = path + "black-tile1_Metallic.png";
+        mesh.normalTextureFilename = path + "black-tile1_Normal-dx.png";
+        mesh.roughnessTextureFilename = path + "black-tile1_Roughness.png";
 
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
@@ -74,7 +74,7 @@ bool Ex1801_Tree::InitScene() {
                                  Matrix::CreateTranslation(center));
 
         m_basicList.push_back(m_leaves); // 리스트에 등록
-
+         
         m_trunk = make_shared<Model>(
             m_device, m_context,
             vector{meshes[0], meshes[1],
