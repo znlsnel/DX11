@@ -4,6 +4,7 @@
 #include "GeometryGenerator.h"
 #include "GraphicsCommon.h"
 #include "OceanModel.h"
+#include "Character.h"
 
 namespace hlab {
 
@@ -22,9 +23,9 @@ bool Ex2001_GamePlay::InitScene() {
                             0.0654498f);
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
 
     AppBase::InitScene();
 
@@ -32,13 +33,13 @@ bool Ex2001_GamePlay::InitScene() {
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
         auto mesh = GeometryGenerator::MakeSquare(5.0, {10.0f, 10.0f});
-        string path = "../Assets/Textures/PBR/stringy-marble-ue/";
-        mesh.albedoTextureFilename = path + "stringy_marble_albedo.png";
+        string path = "../Assets/Textures/PBR/black-tile1-ue/";
+        mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
         mesh.emissiveTextureFilename = "";
-        mesh.aoTextureFilename = path + "stringy_marble_ao.png";
-        mesh.metallicTextureFilename = path + "stringy_marble_Metallic.png";
-        mesh.normalTextureFilename = path + "stringy_marble_Normal-dx.png";
-        mesh.roughnessTextureFilename = path + "stringy_marble_Roughness.png";
+        mesh.aoTextureFilename = path + "black-tile1_ao.png";
+        mesh.metallicTextureFilename = path + "black-tile1_Metallic.png";
+        mesh.normalTextureFilename = path + "black-tile1_Normal-dx.png";
+        mesh.roughnessTextureFilename = path + "black-tile1_Roughness.png";
 
         auto ground = make_shared<Model>(m_device, m_context, vector{mesh});
         ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
@@ -57,40 +58,23 @@ bool Ex2001_GamePlay::InitScene() {
 
     // Main Object
     {
-        vector<string> clipNames = {"FightingIdleOnMichelle2.fbx",
-                                    "Fireball.fbx"};
+        vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",  "walk_end.fbx", "fireBall.fbx"};
         string path = "../Assets/Characters/Mixamo/";
 
-        AnimationData aniData;
-
         auto [meshes, _] =
-            GeometryGenerator::ReadAnimationFromFile(path, "character.fbx");
+            GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
 
-        for (auto &name : clipNames) {
-            auto [_, ani] =
-                GeometryGenerator::ReadAnimationFromFile(path, name);
+        m_player = make_shared<Character>(this, m_device, m_context, path,
+                "Character_Kachujin.fbx", clipNames );
 
-            if (aniData.clips.empty()) {
-                aniData = ani;
-            } else {
-                aniData.clips.push_back(ani.clips.front());
-            }
-        }
-
-        Vector3 center(0.0f, 0.1f, 1.0f);
-        m_character =
-            make_shared<SkinnedMeshModel>(m_device, m_context, meshes, aniData);
-        m_character->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-        m_character->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-        m_character->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-        m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
-                                    Matrix::CreateTranslation(center));
-
-        m_basicList.push_back(m_character); // 리스트에 등록
-        m_pickedModel = m_character;
+        m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
+        m_characters.push_back(m_player);
+        m_camera.SetTarget(m_player.get());
     }
 
     InitPhysics(true);
+
+    InitAudio();
 
     return true;
 }
@@ -188,17 +172,13 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
 void Ex2001_GamePlay::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 
 void Ex2001_GamePlay::Update(float dt) {
+   
 
     AppBase::Update(dt);
+    
 
-    static int frameCount = 0;
-    static int state = 0;
 
-    // TODO:
-
-    m_character->UpdateAnimation(m_context, state, frameCount);
-
-    frameCount += 1;
+    UpdateAnim(dt);
 
     // 이하 물리엔진 관련
 
@@ -270,9 +250,23 @@ void Ex2001_GamePlay::Update(float dt) {
     */
 }
 
+void Ex2001_GamePlay::UpdateAnim(float dt) {
+
+}
+
 void Ex2001_GamePlay::Render() {
     AppBase::Render();
     AppBase::PostRender();
+}
+
+void Ex2001_GamePlay::InitAudio() {
+
+        m_audEngine = std::make_unique<DirectX::AudioEngine>();
+
+        m_sound = std::make_unique<DirectX::SoundEffect>(m_audEngine.get(),
+                                                         L"../Assets/Sound/"
+                                                         L"Swoosh-4S.wav");
+        
 }
 
 void Ex2001_GamePlay::UpdateGUI() {

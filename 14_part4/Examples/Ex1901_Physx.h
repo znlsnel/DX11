@@ -50,11 +50,14 @@ class Ex1901_PhysX : public AppBase {
 
     void createStack(const PxTransform &t, PxU32 size, PxReal halfExtent) {
 
-        vector<MeshData> box = {GeometryGenerator::MakeBox(halfExtent)};
+        //vector<MeshData> box = {GeometryGenerator::MakeBox(halfExtent)};
+        vector<MeshData> box = {
+            GeometryGenerator::MakeSphere(halfExtent, 10, 10)};
 
-        PxShape *shape = gPhysics->createShape(
-            PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
-
+        //PxShape *shape = gPhysics->createShape(
+        //    PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
+        PxShape *shape = gPhysics->createShape(PxSphereGeometry(halfExtent), *gMaterial);
+        
         for (PxU32 i = 2; i < size; i++) {
             for (PxU32 j = 0; j < size - i; j++) {
                 PxTransform localTm(PxVec3(PxReal(j * 2) - PxReal(size - i),

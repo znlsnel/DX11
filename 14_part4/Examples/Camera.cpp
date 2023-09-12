@@ -1,4 +1,5 @@
 ﻿#include "Camera.h"
+#include "Character.h"
 
 #include <iostream>
 
@@ -18,28 +19,45 @@ Matrix Camera::GetViewRow() {
 
 Vector3 Camera::GetEyePos() { return m_position; }
 
+void Camera::UpdatePos() {
+
+        if (m_target == nullptr)
+        return;
+
+        Vector3 tempPos = m_target->GetMesh()->m_worldRow.Translation();
+        //
+        tempPos += -GetForwardVector() / 3;
+        SetLocation(tempPos);
+}
+
 void Camera::UpdateViewDir() {
     // 이동할 때 기준이 되는 정면/오른쪽 방향 계산
     m_viewDir = Vector3::Transform(Vector3(0.0f, 0.0f, 1.0f),
-                                   Matrix::CreateRotationY(this->m_yaw));
+                                          Matrix::CreateRotationY(this->m_yaw));
+    m_forwardDir = Vector3::Transform(Vector3(0.0f, 0.0f, 1.0f),
+                                   Matrix::CreateRotationX(this->m_pitch) *
+                                       Matrix::CreateRotationY(this->m_yaw));
+    m_forwardDir.Normalize();
+
+
     m_rightDir = m_upDir.Cross(m_viewDir);
 }
 
 void Camera::UpdateKeyboard(const float dt, bool const keyPressed[256]) {
-    if (m_useFirstPersonView) {
-        if (keyPressed['W'])
-            MoveForward(dt);
-        if (keyPressed['S'])
-            MoveForward(-dt);
-        if (keyPressed['D'])
-            MoveRight(dt);
-        if (keyPressed['A'])
-            MoveRight(-dt);
-        if (keyPressed['E'])
-            MoveUp(dt);
-        if (keyPressed['Q'])
-            MoveUp(-dt);
-    }
+    //if (m_useFirstPersonView) {
+    //    if (keyPressed['W'])
+    //        MoveForward(dt);
+    //    if (keyPressed['S'])
+    //        MoveForward(-dt);
+    //    if (keyPressed['D'])
+    //        MoveRight(dt);
+    //    if (keyPressed['A'])
+    //        MoveRight(-dt);
+    //    if (keyPressed['E'])
+    //        MoveUp(dt);
+    //    if (keyPressed['Q'])
+    //        MoveUp(-dt);
+    //}
 }
 
 void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
@@ -65,6 +83,8 @@ void Camera::MoveRight(float dt) { m_position += m_rightDir * m_speed * dt; }
 
 void Camera::SetAspectRatio(float aspect) { m_aspect = aspect; }
 
+void Camera::SetLocation(Vector3 pos) { m_position = pos; }
+
 void Camera::PrintView() {
     cout << "Current view settings:" << endl;
     cout << "Vector3 m_position = Vector3(" << m_position.x << "f, "
@@ -76,6 +96,10 @@ void Camera::PrintView() {
          << m_position.y << "f, " << m_position.z << "f), " << m_yaw << "f, "
          << m_pitch << "f);" << endl;
 }
+
+Vector3 Camera::GetForwardVector() { return m_forwardDir; }
+
+Vector3 Camera::GetPosision() { return m_position; }
 
 Matrix Camera::GetProjRow() {
     return m_usePerspectiveProjection

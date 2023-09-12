@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <directxtk/SimpleMath.h>
+#include "Character.h"
 
 #include "D3D11Utils.h"
 #include "GraphicsCommon.h"
@@ -205,9 +206,13 @@ bool AppBase::InitScene() {
 
 void AppBase::Update(float dt) {
 
-    // 카메라의 이동
-    m_camera.UpdateKeyboard(dt, m_keyPressed);
+        for (const auto &model : m_characters) {
+        model->Update(dt);
+        }
 
+    // 카메라의 이동
+    //m_camera.UpdateKeyboard(dt, m_keyPressed);
+        m_camera.UpdatePos();
     // 반사 행렬 추가
     const Vector3 eyeWorld = m_camera.GetEyePos();
     const Matrix reflectRow = Matrix::CreateReflection(m_mirrorPlane);
@@ -307,10 +312,12 @@ void AppBase::RenderDepthOnly() {
     m_context->ClearDepthStencilView(m_depthOnlyDSV.Get(), D3D11_CLEAR_DEPTH,
                                      1.0f, 0);
     AppBase::SetGlobalConsts(m_globalConstsGPU);
+
     for (const auto &model : m_basicList) {
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
+
 
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
@@ -563,9 +570,9 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (wParam == VK_ESCAPE) { // ESC키 종료
             DestroyWindow(hwnd);
         }
-        if (wParam == VK_SPACE) {
-            m_lightRotate = !m_lightRotate;
-        }
+        //if (wParam == VK_SPACE) {
+        //    m_lightRotate = !m_lightRotate;
+        //}
         break;
     case WM_KEYUP:
         if (wParam == 'F') { // f키 일인칭 시점

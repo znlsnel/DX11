@@ -39,12 +39,13 @@ struct AnimationClip {
 
 struct AnimationData {
 
+    vector<AnimationClip> clips;
+
     map<string, int32_t> boneNameToId; // 뼈 이름과 인덱스 정수
     vector<string> boneIdToName; // boneNameToId의 Id 순서대로 뼈 이름 저장
     vector<int32_t> boneParents; // 부모 뼈의 인덱스
     vector<Matrix> offsetMatrices;
     vector<Matrix> boneTransforms;
-    vector<AnimationClip> clips;
     Matrix defaultTransform;
     Matrix rootTransform = Matrix();
     Matrix accumulatedRootTransform = Matrix();
@@ -84,9 +85,9 @@ struct AnimationData {
             // Root일 경우
             if (parentIdx < 0) {
                 if (frame != 0) {
-                    accumulatedRootTransform =
-                        Matrix::CreateTranslation(key.pos - prevPos) *
-                        accumulatedRootTransform;
+                    //accumulatedRootTransform =
+                    //    Matrix::CreateTranslation(key.pos - prevPos) *
+                    //    accumulatedRootTransform;
                 } else {
                     auto temp = accumulatedRootTransform.Translation();
                     temp.y = key.pos.y; // 높이 방향만 첫 프레임으로 보정
@@ -95,6 +96,7 @@ struct AnimationData {
 
                 prevPos = key.pos;
                 key.pos = Vector3(0.0f); // 대신에 이동 취소
+   
             }
 
             // TODO: parentMatrix 사용

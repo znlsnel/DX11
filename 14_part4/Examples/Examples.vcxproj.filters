@@ -166,6 +166,7 @@
     <ClCompile Include="BillboardModel.cpp">
       <Filter>Models</Filter>
     </ClCompile>
+    <ClCompile Include="Character.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h" />
@@ -309,6 +310,7 @@
     <ClInclude Include="BillboardModel.h">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Character.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

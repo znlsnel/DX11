@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="BillboardModel.cpp" />
     <ClCompile Include="BitonicSort.cpp" />
+    <ClCompile Include="Character.cpp" />
     <ClCompile Include="D3D11Utils.cpp" />
     <ClCompile Include="Ex1404_StructuredBuffer.cpp" />
     <ClCompile Include="Ex1405_ConsumeAppendBuffer.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="BillboardModel.h" />
     <ClInclude Include="BitonicSort.h" />
     <ClInclude Include="Buffers.h" />
+    <ClInclude Include="Character.h" />
     <ClInclude Include="ComputePSO.h" />
     <ClInclude Include="ConstantBuffers.h" />
     <ClInclude Include="Camera.h" />

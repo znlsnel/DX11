@@ -68,36 +68,30 @@ class SkinnedMeshModel : public Model {
     void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, int clipId,
                          float frame) override {
 
-        m_aniData.Update(clipId, frame);
-
+           
         int currFrame = (int)frame;
         int nextFrame =
             std::min(currFrame + 1, (int)m_aniData.clips[clipId].keys[0].size());
-
         float lerpValue = (float)frame - currFrame;
 
-        std::cout << "currFrame : " << currFrame
-                  << "  nextFrame : " << nextFrame
-                  << "  lerpValue : " << lerpValue << std::endl;
+        vector<Matrix> tempFrameMatrix(m_boneTransforms.m_cpu.size()); 
 
-        for (int i = 0; i < m_boneTransforms.m_cpu.size(); i++) {
-                //m_boneTransforms.m_cpu[i] =
-                //        m_aniData.Get(clipId, i, frame).Transpose();
-
-                m_boneTransforms.m_cpu[i] = Matrix::Lerp(
-                m_aniData.Get(clipId, i, currFrame).Transpose(), 
-                        m_aniData.Get(clipId, i, nextFrame).Transpose(), lerpValue);
-
-            //if (currAnimFrame == currAnimSize) {
-            //        m_boneTransforms.m_cpu[i] =
-            //                m_aniData.Get(clipId, i, frame).Transpose();
-            //} else {
-            //        m_boneTransforms.m_cpu[i] = Matrix::Lerp(
-            //            m_aniData.Get(currAnimID, i, currAnimFrame).Transpose(),
-            //            m_aniData.Get(clipId, i, frame).Transpose(), lerpValue);
-            //}
+        m_aniData.Update(clipId, currFrame);
+        for (int i = 0; i < tempFrameMatrix.size(); i++) {
+            tempFrameMatrix[i] = m_aniData.Get(clipId, i, currFrame).Transpose();
         }
-            currAnimFrame++;
+
+        m_aniData.Update(clipId, nextFrame);
+        for (int i = 0; i < m_boneTransforms.m_cpu.size(); i++) {
+
+
+            m_boneTransforms.m_cpu[i] = Matrix::Lerp(
+                tempFrameMatrix[i],
+                m_aniData.Get(clipId, i, currFrame).Transpose(), lerpValue);
+                //m_boneTransforms.m_cpu[i] = currFrameMatrix[i];
+
+
+        }
 
         m_boneTransforms.Upload(context);
     }

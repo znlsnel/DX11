@@ -14,14 +14,14 @@ class Camera {
     Matrix GetViewRow();
     Matrix GetProjRow();
     Vector3 GetEyePos();
-
+    
     void Reset(Vector3 pos, float yaw, float pitch) {
         m_position = pos;
         m_yaw = yaw;
         m_pitch = pitch;
         UpdateViewDir();
     }
-
+    void UpdatePos();
     void UpdateViewDir();
     void UpdateKeyboard(const float dt, bool const keyPressed[256]);
     void UpdateMouse(float mouseNdcX, float mouseNdcY);
@@ -29,14 +29,20 @@ class Camera {
     void MoveRight(float dt);
     void MoveUp(float dt);
     void SetAspectRatio(float aspect);
+    void SetLocation(Vector3 pos);
     void PrintView();
+    void SetTarget(class Character *target) { m_target = target; };
 
+    Vector3 GetForwardVector();
+    Vector3 GetPosision();
+    float GetYaw() { return m_yaw; };
   public:
     bool m_useFirstPersonView = false;
 
   private:
     Vector3 m_position = Vector3(0.312183f, 0.957463f, -1.88458f);
     Vector3 m_viewDir = Vector3(0.0f, 0.0f, 1.0f);
+    Vector3 m_forwardDir = Vector3(0.0f, 0.0f, 1.0f);
     Vector3 m_upDir = Vector3(0.0f, 1.0f, 0.0f); // +Y 방향으로 고정
     Vector3 m_rightDir = Vector3(1.0f, 0.0f, 0.0f);
 
@@ -52,6 +58,8 @@ class Camera {
     float m_farZ = 100.0f;
     float m_aspect = 16.0f / 9.0f;
     bool m_usePerspectiveProjection = true;
+
+    class Character* m_target;
 };
 
 } // namespace hlab

@@ -122,17 +122,6 @@ void Ex1701_SkeletalAnimation::UpdateLights(float dt) {
 void Ex1701_SkeletalAnimation::Update(float dt) {
     AppBase::Update(dt);
 
-    //std::cout << dt << std::endl;
-
-    static float currTime = 0;
-
-    //currTime += dt;
-    //if (currTime < 1.0f / 60.0f)
-    //    return;
-    //
-    //currTime = 0.0f;
-
-
     static float frameCount = 0;
     static int state = 0;
 

@@ -27,20 +27,20 @@ bool Ex1803_Landscape::InitScene() {
     AppBase::m_globalConstsCPU.lodBias = 0.0f;
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
 
     AppBase::InitScene();
 
     // Main Object
     {
         auto meshes = GeometryGenerator::ReadFromFile(
-            "../Assets/Terrain/snowy_mountain_with_slopes/",
-            "uploads_files_4497957_untitled.fbx", false);
-        meshes[0].albedoTextureFilename =
-            "../Assets/Terrain/snowy_mountain_with_slopes/"
-            "Texture.png";
+            "../Assets/Terrain/uploads_files_4499209_1009/",
+            "uploads_files_4499209_Mountain_Terrain_1_FBX_1k.fbx", false);
+        //meshes[0].albedoTextureFilename =
+        //    "../Assets/Terrain/snowy_mountain_with_slopes/"
+        //    "Texture.png";
 
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Terrain/Chalaadi/", "2.fbx", false);

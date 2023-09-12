@@ -8,6 +8,7 @@
 
 // 기본 사용법은 SnippetHelloWorld.cpp
 // 렌더링 관련은 SnippetHelloWorldRender.cpp
+#include <directxtk/audio.h>
 
 #define PX_RELEASE(x)                                                          \
     if (x) {                                                                   \
@@ -50,8 +51,9 @@ class Ex2001_GamePlay : public AppBase {
     void UpdateLights(float dt) override;
     void UpdateGUI() override;
     void Update(float dt) override;
+    void UpdateAnim(float dt);
     void Render() override;
-
+    void InitAudio();
   public:
     float m_simToRenderScale = 0.01f; // 시뮬레이션 물체가 너무 작으면 불안정
 
@@ -69,7 +71,12 @@ class Ex2001_GamePlay : public AppBase {
         m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
 
     shared_ptr<BillboardModel> m_fireball;
-    shared_ptr<SkinnedMeshModel> m_character;
+    shared_ptr<class Character> m_player;
+
+    bool isUsingSkill = false;
+
+    std::unique_ptr<DirectX::AudioEngine> m_audEngine;
+    std::unique_ptr<DirectX::SoundEffect> m_sound;
 };
 
 } // namespace hlab

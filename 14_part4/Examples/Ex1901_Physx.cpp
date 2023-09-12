@@ -38,9 +38,11 @@ void Ex1901_PhysX::InitPhysics(bool interactive) {
         pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES,
                                    true);
     }
-    gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
-    PxRigidStatic *groundPlane =
+    // ¸ØÃçÀÖ´Ù ¿òÁ÷ÀÏ¶§ ¸¶Âû°è¼ö, ¿òÁúÀÏ¶§ ¸¶Âû°è¼ö, Æ¨°Ü³ª°¥¶§ Èí¼öÇÏ´Â ¸¶Âû°è¼ö
+    gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+     
+    PxRigidStatic *groundPlane = 
         PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
     gScene->addActor(*groundPlane);
 
@@ -61,9 +63,9 @@ bool Ex1901_PhysX::InitScene() {
     AppBase::m_globalConstsCPU.lodBias = 0.0f;
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"clear_pureskyEnvHDR.dds",
-        L"clear_pureskySpecularHDR.dds", L"clear_pureskyDiffuseHDR.dds",
-        L"clear_pureskyBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
+        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
+        L"SampleBrdf.dds");
 
     AppBase::InitScene();
 
@@ -78,7 +80,7 @@ void Ex1901_PhysX::Update(float dt) {
 
     AppBase::Update(dt);
 
-    gScene->simulate(1.0f / 60.0f);
+    gScene->simulate(dt);
     gScene->fetchResults(true);
 
     // gScene->getActors()
