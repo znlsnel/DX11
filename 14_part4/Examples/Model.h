@@ -41,7 +41,9 @@ class Model {
     void Initialize(ComPtr<ID3D11Device> &device,
                     ComPtr<ID3D11DeviceContext> &context,
                     const vector<MeshData> &meshes);
-
+    virtual void UpdatePose(ComPtr<ID3D11DeviceContext> &context, float dt,
+                            bool bUseBlendAnim = false){};
+    
     void UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context);
 

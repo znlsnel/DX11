@@ -35,137 +35,114 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
 }
 
 void hlab::Character::Update(float dt) { 
-        
-        UpdateAnimation(dt); 
-
+        UpdateState(dt); 
+        UpdateTransform(dt);
 }
 
 void hlab::Character::BeginPlay() {
 
 }
 
-void hlab::Character::UpdateAnimation(float dt) {
-        int animSize = GetCurrAnimSize();
-        // States
-        // 0: idle
-        // 1: idle to walk
-        // 2: walk forward
-        // 3: walk to stop
-        // 4: dance
 
-        bool isLastFrame = animSize <= frameCount;
-        // /*animSize - frameCount < 20 || */(float)frameCount / (float)animSize
-        // > 0.9;
+void hlab::Character::UpdateTransform(float dt) 
+{
+        if (appBase->m_keyPressed['A']) {
 
-        Vector3 tempPos = (m_mesh->m_worldRow).Translation();
+                m_mesh->UpdateWorldRow(
+                    Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
+                    m_mesh->m_worldRow);
 
-        if (appBase->m_keyPressed[VK_SPACE] || state == 4) {
-                if (state != 4) {
-                state = 4;
-                isLastFrame = true;
-                //m_sound->Play();
-                } else {
-                if (isLastFrame)
-                    state = 0;
+        } else if (appBase->m_keyPressed['D']) {
+                m_mesh->UpdateWorldRow(
+                    Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
+                    m_mesh->m_worldRow);
+        }
 
-                if ((int)frameCount == 60 && isUsingSkill == false) {
-                    Vector3 handPos = (m_mesh->m_worldRow).Translation();
-                    Vector4 offset = Vector4::Transform(
-                        Vector4(0.0f, 0.0f, -0.1f, 0.0f),
-                        m_mesh->m_worldRow *
-                            m_mesh->m_aniData.accumulatedRootTransform);
 
-                    // Vector3 offset = Vector3(0.0f, 0.0f, -0.1f);
-                    handPos += Vector3(offset.x, offset.y, offset.z);
 
-                    Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
-                    dir = Vector4::Transform(
-                        dir,
-                        m_mesh->m_worldRow *
-                                 m_mesh->m_aniData.accumulatedRootTransform);
+        if (state == walk) {
+                  Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
+                  dir = Vector4::Transform(
+                      dir, m_mesh->m_worldRow);
 
-                    dir.Normalize();
-                    dir *= 1.5f / m_simToRenderScale;
+                  dir.Normalize();
 
-                    appBase->CreateDynamic(
-                        PxTransform(PxVec3(handPos.x, handPos.y, handPos.z) /
-                                    m_simToRenderScale),
-                        PxSphereGeometry(5), PxVec3(dir.x, dir.y, dir.z));
-                    isUsingSkill = true;
-                } else if ((int)frameCount != 60)
-                    isUsingSkill = false;
+                  Vector3 speed = m_mesh->m_worldRow.Translation() +
+                                     (Vector3(dir.x, dir.y, dir.z)) * dt
+                                     / 5.0f;
+
+                  m_mesh->m_worldRow.Translation(Vector3(0.0f));
+
+                  m_mesh->UpdateWorldRow(
+                     // Matrix::CreateScale(0.2f) *
+                          //Matrix::CreateRotationY(appBase->m_camera.GetYaw())
+                          //* Matrix::CreateRotationY(3.141592f) *
+                          m_mesh->m_worldRow *
+                      Matrix::CreateTranslation(speed));
+        }
+}
+
+void hlab::Character::UpdateState(float dt) {
+
+        switch (state) { 
+        case EActorState::idle:
+        {
+                  if (appBase->m_keyPressed[VK_SPACE]) {
+                state = EActorState::attack;
+                  } 
+                  else if (appBase->m_keyPressed['W'])
+                        state = EActorState::walk;
+        }
+                break;
+        case EActorState::walk: {
+                  if (appBase->m_keyPressed['W'] == false)
+                        state = EActorState::idle;
+        }
+                break;
+        case EActorState::attack: {
+                state = EActorState::attack;
+                int currFrame = (int)m_mesh->currAnim->frame;
+                if (currFrame == 60 && isUsingSkill == false) {
+                        Vector3 handPos = (m_mesh->m_worldRow).Translation();
+                        Vector4 offset = Vector4::Transform(
+                            Vector4(0.0f, 0.0f, -0.1f, 0.0f),
+                            m_mesh->m_worldRow *
+                                m_mesh->m_aniData.accumulatedRootTransform);
+
+                        // Vector3 offset = Vector3(0.0f, 0.0f, -0.1f);
+                        handPos += Vector3(offset.x, offset.y, offset.z);
+
+                        Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
+                        dir = Vector4::Transform(
+                            dir,
+                            m_mesh->m_worldRow *
+                                m_mesh->m_aniData.accumulatedRootTransform);
+
+                        dir.Normalize();
+                        dir *= 1.5f / m_simToRenderScale;
+
+                        appBase->CreateDynamic(
+                            PxTransform(
+                                PxVec3(handPos.x, handPos.y, handPos.z) /
+                                m_simToRenderScale),
+                            PxSphereGeometry(5), PxVec3(dir.x, dir.y, dir.z));
+                        isUsingSkill = true;
+                } 
+                else if (currFrame != 60) {
+                        isUsingSkill = false;
                 }
+
+                if (currFrame == m_mesh->currAnim->endFrame - (61.f * m_mesh->currAnim->blendTime))
+                        state = EActorState::idle;
         }
-
-        else if (state == 0) { // 정지 상태
-                // TODO:
-                if (appBase->m_keyPressed['W']) {
-                state = 1;
-                isLastFrame = true;
-                }
-        } else if (state == 1) {
-                if (appBase->m_keyPressed['W']) {
-                if (isLastFrame)
-                    state = 2;
-                } else {
-                state = 3;
-                isLastFrame = true;
-                }
+                break;
         }
+        
+          //std::cout << "state : " << state << std::endl;
+        m_mesh->ChangeAnimation(state);
+          m_mesh->UpdatePose(appBase->m_context, dt , appBase->bUseBlendAnimation);
+   //    m_mesh->UpdateAnimation(appBase->m_context, 0, 0);
 
-        else if (state == 2) {
-                if (appBase->m_keyPressed['W'] == false) {
-                state = 3;
-                isLastFrame = true;
-                }
-        }
-
-        else if (state == 3) {
-                if (appBase->m_keyPressed['W']) {
-                state = 1;
-                isLastFrame = true;
-                } else if (isLastFrame) {
-                state = 0;
-                }
-        }
-        if (state != 4) {
-                //if (appBase->m_keyPressed['D']) {
-                //m_mesh->m_aniData.accumulatedRootTransform =
-                //    Matrix::CreateRotationY(3.141592f * 120.0f / 180.0f * dt) *
-                //    m_mesh->m_aniData.accumulatedRootTransform;
-                //}
-                //if (appBase->m_keyPressed['A']) {
-                //m_mesh->m_aniData.accumulatedRootTransform =
-                //    Matrix::CreateRotationY(-3.141592f * 120.0f / 180.0f * dt) *
-                //    m_mesh->m_aniData.accumulatedRootTransform;
-                //}
-        }
-
-        if (state > 0 && state < 4) {
-                //Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
-                //dir = Vector4::Transform(
-                //    dir, m_mesh->m_worldRow *
-                //             m_mesh->m_aniData.accumulatedRootTransform);
-
-                //dir.Normalize();
-
-                //Vector3 velocity = m_mesh->m_worldRow.Translation() +
-                //                   (Vector3(dir.x, dir.y, dir.z)) * dt / 5.0f;
-                //m_mesh->UpdateWorldRow(
-                //    Matrix::CreateScale(0.2f) *
-                //        // m_mesh->m_worldRow
-                //        //     .CreateRotationY(appBase->m_camera.GetYaw()) *
-                //        Matrix::CreateRotationY(appBase->m_camera.GetYaw()) *
-                //        Matrix::CreateRotationY(3.141592f) *
-                //    m_mesh->m_worldRow.CreateTranslation(velocity));
-        }
-
-        if (isLastFrame)
-                frameCount = 0;
-
-        m_mesh->UpdateAnimation(appBase->m_context, state, frameCount);
-
-        frameCount += dt * 60;
 }
 
 int hlab::Character::GetCurrAnimSize() 

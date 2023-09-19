@@ -85,6 +85,7 @@ struct AnimationData {
             // RootÀÏ °æ¿ì
             if (parentIdx < 0) {
                 if (frame != 0) {
+                   
                     //accumulatedRootTransform =
                     //    Matrix::CreateTranslation(key.pos - prevPos) *
                     //    accumulatedRootTransform;

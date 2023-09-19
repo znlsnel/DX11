@@ -61,8 +61,8 @@ bool Ex2001_GamePlay::InitScene() {
         vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",  "walk_end.fbx", "fireBall.fbx"};
         string path = "../Assets/Characters/Mixamo/";
 
-        auto [meshes, _] =
-            GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
+       // auto [meshes, _] =
+      //      GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
 
         m_player = make_shared<Character>(this, m_device, m_context, path,
                 "Character_Kachujin.fbx", clipNames );
@@ -172,7 +172,7 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
 void Ex2001_GamePlay::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 
 void Ex2001_GamePlay::Update(float dt) {
-   
+    timeSeconds += dt;
 
     AppBase::Update(dt);
     
@@ -272,6 +272,8 @@ void Ex2001_GamePlay::InitAudio() {
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
+    ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
+
     if (ImGui::TreeNode("General")) {
         ImGui::Checkbox("Use FPV", &m_camera.m_useFirstPersonView);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);

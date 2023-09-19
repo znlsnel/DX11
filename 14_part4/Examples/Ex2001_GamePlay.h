@@ -54,6 +54,7 @@ class Ex2001_GamePlay : public AppBase {
     void UpdateAnim(float dt);
     void Render() override;
     void InitAudio();
+    double GetTimeSeconds() { return timeSeconds; };
   public:
     float m_simToRenderScale = 0.01f; // 시뮬레이션 물체가 너무 작으면 불안정
 
@@ -74,9 +75,11 @@ class Ex2001_GamePlay : public AppBase {
     shared_ptr<class Character> m_player;
 
     bool isUsingSkill = false;
+    bool bUseBlendAnimation = false;
 
     std::unique_ptr<DirectX::AudioEngine> m_audEngine;
     std::unique_ptr<DirectX::SoundEffect> m_sound;
+    double timeSeconds = 0.0;
 };
 
 } // namespace hlab

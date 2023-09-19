@@ -5,6 +5,12 @@
 
 namespace hlab{
 
+        enum EActorState : int { 
+                idle = 0, 
+                walk = 1,
+                attack = 2,
+        };
+
 using namespace std;
 class Character {
   public:
@@ -14,7 +20,8 @@ class Character {
 
     virtual void Update(float dt);
     virtual void BeginPlay();
-    virtual void UpdateAnimation(float dt);
+    virtual void UpdateState(float dt);
+    virtual void UpdateTransform(float dt);
 
     void SetUseUpdateTick(bool use) { bUseUpdateTick = use; };
     int GetCurrAnimSize();
@@ -29,8 +36,8 @@ class Character {
 
         bool bUseUpdateTick = false;
         bool isUsingSkill = false;
-        int state = 0;
-        float frameCount = 0;
+
+        EActorState state = EActorState::idle;
 };
 }
 

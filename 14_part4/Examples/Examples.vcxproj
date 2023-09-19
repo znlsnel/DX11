@@ -190,6 +190,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Noise.cpp" />
     <ClCompile Include="PostProcess.cpp" />
+    <ClCompile Include="SkinnedMeshModel.cpp" />
     <ClCompile Include="SphSimulation.cpp" />
     <ClCompile Include="StableFluids.cpp" />
     <ClCompile Include="UniformGrid.cpp" />
