@@ -64,6 +64,7 @@ class Model {
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);
     void UpdateWorldRow(const Matrix &worldRow);
 
+
   public:
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
     Matrix m_worldITRow = Matrix(); // InverseTranspose
@@ -72,6 +73,7 @@ class Model {
     bool m_isVisible = true;
     bool m_castShadow = true;
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
+    bool useTessellation = false;
 
     vector<shared_ptr<Mesh>> m_meshes;
 

@@ -10,8 +10,7 @@ void hlab::SkinnedMeshModel::UpdatePose(ComPtr<ID3D11DeviceContext> &context,
 
         if (prevAnim == nullptr) {
              currAnim->GetCurrFramePos(m_boneTransforms.m_cpu, dt);
-            std::cout << "anim ID : " << currAnim->clipId
-                       << "lerpValue : " << currAnim->lerpValue << std::endl;
+
         }
 
         // 

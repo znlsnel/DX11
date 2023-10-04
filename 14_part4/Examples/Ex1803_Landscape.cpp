@@ -20,7 +20,7 @@ Ex1803_Landscape::Ex1803_Landscape() : AppBase() {}
 
 bool Ex1803_Landscape::InitScene() {
 
-    AppBase::m_camera.Reset(Vector3(10.9064f, 1.00741f, -7.31526f), -1.00629f,
+    AppBase::m_camera->Reset(Vector3(10.9064f, 1.00741f, -7.31526f), -1.00629f,
                             0.148015f);
 
     AppBase::m_globalConstsCPU.strengthIBL = 1.0f;
@@ -99,7 +99,7 @@ void Ex1803_Landscape::UpdateGUI() {
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera.m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
             CreateBuffers();

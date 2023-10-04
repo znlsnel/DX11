@@ -31,6 +31,14 @@ __declspec(align(256)) struct MeshConstants {
     float windLeaves = 0.0f;
 };
 
+__declspec(align(256)) struct TessellationConstants {
+    Vector3 eyeWorld;
+    float padding = 0.0f;
+    Matrix model;
+    Matrix view;
+    Matrix proj;
+};
+
 // 주로 Pixel 쉐이더에서 사용
 __declspec(align(256)) struct MaterialConstants {
 

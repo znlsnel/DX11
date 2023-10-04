@@ -310,12 +310,12 @@ PixelShaderOutput main(PixelShaderInput input)
 
             float3 radiance = LightRadiance(lights[i], representativePoint, input.posWorld, normalWorld, shadowMaps[i]);
             
-            /*if (i == 0)
-                radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap0);
-            if (i == 1)
-                radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap1);
-            if (i == 2)
-                radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap2);*/
+            //if (i == 0)
+            //    radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMaps[0]);
+            //if (i == 1)
+            //    radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap1);
+            //if (i == 2)
+            //    radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap2);
             
             // 오류 임시 수정 (radiance가 (0,0,0)일 경우  directLighting += ... 인데도 0 벡터가 되어버림
             if (abs(dot(float3(1, 1, 1), radiance)) > 1e-5)

@@ -14,7 +14,7 @@ bool Ex1801_Tree::InitScene() {
 
     cout << "Ex1801_Tree::InitScene()" << endl;
 
-    AppBase::m_camera.Reset(Vector3(0.424079f, 0.0551374f, 0.379334f),
+    AppBase::m_camera->Reset(Vector3(0.424079f, 0.0551374f, 0.379334f),
                             -0.255254f, 0.0785397f);
 
     AppBase::m_postProcess.m_combineFilter.m_constData.strength = 0.3f;
@@ -117,7 +117,7 @@ void Ex1801_Tree::UpdateGUI() {
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera.m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
             CreateBuffers();

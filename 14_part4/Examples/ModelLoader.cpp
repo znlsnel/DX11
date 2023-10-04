@@ -101,9 +101,9 @@ void ModelLoader::ReadAnimation(const aiScene *pScene) {
  * 트래버스 순서로 저장
  */
 void ModelLoader::Load(std::string basePath, std::string filename,
-                       bool revertNormals) {
+                       bool revertNormals, bool gltNormal) {
 
-    if (GetExtension(filename) == ".gltf") {
+    if (GetExtension(filename) == ".gltf" || gltNormal) {
         m_isGLTF = true;
         m_revertNormals = revertNormals;
     }
@@ -119,6 +119,14 @@ void ModelLoader::Load(std::string basePath, std::string filename,
     // aiProcess_JoinIdenticalVertices | aiProcess_PopulateArmatureData |
     // aiProcess_SplitByBoneCount |
     // aiProcess_Debone); // aiProcess_LimitBoneWeights
+
+    if (pScene->mMeshes[0]->mNormals == nullptr) {
+       
+            // TODO
+            //  Normal 계산
+
+
+    }
 
     if (pScene) {
 

@@ -46,12 +46,14 @@ void hlab::Character::BeginPlay() {
 
 void hlab::Character::UpdateTransform(float dt) 
 {
+        if (appBase->m_camera->m_useFirstPersonView == false)
+                return;
         if (appBase->m_keyPressed['A']) {
 
                 m_mesh->UpdateWorldRow(
                     Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
                     m_mesh->m_worldRow);
-
+                 
         } else if (appBase->m_keyPressed['D']) {
                 m_mesh->UpdateWorldRow(
                     Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
@@ -68,9 +70,10 @@ void hlab::Character::UpdateTransform(float dt)
                   dir.Normalize();
 
                   Vector3 speed = m_mesh->m_worldRow.Translation() +
-                                     (Vector3(dir.x, dir.y, dir.z)) * dt
-                                     / 5.0f;
+                                  (Vector3(dir.x, dir.y, dir.z)) * dt * 5.0f;
+                  
 
+                 DirectX::SimpleMath::Ray a;
                   m_mesh->m_worldRow.Translation(Vector3(0.0f));
 
                   m_mesh->UpdateWorldRow(

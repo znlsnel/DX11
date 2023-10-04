@@ -17,7 +17,7 @@ void TessellatedQuad::Initialize(ComPtr<ID3D11Device> &device) {
     device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // Vetex Buffer ¸¸µé±â
-    std::vector<Vector4> controlPoints = {{-1.0f, 1.0f, 0.0, 1.0f},
+    std::vector<Vector4> controlPoints = {{-2.0f, 1.0f, 0.0, 1.0f},
                                           {1.0f, 1.0f, 0.0, 1.0f},
                                           {-1.0f, -1.0f, 0.0, 1.0f},
                                           {1.0f, -1.0f, 0.0, 1.0f}};

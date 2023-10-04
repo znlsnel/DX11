@@ -34,9 +34,7 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOut, 4> patch,
     PatchConstOutput pt;
     
     float len = length(eyeWorld - patch[0].pos.xyz);
-    len = len > 2.5 ? 2.5
-    : len < 0.0 ? 0.0 : len;
-    
+    len = clamp(len, 0.0, 2.5);
     len /= 2.5;
     len = 1.0 - len;
     

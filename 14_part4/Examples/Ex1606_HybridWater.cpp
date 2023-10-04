@@ -18,7 +18,7 @@ bool Ex1606_HybridWater::InitScene() {
 
     cout << "Ex1606_HybridWater::InitScene()" << endl;
 
-    AppBase::m_camera.Reset(Vector3(0.00207493f, 0.0f, -4.31722f), 0.00981733f,
+    AppBase::m_camera->Reset(Vector3(0.00207493f, 0.0f, -4.31722f), 0.00981733f,
                             0.00436338f);
 
     AppBase::InitCubemaps(

@@ -56,7 +56,7 @@ void Ex1901_PhysX::InitPhysics(bool interactive) {
 
 bool Ex1901_PhysX::InitScene() {
 
-    AppBase::m_camera.Reset(Vector3(-11.9666f, 4.85741f, -1.85711f), 0.981748f,
+    AppBase::m_camera->Reset(Vector3(-11.9666f, 4.85741f, -1.85711f), 0.981748f,
                             0.239983f);
 
     AppBase::m_globalConstsCPU.strengthIBL = 1.0f;

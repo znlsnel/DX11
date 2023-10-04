@@ -26,7 +26,7 @@ struct PixelShaderInput
     float2 texCoord : TEXCOORD;
     uint primID : SV_PrimitiveID;
 };
-
+ 
 [maxvertexcount(4)]
 void main(point GeometryShaderInput input[1], uint primID : SV_PrimitiveID,
                               inout TriangleStream<PixelShaderInput> outputStream)

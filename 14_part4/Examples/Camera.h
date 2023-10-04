@@ -9,7 +9,7 @@ using DirectX::SimpleMath::Vector3;
 
 class Camera {
   public:
-    Camera();
+    Camera(class AppBase *appBase);
 
     Matrix GetViewRow();
     Matrix GetProjRow();
@@ -21,6 +21,7 @@ class Camera {
         m_pitch = pitch;
         UpdateViewDir();
     }
+
     void UpdatePos();
     void UpdateViewDir();
     void UpdateKeyboard(const float dt, bool const keyPressed[256]);
@@ -38,6 +39,9 @@ class Camera {
     float GetYaw() { return m_yaw; };
   public:
     bool m_useFirstPersonView = false;
+    bool m_isCameraLock = false;
+    float cameraDistance = 1.0f;
+    float cameraSpeed = 1.0f;
 
   private:
     Vector3 m_position = Vector3(0.312183f, 0.957463f, -1.88458f);
@@ -57,9 +61,11 @@ class Camera {
     float m_nearZ = 0.01f;
     float m_farZ = 100.0f;
     float m_aspect = 16.0f / 9.0f;
+
     bool m_usePerspectiveProjection = true;
 
     class Character* m_target;
+    class AppBase *m_appBase;
 };
 
 } // namespace hlab

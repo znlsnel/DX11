@@ -38,7 +38,7 @@ class ExampleApp : public AppBase {
     BasicMeshGroup m_cursorSphere;
     BasicMeshGroup m_meshGroupGround;
     CubeMapping m_cubeMapping;
-
+     
     bool m_usePerspectiveProjection = true;
 
     // 블룸 효과 옵션

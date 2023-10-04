@@ -22,7 +22,7 @@ bool Ex1701_SkeletalAnimation::InitScene() {
 
     AppBase::m_globalConstsCPU.strengthIBL = 1.0f;
 
-    AppBase::m_camera.Reset(Vector3(3.74966f, 5.03645f, -2.54918f), -0.819048f,
+    AppBase::m_camera->Reset(Vector3(3.74966f, 5.03645f, -2.54918f), -0.819048f,
                             0.741502f);
 
     AppBase::InitCubemaps(
@@ -213,7 +213,7 @@ void Ex1701_SkeletalAnimation::UpdateGUI() {
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera.m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         ImGui::Checkbox("DrawOBB", &m_drawOBB);
         ImGui::Checkbox("DrawBSphere", &m_drawBS);
@@ -315,44 +315,7 @@ void Ex1701_SkeletalAnimation::UpdateGUI() {
 
         int flag = 0;
 
-        if (m_pickedModel) {
-            flag += ImGui::SliderFloat(
-                "Metallic",
-                &m_pickedModel->m_materialConsts.GetCpu().metallicFactor, 0.0f,
-                1.0f);
-            flag += ImGui::SliderFloat(
-                "Roughness",
-                &m_pickedModel->m_materialConsts.GetCpu().roughnessFactor, 0.0f,
-                1.0f);
-            flag += ImGui::CheckboxFlags(
-                "AlbedoTexture",
-                &m_pickedModel->m_materialConsts.GetCpu().useAlbedoMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "EmissiveTexture",
-                &m_pickedModel->m_materialConsts.GetCpu().useEmissiveMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "Use NormalMapping",
-                &m_pickedModel->m_materialConsts.GetCpu().useNormalMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "Use AO", &m_pickedModel->m_materialConsts.GetCpu().useAOMap,
-                1);
-            flag += ImGui::CheckboxFlags(
-                "Use HeightMapping",
-                &m_pickedModel->m_meshConsts.GetCpu().useHeightMap, 1);
-            flag += ImGui::SliderFloat(
-                "HeightScale",
-                &m_pickedModel->m_meshConsts.GetCpu().heightScale, 0.0f, 0.1f);
-            flag += ImGui::CheckboxFlags(
-                "Use MetallicMap",
-                &m_pickedModel->m_materialConsts.GetCpu().useMetallicMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "Use RoughnessMap",
-                &m_pickedModel->m_materialConsts.GetCpu().useRoughnessMap, 1);
-            if (flag) {
-                m_pickedModel->UpdateConstantBuffers(m_device, m_context);
-            }
-            ImGui::Checkbox("Draw Normals", &m_pickedModel->m_drawNormals);
-        }
+
 
         ImGui::TreePop();
     }

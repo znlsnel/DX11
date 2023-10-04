@@ -106,7 +106,7 @@ bool ExampleApp::Initialize() {
 
     // Ground
     {
-        MeshData ground = GeometryGenerator::MakeSquare(20.0f);
+        MeshData ground = GeometryGenerator::MakeSquare(10.0f);
         ground.textureFilename = "../Assets/Textures/blender_uv_grid_2k.png";
         m_meshGroupGround.Initialize(m_device, {ground});
         m_meshGroupGround.m_diffuseResView = m_cubeMapping.m_diffuseResView;

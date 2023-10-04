@@ -54,7 +54,10 @@ class Ex2001_GamePlay : public AppBase {
     void UpdateAnim(float dt);
     void Render() override;
     void InitAudio();
+    void MousePicking();
+
     double GetTimeSeconds() { return timeSeconds; };
+
   public:
     float m_simToRenderScale = 0.01f; // 시뮬레이션 물체가 너무 작으면 불안정
 
@@ -68,18 +71,33 @@ class Ex2001_GamePlay : public AppBase {
     PxPvd *gPvd = NULL;
     PxReal stackZ = 10.0f;
 
-    vector<shared_ptr<Model>>
-        m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
+    // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
+    vector<shared_ptr<Model>> m_objects; 
+    shared_ptr<Model> m_ocean;
 
     shared_ptr<BillboardModel> m_fireball;
     shared_ptr<class Character> m_player;
 
     bool isUsingSkill = false;
-    bool bUseBlendAnimation = false;
+    bool bUseBlendAnimation = true;
 
     std::unique_ptr<DirectX::AudioEngine> m_audEngine;
     std::unique_ptr<DirectX::SoundEffect> m_sound;
     double timeSeconds = 0.0;
+
+    float metallicFactor = 0.0f;
+    float roughnessFactor = 0.0f;
+    int useAlbedoMap = 0.0f;
+    int useEmissiveMap = 0.0f;
+    int useNormalMap = 0.0f;
+
+    int useAOMap = 0.0f;
+    int useHeightMap = 0.0f;
+    float heightScale = 0.0f;
+    int useMetallicMap = 0.0f;
+    int useRoughnessMap = 0.0f;
+    bool drawNormals = 0.0f;
+
 };
 
 } // namespace hlab

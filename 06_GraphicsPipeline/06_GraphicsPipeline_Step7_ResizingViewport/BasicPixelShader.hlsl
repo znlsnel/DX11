@@ -17,7 +17,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
 
     float3 toEye = normalize(eyeWorld - input.posWorld);
 
-    float3 color = float3(0.0, 0.0, 0.0);
+    float3 color = float3(1.0, 0.0, 0.0);
     
     int i = 0;
     

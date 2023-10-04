@@ -48,6 +48,12 @@ extern ComPtr<ID3D11VertexShader> depthOnlyVS;
 extern ComPtr<ID3D11VertexShader> depthOnlySkinnedVS;
 extern ComPtr<ID3D11VertexShader> grassVS;
 extern ComPtr<ID3D11VertexShader> billboardVS;
+extern ComPtr<ID3D11VertexShader> terrainVS;
+
+extern ComPtr<ID3D11HullShader> terrainHS;
+
+extern ComPtr<ID3D11DomainShader> terrainDS;
+
 extern ComPtr<ID3D11PixelShader> basicPS;
 extern ComPtr<ID3D11PixelShader> skyboxPS;
 extern ComPtr<ID3D11PixelShader> combinePS;
@@ -61,6 +67,8 @@ extern ComPtr<ID3D11PixelShader> grassPS;
 extern ComPtr<ID3D11PixelShader> oceanPS;
 extern ComPtr<ID3D11PixelShader> volumetricFirePS;
 extern ComPtr<ID3D11PixelShader> gameExplosionPS;
+extern ComPtr<ID3D11PixelShader> terrainPS;
+
 extern ComPtr<ID3D11GeometryShader> normalGS;
 extern ComPtr<ID3D11GeometryShader> billboardGS;
 
@@ -103,6 +111,8 @@ extern GraphicsPSO boundingBoxPSO;
 extern GraphicsPSO grassSolidPSO;
 extern GraphicsPSO grassWirePSO;
 extern GraphicsPSO oceanPSO;
+extern GraphicsPSO terrainSolidPSO;
+extern GraphicsPSO terrainWirePSO;
 
 // 주의: 초기화가 느려서 필요한 경우에만 초기화
 extern GraphicsPSO volumeSmokePSO;

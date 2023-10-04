@@ -133,7 +133,7 @@ struct PixelShaderInput
     float3 normalWorld : NORMAL0;
     float2 texcoord : TEXCOORD0;
     float3 tangentWorld : TANGENT0;
-    float3 posModel : POSITION1; // Volume casting 시작점
+    float3 posModel : POSITION1; // Volume casting 시작점 
 };
 
 #endif // __COMMON_HLSLI__

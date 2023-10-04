@@ -19,7 +19,7 @@ ExampleApp::ExampleApp() : AppBase() {}
 
 bool ExampleApp::InitScene() {
 
-    AppBase::m_camera.Reset(Vector3(-0.112852f, 0.307729f, -0.542159f),
+    AppBase::m_camera->Reset(Vector3(-0.112852f, 0.307729f, -0.542159f),
                             0.0589047f, 0.14399f);
     AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
 
@@ -143,7 +143,7 @@ void ExampleApp::UpdateGUI() {
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera.m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         ImGui::Checkbox("DrawOBB", &m_drawOBB);
         ImGui::Checkbox("DrawBSphere", &m_drawBS);

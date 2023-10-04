@@ -29,12 +29,13 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 AppBase::AppBase()
-    : m_screenWidth(1280), m_screenHeight(720), m_mainWindow(0),
-      m_screenViewport(D3D11_VIEWPORT()) {
+    : m_mainWindow(0),
+      m_screenViewport(D3D11_VIEWPORT()) 
+{
 
     g_appBase = this;
-
-    m_camera.SetAspectRatio(this->GetAspectRatio());
+    m_camera = make_shared<Camera>(g_appBase);
+    m_camera->SetAspectRatio(this->GetAspectRatio());
 }
 
 AppBase::~AppBase() {
@@ -57,7 +58,11 @@ AppBase::~AppBase() {
 }
 
 float AppBase::GetAspectRatio() const {
-    return float(m_screenWidth) / m_screenHeight;
+
+        float ratio = float(m_screenWidth - m_imGuiWidth) / m_screenHeight;
+
+        //std::cout << "ratio : " << ratio << std::endl;
+    return ratio;
 }
 
 int AppBase::Run() {
@@ -204,20 +209,36 @@ bool AppBase::InitScene() {
     return true;
 }
 
+void AppBase::UpdateGUI() {
+
+        float tempWidth = ImGui::GetWindowSize().x;
+    float posX = ImGui::GetWindowPos().x;
+
+        if (m_imGuiWidth == tempWidth && posX != 0.0f)
+        return; 
+
+    ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetWindowSize(ImVec2(m_imGuiWidth, m_screenHeight));
+   // m_imGuiWidth = tempWidth;
+
+   // ResizeSwapChain(m_screenWidth , m_screenHeight);
+   //std::cout << "ImGui Width : " << m_imGuiWidth << std::endl;
+    }
+
 void AppBase::Update(float dt) {
 
         for (const auto &model : m_characters) {
-        model->Update(dt);
+                model->Update(dt);
         }
 
     // 카메라의 이동
     //m_camera.UpdateKeyboard(dt, m_keyPressed);
-        m_camera.UpdatePos();
+        m_camera->UpdatePos();
     // 반사 행렬 추가
-    const Vector3 eyeWorld = m_camera.GetEyePos();
+    const Vector3 eyeWorld = m_camera->GetEyePos();
     const Matrix reflectRow = Matrix::CreateReflection(m_mirrorPlane);
-    const Matrix viewRow = m_camera.GetViewRow();
-    const Matrix projRow = m_camera.GetProjRow();
+    const Matrix viewRow = m_camera->GetViewRow();
+    const Matrix projRow = m_camera->GetProjRow();
 
     UpdateLights(dt);
 
@@ -235,10 +256,12 @@ void AppBase::Update(float dt) {
                 std::max(0.01f, m_globalConstsCPU.lights[i].radius)) *
             Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
 
+    // m_ground->UpdateConstantBuffers(m_device, m_context);
     //ProcessMouseControl();
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
+   
 }
 
 void AppBase::UpdateLights(float dt) {
@@ -318,7 +341,6 @@ void AppBase::RenderDepthOnly() {
         model->Render(m_context);
     }
 
-
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
         m_skybox->Render(m_context);
@@ -388,6 +410,8 @@ void AppBase::RenderOpaqueObjects() {
         model->Render(m_context);
     }
 
+    // AppBase::SetPipelineState(m_ground->GetTerrainPSO(m_drawAsWire));
+
     // 거울 반사를 그릴 필요가 없으면 불투명 거울만 그리기
     if (m_mirrorAlpha == 1.0f && m_mirror) {
         AppBase::SetPipelineState(m_drawAsWire ? Graphics::defaultWirePSO
@@ -402,17 +426,20 @@ void AppBase::RenderOpaqueObjects() {
             model->RenderNormals(m_context);
     }
 
+
     AppBase::SetPipelineState(Graphics::boundingBoxPSO);
     if (AppBase::m_drawOBB) {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingBox(m_context);
         }
     }
+
     if (AppBase::m_drawBS) {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingSphere(m_context);
         }
     }
+
 }
 
 void AppBase::RenderMirror() {
@@ -432,6 +459,8 @@ void AppBase::RenderMirror() {
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
             model->Render(m_context);
         }
+        AppBase::SetPipelineState(m_ground->GetReflectPSO(m_drawAsWire));
+        m_ground->Render(m_context);
 
         AppBase::SetPipelineState(m_drawAsWire
                                       ? Graphics::reflectSkyboxWirePSO
@@ -456,6 +485,11 @@ void AppBase::Render() {
                              Graphics::sampleStates.data());
     m_context->PSSetSamplers(0, UINT(Graphics::sampleStates.size()),
                              Graphics::sampleStates.data());
+    m_context->DSSetSamplers(0, UINT(Graphics::sampleStates.size()),
+                             Graphics::sampleStates.data());
+    m_context->HSSetSamplers(0, UINT(Graphics::sampleStates.size()),
+                        Graphics::sampleStates.data());
+    
 
     // 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
     vector<ID3D11ShaderResourceView *> commonSRVs = {
@@ -490,7 +524,7 @@ void AppBase::OnMouseMove(int mouseX, int mouseY) {
     m_mouseNdcY = std::clamp(m_mouseNdcY, -1.0f, 1.0f);
 
     // 카메라 시점 회전
-    m_camera.UpdateMouse(m_mouseNdcX, m_mouseNdcY);
+    m_camera->UpdateMouse(m_mouseNdcX, m_mouseNdcY);
 }
 
 void AppBase::OnMouseClick(int mouseX, int mouseY) {
@@ -502,41 +536,35 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
     m_mouseNdcY = -mouseY * 2.0f / m_screenHeight + 1.0f;
 }
 
+void AppBase::OnMouseWheel(float wheelDt) {
+    //std::cout << "wheelDt : " << wheelDt << std::endl;
+
+        if (m_camera->m_useFirstPersonView) {
+            m_camera->cameraDistance += (float)-wheelDt * 0.001f;
+            m_camera->cameraDistance = std::clamp(
+                m_camera->cameraDistance, cameraDistance_min, cameraDistance_max);    
+        } else {
+            m_camera->cameraSpeed += (float)wheelDt * 0.001f;
+            m_camera->cameraSpeed =
+                std::clamp(m_camera->cameraSpeed, 
+                        cameraSpeed_min, cameraSpeed_max);
+        }
+}
+
 LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
         return true;
 
     switch (msg) {
-    case WM_SIZE:
+    case WM_SIZE: {
         // 화면 해상도가 바뀌면 SwapChain을 다시 생성
-        if (m_swapChain) {
-
-            m_screenWidth = int(LOWORD(lParam));
-            m_screenHeight = int(HIWORD(lParam));
-
-            // 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
-            if (m_screenWidth && m_screenHeight) {
-
-                cout << "Resize SwapChain to " << m_screenWidth << " "
-                     << m_screenHeight << endl;
-
-                m_backBufferRTV.Reset();
-                m_swapChain->ResizeBuffers(
-                    0,                    // 현재 개수 유지
-                    (UINT)LOWORD(lParam), // 해상도 변경
-                    (UINT)HIWORD(lParam),
-                    DXGI_FORMAT_UNKNOWN, // 현재 포맷 유지
-                    0);
-                CreateBuffers();
-                SetMainViewport();
-                m_camera.SetAspectRatio(this->GetAspectRatio());
-
-                m_postProcess.Initialize(
-                    m_device, m_context, {m_postEffectsSRV, m_prevSRV},
-                    {m_backBufferRTV}, m_screenWidth, m_screenHeight, 4);
-            }
-        }
+        int width = int(LOWORD(lParam));
+        int height = int(HIWORD(lParam));
+        //cout << "width : " << width << "height : " << height << endl; 
+        // 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
+        ResizeSwapChain(width, height);
+    }
         break;
     case WM_SYSCOMMAND:
         if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
@@ -576,7 +604,12 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
     case WM_KEYUP:
         if (wParam == 'F') { // f키 일인칭 시점
-            m_camera.m_useFirstPersonView = !m_camera.m_useFirstPersonView;
+            if (m_keyPressed[17]) {
+                    m_camera->m_useFirstPersonView = !m_camera->m_useFirstPersonView;
+            } else {
+                m_camera->m_isCameraLock = !m_camera->m_isCameraLock;
+            }
+            
         }
         if (wParam == 'C') { // c키 화면 캡쳐
             ComPtr<ID3D11Texture2D> backBuffer;
@@ -588,13 +621,15 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             m_pauseAnimation = !m_pauseAnimation;
         }
         if (wParam == 'Z') { // 카메라 설정 화면에 출력
-            m_camera.PrintView();
+            m_camera->PrintView();
         }
-
+        cout << wParam << endl;
         m_keyPressed[wParam] = false;
         break;
-    case WM_MOUSEWHEEL:
+    case WM_MOUSEWHEEL: {
         m_wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+        OnMouseWheel(m_wheelDelta);
+    }
         break;
     case WM_DESTROY:
         ::PostQuitMessage(0);
@@ -602,6 +637,40 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
 
     return ::DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void AppBase::ResizeSwapChain(int width, int height) {
+
+
+    if (m_swapChain) {
+        m_screenWidth = width;
+        m_screenHeight = height;
+
+        // 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
+        if (m_screenWidth && m_screenHeight) {
+
+          //  cout << "Resize SwapChain to " << m_screenWidth << " "
+              //   << m_screenHeight << endl;
+
+            m_backBufferRTV.Reset();
+            m_swapChain->ResizeBuffers(0, // 현재 개수 유지
+                                       (UINT)m_screenWidth, // 해상도 변경
+                                       (UINT)m_screenHeight,
+                                       DXGI_FORMAT_UNKNOWN, // 현재 포맷 유지
+                                       0);
+
+            m_camera->SetAspectRatio(this->GetAspectRatio());
+            CreateBuffers();
+            SetMainViewport();
+
+            m_postProcess.Initialize(
+                m_device, m_context, {m_postEffectsSRV, m_prevSRV},
+                {m_backBufferRTV}, m_screenWidth, m_screenHeight, 4);
+        }
+    }
+
+
+        
 }
 
 void AppBase::PostRender() {
@@ -698,7 +767,7 @@ void AppBase::CreateDepthBuffers() {
     // DepthStencilView 만들기
     D3D11_TEXTURE2D_DESC desc;
     ZeroMemory(&desc, sizeof(desc));
-    desc.Width = m_screenWidth;
+    desc.Width = m_screenWidth ;
     desc.Height = m_screenHeight;
     desc.MipLevels = 1;
     desc.ArraySize = 1;
@@ -764,7 +833,7 @@ void AppBase::CreateDepthBuffers() {
             m_shadowBuffers[i].Get(), &srvDesc,
             m_shadowSRVs[i].GetAddressOf()));
     }
-}
+} 
 
 void AppBase::SetPipelineState(const GraphicsPSO &pso) {
 
@@ -823,8 +892,8 @@ void AppBase::ProcessMouseControl() {
 
     // 사용자가 두 버튼 중 하나만 누른다고 가정합니다.
     if (m_leftButton || m_rightButton) {
-        const Matrix viewRow = m_camera.GetViewRow();
-        const Matrix projRow = m_camera.GetProjRow();
+        const Matrix viewRow = m_camera->GetViewRow();
+        const Matrix projRow = m_camera->GetProjRow();
         const Vector3 ndcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
         const Vector3 ndcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
         const Matrix invProjView = (viewRow * projRow).Invert();
@@ -1047,19 +1116,26 @@ bool AppBase::InitGUI() {
 
     return true;
 }
-
+ 
 void AppBase::SetMainViewport() {
 
-    // Set the viewport
-    ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
-    m_screenViewport.TopLeftX = 0;
-    m_screenViewport.TopLeftY = 0;
-    m_screenViewport.Width = float(m_screenWidth);
-    m_screenViewport.Height = float(m_screenHeight);
-    m_screenViewport.MinDepth = 0.0f;
-    m_screenViewport.MaxDepth = 1.0f;
 
-    m_context->RSSetViewports(1, &m_screenViewport);
+
+        // Set the viewport
+        ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
+
+        m_screenViewport.TopLeftX = (float)200;
+        m_screenViewport.TopLeftY = 0;
+        m_screenViewport.Width =
+            float(m_screenWidth) - m_screenViewport.TopLeftX;
+        m_screenViewport.Height = float(m_screenHeight);
+        m_screenViewport.MinDepth = 0.0f;
+        m_screenViewport.MaxDepth = 1.0f;
+      
+       // std::cout << "m_imGuiWidth" << m_imGuiWidth << std::endl;
+
+        m_context->RSSetViewports(1, &m_screenViewport);
+    
 }
 
 void AppBase::SetShadowViewport() {
@@ -1067,9 +1143,9 @@ void AppBase::SetShadowViewport() {
     // Set the viewport
     D3D11_VIEWPORT shadowViewport;
     ZeroMemory(&shadowViewport, sizeof(D3D11_VIEWPORT));
-    shadowViewport.TopLeftX = 0;
+    shadowViewport.TopLeftX = float(m_imGuiWidth);
     shadowViewport.TopLeftY = 0;
-    shadowViewport.Width = float(m_shadowWidth);
+    shadowViewport.Width = float(m_shadowWidth - m_imGuiWidth);
     shadowViewport.Height = float(m_shadowHeight);
     shadowViewport.MinDepth = 0.0f;
     shadowViewport.MaxDepth = 1.0f;

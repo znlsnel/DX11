@@ -24,7 +24,7 @@ using std::vector;
 
 class ModelLoader {
   public:
-    void Load(string basePath, string filename, bool revertNormals);
+    void Load(string basePath, string filename, bool revertNormals, bool gltfNormal = false);
     void LoadAnimation(string basePath, string filename);
 
     const aiNode *FindParent(const aiNode *node);

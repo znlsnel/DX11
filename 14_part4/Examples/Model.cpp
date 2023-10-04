@@ -202,7 +202,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
     {
         m_boundingBox = GetBoundingBox(meshes[0].vertices);
         for (size_t i = 1; i < meshes.size(); i++) {
-            auto bb = GetBoundingBox(meshes[0].vertices);
+            auto bb = GetBoundingBox(meshes[i].vertices);
             ExtendBoundingBox(bb, m_boundingBox);
         }
         auto meshData = GeometryGenerator::MakeWireBox(
@@ -256,6 +256,10 @@ void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
 }
 
 GraphicsPSO &Model::GetPSO(const bool wired) {
+
+       if (useTessellation) {
+        return wired ? Graphics::terrainWirePSO : Graphics::terrainSolidPSO;
+    }
     return wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
 }
 
@@ -263,7 +267,8 @@ GraphicsPSO &Model::GetDepthOnlyPSO() { return Graphics::depthOnlyPSO; }
 
 GraphicsPSO &Model::GetReflectPSO(const bool wired) {
     return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
-}
+} 
+
 
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
     if (m_isVisible) {
@@ -304,6 +309,7 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
         }
     }
 }
+
 
 void Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, int clipId,
                             int frame) {
@@ -379,5 +385,7 @@ void Model::UpdateWorldRow(const Matrix &worldRow) {
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
 }
+
+
 
 } // namespace hlab

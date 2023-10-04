@@ -14,9 +14,15 @@ struct PixelShaderOutput
 PixelShaderOutput main(SkyboxPixelShaderInput input)
 {
     PixelShaderOutput output;
+
+    
+    if (input.posModel.y < -0.1)
+        input.posModel.y *= -1.0f;
+    else if (input.posModel.y < 0.1)
+        input.posModel.y = 0.1;
     
     output.pixelColor = envIBLTex.SampleLevel(linearWrapSampler, input.posModel.xyz, envLodBias);
-    
+
     /*if (textureToDraw == 0)
         output.pixelColor = envIBLTex.SampleLevel(linearWrapSampler, input.posModel.xyz, envLodBias);
     else if (textureToDraw == 1)

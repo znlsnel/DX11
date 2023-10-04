@@ -18,7 +18,7 @@ using std::tuple;
 class GeometryGenerator {
   public:
     static vector<MeshData> ReadFromFile(string basePath, string filename,
-                                         bool revertNormals = false);
+                                         bool revertNormals = false, bool gltNormal = false);
 
     static auto ReadAnimationFromFile(string basePath, string filename,
                                       bool revertNormals = false)

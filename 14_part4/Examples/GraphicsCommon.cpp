@@ -45,6 +45,11 @@ ComPtr<ID3D11VertexShader> depthOnlyVS;
 ComPtr<ID3D11VertexShader> depthOnlySkinnedVS;
 ComPtr<ID3D11VertexShader> grassVS;
 ComPtr<ID3D11VertexShader> billboardVS;
+ComPtr<ID3D11VertexShader> terrainVS;
+
+ComPtr<ID3D11HullShader> terrainHS;
+
+ComPtr<ID3D11DomainShader> terrainDS;
 
 ComPtr<ID3D11PixelShader> basicPS;
 ComPtr<ID3D11PixelShader> skyboxPS;
@@ -60,6 +65,7 @@ ComPtr<ID3D11PixelShader> grassPS;
 ComPtr<ID3D11PixelShader> oceanPS;
 ComPtr<ID3D11PixelShader> volumetricFirePS;
 ComPtr<ID3D11PixelShader> gameExplosionPS;
+ComPtr<ID3D11PixelShader> terrainPS;
 
 ComPtr<ID3D11GeometryShader> normalGS;
 ComPtr<ID3D11GeometryShader> billboardGS;
@@ -72,6 +78,7 @@ ComPtr<ID3D11InputLayout> skyboxIL;
 ComPtr<ID3D11InputLayout> postProcessingIL;
 ComPtr<ID3D11InputLayout> grassIL;     // PER_INSTANCE 사용
 ComPtr<ID3D11InputLayout> billboardIL; // PER_INSTANCE 사용
+ComPtr<ID3D11InputLayout> terrainIL; 
 
 // Graphics Pipeline States
 GraphicsPSO defaultSolidPSO;
@@ -97,6 +104,8 @@ GraphicsPSO postProcessingPSO;
 GraphicsPSO boundingBoxPSO;
 GraphicsPSO grassSolidPSO;
 GraphicsPSO grassWirePSO;
+GraphicsPSO terrainSolidPSO;
+GraphicsPSO terrainWirePSO;
 GraphicsPSO oceanPSO;
 
 // 주의: 초기화가 느려서 필요한 경우에만 초기화
@@ -460,6 +469,20 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreateVertexShaderAndInputLayout(
         device, L"BillboardVS.hlsl", billboardIEs, billboardVS, billboardIL);
 
+        vector<D3D11_INPUT_ELEMENT_DESC> inputElements = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, // Vector4
+         D3D11_INPUT_PER_VERTEX_DATA, 0}};
+    D3D11Utils::CreateVertexShaderAndInputLayout(
+        device, L"tessellatedQuadVS.hlsl", inputElements, terrainVS,
+        terrainIL);
+
+    D3D11Utils::CreateHullShader(device, L"tessellatedQuadHS.hlsl", terrainHS);
+
+    D3D11Utils::CreateDomainShader(device, L"tessellatedQuadDS.hlsl",
+                                   terrainDS);
+
+    D3D11Utils::CreatePixelShader(device, L"tessellatedQuadPS.hlsl", terrainPS);
+
     D3D11Utils::CreatePixelShader(device, L"BasicPS.hlsl", basicPS);
     D3D11Utils::CreatePixelShader(device, L"NormalPS.hlsl", normalPS);
     D3D11Utils::CreatePixelShader(device, L"SkyboxPS.hlsl", skyboxPS);
@@ -478,7 +501,7 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
 
     D3D11Utils::CreateGeometryShader(device, L"NormalGS.hlsl", normalGS);
     D3D11Utils::CreateGeometryShader(device, L"BillboardGS.hlsl", billboardGS);
-}
+} 
 
 void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     // defaultSolidPSO;
@@ -488,6 +511,15 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     defaultSolidPSO.m_rasterizerState = solidRS;
     defaultSolidPSO.m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
+    terrainSolidPSO = defaultSolidPSO;
+    terrainSolidPSO.m_hullShader = terrainHS;
+    terrainSolidPSO.m_domainShader = terrainDS;
+    terrainSolidPSO.m_primitiveTopology =
+         D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST; 
+
+    terrainWirePSO = terrainSolidPSO;
+    terrainWirePSO.m_rasterizerState = wireRS;
+     
     // Skinned mesh solid
     skinnedSolidPSO = defaultSolidPSO;
     skinnedSolidPSO.m_vertexShader = skinnedVS;
@@ -496,6 +528,8 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     // defaultWirePSO
     defaultWirePSO = defaultSolidPSO;
     defaultWirePSO.m_rasterizerState = wireRS;
+
+
 
     // Skinned mesh wire
     skinnedWirePSO = skinnedSolidPSO;
@@ -608,7 +642,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     // oceanPSO
     oceanPSO = defaultSolidPSO;
     oceanPSO.m_blendState = alphaBS;
-    // oceanPSO.m_rasterizerState = solidBothRS; // 양면
+    //oceanPSO.m_rasterizerState = solidBothRS; // 양면
     oceanPSO.m_pixelShader = oceanPS;
 }
 

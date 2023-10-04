@@ -1,5 +1,6 @@
 ﻿#include "Camera.h"
 #include "Character.h"
+#include "AppBase.h"
 
 #include <iostream>
 
@@ -8,26 +9,55 @@ namespace hlab {
 using namespace std;
 using namespace DirectX;
 
-Camera::Camera() { UpdateViewDir(); }
+Camera::Camera(AppBase* appBase) {
+        UpdateViewDir(); 
+        m_appBase = appBase;
+}
 
 Matrix Camera::GetViewRow() {
     return Matrix::CreateTranslation(-m_position) *
            Matrix::CreateRotationY(-m_yaw) *
-           Matrix::CreateRotationX(
-               -m_pitch); // m_pitch가 양수이면 고개를 드는 방향
+           Matrix::CreateRotationX(-m_pitch); 
+    // m_pitch가 양수이면 고개를 드는 방향
 }
 
 Vector3 Camera::GetEyePos() { return m_position; }
-
 void Camera::UpdatePos() {
 
-        if (m_target == nullptr)
-        return;
+        if (m_target != nullptr && m_useFirstPersonView) {
+                Vector3 tempPos = m_target->GetMesh()->m_worldRow.Translation();
+                //
+                tempPos += -GetForwardVector() * cameraDistance;
+                SetLocation(tempPos);
+        } 
+        else 
+        {
+                Vector3 moveDir{0.f, 0.f, 0.f};
+                
+                if (m_appBase->m_keyPressed['W'])
+                    moveDir += m_forwardDir;
 
-        Vector3 tempPos = m_target->GetMesh()->m_worldRow.Translation();
-        //
-        tempPos += -GetForwardVector() / 3;
-        SetLocation(tempPos);
+                if (m_appBase->m_keyPressed['S'])
+                    moveDir += -m_forwardDir;
+                    
+                if (m_appBase->m_keyPressed['A']) {
+                    moveDir += -m_rightDir;
+                }
+
+                if (m_appBase->m_keyPressed['D'])
+                    moveDir += m_rightDir;
+
+                if (m_appBase->m_keyPressed['Q'])
+                    moveDir += -m_upDir;
+
+                if (m_appBase->m_keyPressed['E'])
+                    moveDir += m_upDir;
+
+                moveDir.Normalize();
+                SetLocation(m_position + moveDir * 0.1 * cameraSpeed);
+        
+        }
+
 }
 
 void Camera::UpdateViewDir() {
@@ -61,12 +91,14 @@ void Camera::UpdateKeyboard(const float dt, bool const keyPressed[256]) {
 }
 
 void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
-    if (m_useFirstPersonView) {
         // 얼마나 회전할지 계산
+    if (m_isCameraLock)
+                return;
+
         m_yaw = mouseNdcX * DirectX::XM_2PI;       // 좌우 360도
         m_pitch = -mouseNdcY * DirectX::XM_PIDIV2; // 위 아래 90도
         UpdateViewDir();
-    }
+    
 }
 
 void Camera::MoveForward(float dt) {
@@ -102,6 +134,8 @@ Vector3 Camera::GetForwardVector() { return m_forwardDir; }
 Vector3 Camera::GetPosision() { return m_position; }
 
 Matrix Camera::GetProjRow() {
+
+      //  std::cout << "aspect :" << m_aspect << std::endl;
     return m_usePerspectiveProjection
                ? XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
                                           m_aspect, m_nearZ, m_farZ)

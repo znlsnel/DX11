@@ -576,5 +576,17 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Ex1408_BitonicSortCS.hlsl" />
+    <FxCompile Include="tessellatedQuadHS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellatedQuadDS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellatedQuadVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellatedQuadPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

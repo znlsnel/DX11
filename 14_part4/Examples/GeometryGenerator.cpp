@@ -727,9 +727,9 @@ void GeometryGenerator::Normalize(const Vector3 center,
 
 vector<MeshData> GeometryGenerator::ReadFromFile(std::string basePath,
                                                  std::string filename,
-                                                 bool revertNormals) {
+                                                 bool revertNormals, bool gltNormal) {
     ModelLoader modelLoader;
-    modelLoader.Load(basePath, filename, revertNormals);
+    modelLoader.Load(basePath, filename, revertNormals, gltNormal);
 
     GeometryGenerator::Normalize(Vector3(0.0f), 1.0f, modelLoader.m_meshes,
                                  modelLoader.m_aniData);

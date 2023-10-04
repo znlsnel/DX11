@@ -19,42 +19,82 @@ bool Ex2001_GamePlay::InitScene() {
     AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
     AppBase::m_globalConstsCPU.lodBias = 0.0f;
 
-    AppBase::m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
+    AppBase::m_camera->Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
                             0.0654498f);
 
     AppBase::InitCubemaps(
-        L"../Assets/Textures/Cubemaps/HDRI/", L"SampleEnvHDR.dds",
-        L"SampleSpecularHDR.dds", L"SampleDiffuseHDR.dds",
-        L"SampleBrdf.dds");
+        L"../Assets/Textures/Cubemaps/HDRI/Sky/", L"skyEnvHDR.dds",
+        L"skySpecularHDR.dds", L"skyDiffuseHDR.dds",
+        L"skyBrdf.dds");
 
     AppBase::InitScene();
-
+     
     // 바닥(거울)
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
-        auto mesh = GeometryGenerator::MakeSquare(5.0, {10.0f, 10.0f});
-        string path = "../Assets/Textures/PBR/black-tile1-ue/";
-        mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
-        mesh.emissiveTextureFilename = "";
-        mesh.aoTextureFilename = path + "black-tile1_ao.png";
-        mesh.metallicTextureFilename = path + "black-tile1_Metallic.png";
-        mesh.normalTextureFilename = path + "black-tile1_Normal-dx.png";
-        mesh.roughnessTextureFilename = path + "black-tile1_Roughness.png";
-
-        auto ground = make_shared<Model>(m_device, m_context, vector{mesh});
-        ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
-        ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
-        ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
-        ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
+        //auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
+        auto mesh =  GeometryGenerator::MakeSquareGrid(10, 10);
+        string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
+        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+      //  mesh.metallicTextureFilename = path + "";
+        mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
+        mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
+        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+         
+        m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
+        m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+        m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
+        m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
+        m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
+         
         Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
-        ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
                                Matrix::CreateTranslation(position));
-
+      // m_ground->useTessellation = true; 
+         
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
-        // m_mirror = ground; // 바닥에 거울처럼 반사 구현
-
-        m_basicList.push_back(ground); // 거울은 리스트에 등록 X
+        // m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
+        m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
+      
+        m_pbrList.push_back(m_ground);   // 리스트에 등록
     }
+    
+        // terrain
+    {
+        auto meshes = GeometryGenerator::ReadFromFile(
+            "../Assets/Terrain/Chalaadi/",
+            "2.fbx", false);
+
+        // meshes[0].albedoTextureFilename =
+        //     "../Assets/Terrain/snowy_mountain_with_slopes/"
+        //     "Texture.png";
+
+         //auto meshes = GeometryGenerator::ReadFromFile(
+         //    "../Assets/Terrain/Chalaadi/", "2.fbx", false);
+         for (auto &v : meshes[0].vertices)
+             v.texcoord /= 1024.0f;
+         meshes[0].albedoTextureFilename =
+             "../Assets/Terrain/Chalaadi/overlay.png";
+
+         float terrainScale = 100.f;
+
+        Vector3 center(0.f, 0.02f, 0.f);
+        m_terrain =
+            make_shared<Model>(m_device, m_context, meshes);
+        //m_terrain->m_materialConsts.GetCpu().invertNormalMapY =
+        //    true; // GLTF는 true로
+        m_terrain->m_materialConsts.GetCpu().roughnessFactor = 0.97f;
+        m_terrain->m_materialConsts.GetCpu().metallicFactor = 0.03f;
+        m_terrain->UpdateWorldRow(Matrix::CreateScale(terrainScale) *
+                                  Matrix::CreateTranslation(center));
+        m_terrain->m_castShadow = true;
+        //m_pickedModel = m_terrain;
+
+        m_basicList.push_back(m_terrain); // 리스트에 등록
+        m_pbrList.push_back(m_terrain);   // 리스트에 등록
+    }
+
 
     // Main Object
     {
@@ -69,12 +109,31 @@ bool Ex2001_GamePlay::InitScene() {
 
         m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
         m_characters.push_back(m_player);
-        m_camera.SetTarget(m_player.get());
+        //m_pickedModel = m_player->GetMesh()->m_meshes;
+        m_pbrList.push_back(m_player->GetMesh()); // 리스트에 등록
+
+       
+        m_camera->SetTarget(m_player.get());
     }
 
     InitPhysics(true);
 
     InitAudio();
+
+    // ocean
+        {
+        auto mesh = GeometryGenerator::MakeSquare(20.0, {10.0f, 10.0f});
+        m_ocean =
+            make_shared<OceanModel>(m_device, m_context, vector{mesh});
+        m_ocean->m_castShadow = false;
+
+        Vector3 position = Vector3(0.0f, 0.1f, 2.0f);
+        m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+                                Matrix::CreateTranslation(position));
+
+        m_basicList.push_back(m_ocean);
+    }
+
 
     return true;
 }
@@ -175,7 +234,7 @@ void Ex2001_GamePlay::Update(float dt) {
     timeSeconds += dt;
 
     AppBase::Update(dt);
-    
+    MousePicking();
 
 
     UpdateAnim(dt);
@@ -269,13 +328,58 @@ void Ex2001_GamePlay::InitAudio() {
         
 }
 
+void Ex2001_GamePlay::MousePicking() {
+
+        if (m_leftButton == false)
+                return;
+
+        m_leftButton = false;
+
+        Vector3 cursorNdcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
+        Vector3 cursorNdcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
+
+        Matrix inverseProjView =
+            (m_camera->GetViewRow() * m_camera->GetProjRow()).Invert();
+
+        Vector3 cursorWorldNear =
+            Vector3::Transform(cursorNdcNear, inverseProjView);
+        Vector3 cursorWorldFar =
+            Vector3::Transform(cursorNdcFar, inverseProjView);
+        Vector3 dir = cursorWorldFar - cursorWorldNear;
+        dir.Normalize();
+        
+
+
+        for (auto model : m_pbrList) {
+                SimpleMath::Ray currRay = SimpleMath::Ray(cursorWorldNear, dir);
+                float dist = 0.0f;
+               
+                bool selected = currRay.Intersects(model->m_boundingBox, dist);
+                if (selected) {
+                        std::cout << " selected!!!  !!  "  << std::endl;
+                        m_pickedModel = model;
+                        break;
+                }
+        }
+
+}
+
+
+
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
-    ImGui::SetNextItemOpen(false, ImGuiCond_Once);
+ //   ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
 
+        static float oceanHeight = 0.0f;
+    if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
+        Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
+        m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+                                Matrix::CreateTranslation(position));
+    }
+
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera.m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         ImGui::Checkbox("DrawOBB", &m_drawOBB);
         ImGui::Checkbox("DrawBSphere", &m_drawBS);

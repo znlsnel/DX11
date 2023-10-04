@@ -37,9 +37,7 @@ class AppBase {
 
     virtual bool Initialize();
     virtual bool InitScene();
-    virtual void UpdateGUI() {
-    
-    }
+    virtual void UpdateGUI();
     virtual void Update(float dt);
     virtual void UpdateLights(float dt);
     virtual void RenderDepthOnly();
@@ -50,8 +48,10 @@ class AppBase {
 
     virtual void OnMouseMove(int mouseX, int mouseY);
     virtual void OnMouseClick(int mouseX, int mouseY);
-    virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    virtual void OnMouseWheel(float wheelDt);
 
+    virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    void ResizeSwapChain(int width, int height);
     void PostRender();
 
     void InitCubemaps(wstring basePath, wstring envFilename,
@@ -81,9 +81,12 @@ class AppBase {
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
     // 변수 이름을 줄이기 위해 d3d는 생략했습니다.
     // 예: m_d3dDevice -> m_device
+           
 
-    int m_screenWidth;
-    int m_screenHeight;
+        
+    int m_imGuiWidth = 378;
+    int m_screenWidth = 1280 + m_imGuiWidth;
+    int m_screenHeight = 720;
     HWND m_mainWindow;
     bool m_useMSAA = true;
     UINT m_numQualityLevels = 0;
@@ -129,7 +132,7 @@ class AppBase {
     D3D11_VIEWPORT m_screenViewport;
 
     // 시점을 결정하는 카메라 클래스 추가
-    Camera m_camera;
+    shared_ptr<Camera> m_camera;
     bool m_keyPressed[256] = {
         false,
     };
@@ -144,6 +147,12 @@ class AppBase {
     float m_wheelDelta = 0.0f;
     int m_mouseX = -1;
     int m_mouseY = -1;
+
+    float cameraDistance_min = 0.3f;
+    float cameraDistance_max = 10.f;
+
+    float cameraSpeed_min = 0.1f;
+    float cameraSpeed_max = 2.0f;
 
     // 렌더링 -> PostEffects -> PostProcess
     PostEffectsConstants m_postEffectsConstsCPU;
@@ -161,25 +170,31 @@ class AppBase {
       
     // 공통으로 사용하는 텍스춰들
     ComPtr<ID3D11ShaderResourceView> m_envSRV;
-    ComPtr<ID3D11ShaderResourceView> m_irradianceSRV; 
-    ComPtr<ID3D11ShaderResourceView> m_specularSRV;
-    ComPtr<ID3D11ShaderResourceView> m_brdfSRV;
+    ComPtr<ID3D11ShaderResourceView> m_irradianceSRV;  
+    ComPtr<ID3D11ShaderResourceView> m_specularSRV; 
+    ComPtr<ID3D11ShaderResourceView> m_brdfSRV; 
+            
+    bool m_lightRotate = false;            
+    bool m_pauseAnimation = false;   
          
-    bool m_lightRotate = false;  
-    bool m_pauseAnimation = false;
-
-    // 여러 예제들 공용
-    shared_ptr<Model> m_screenSquare; // PostEffect에 사용
+    // 여러 예제들 공용     
+    shared_ptr<Model> m_screenSquare; // PostEffect에 사용   
     shared_ptr<Model> m_skybox;
-    shared_ptr<Model> m_pickedModel;
+    shared_ptr<Model> m_pickedModel; 
+    shared_ptr<Model> m_ground;
+    shared_ptr<Model> m_terrain;
     shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
     shared_ptr<Model> m_cursorSphere;
     shared_ptr<Model> m_mirror; // 거울은 별도로 그림
     DirectX::SimpleMath::Plane m_mirrorPlane;
     float m_mirrorAlpha = 1.0f; // Opacity
 
+
+
+
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
     vector<shared_ptr<Model>> m_basicList;
+    vector<shared_ptr<Model>> m_pbrList;
     vector<shared_ptr<class Character>> m_characters;
 };
 

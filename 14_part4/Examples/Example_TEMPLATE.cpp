@@ -14,7 +14,7 @@ bool Example_TEMPLATE::InitScene() {
 
     cout << "Example_TEMPLATE::InitScene()" << endl;
 
-    AppBase::m_camera.Reset(Vector3(0.0f, 0.0f, -2.5f), 0.0f, 0.0f);
+    AppBase::m_camera->Reset(Vector3(0.0f, 0.0f, -2.5f), 0.0f, 0.0f);
     AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
                           L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
                           L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");

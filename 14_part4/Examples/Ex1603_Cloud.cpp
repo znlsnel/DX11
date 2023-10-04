@@ -20,7 +20,7 @@ bool Ex1603_Cloud::InitScene() {
 
     cout << "Ex1603_Cloud::InitScene()" << endl;
      
-    AppBase::m_camera.Reset(Vector3(0.0f, 0.0f, -2.5f), 0.0f, 0.0f);
+    AppBase::m_camera->Reset(Vector3(0.0f, 0.0f, -2.5f), 0.0f, 0.0f);
       
     // https://polyhaven.com/a/syferfontein_18d_clear_puresky
     AppBase::InitCubemaps(
