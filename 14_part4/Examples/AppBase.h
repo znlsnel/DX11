@@ -27,6 +27,7 @@ using std::shared_ptr;
 using std::vector;
 using std::wstring;
 
+
 class AppBase {
   public:
     AppBase();
@@ -193,9 +194,12 @@ class AppBase {
 
 
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
+    vector<shared_ptr<Model>> m_objects;
     vector<shared_ptr<Model>> m_basicList;
     vector<shared_ptr<Model>> m_pbrList;
     vector<shared_ptr<class Character>> m_characters;
+
+    shared_ptr<class JsonManager> m_JsonManager;
 };
 
 } // namespace hlab

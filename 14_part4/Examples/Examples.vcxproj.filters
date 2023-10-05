@@ -168,6 +168,7 @@
     </ClCompile>
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="SkinnedMeshModel.cpp" />
+    <ClCompile Include="JsonManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h" />
@@ -312,6 +313,7 @@
       <Filter>Models</Filter>
     </ClInclude>
     <ClInclude Include="Character.h" />
+    <ClInclude Include="JsonManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

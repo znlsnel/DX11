@@ -19,6 +19,7 @@ using std::endl;
 using std::string;
 using std::vector;
 
+
 class Model {
   public:
     Model() {}
@@ -84,6 +85,8 @@ class Model {
     DirectX::BoundingSphere m_boundingSphere;
 
     string m_name = "NoName";
+    ObjectSaveInfo objectInfo;
+
 
   private:
     shared_ptr<Mesh> m_boundingBoxMesh;

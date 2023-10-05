@@ -1,4 +1,5 @@
 ﻿#include "AppBase.h"
+#include "JsonManager.h"
 
 #include <algorithm>
 #include <directxtk/SimpleMath.h>
@@ -35,6 +36,9 @@ AppBase::AppBase()
 
     g_appBase = this;
     m_camera = make_shared<Camera>(g_appBase);
+    m_JsonManager = make_shared<JsonManager>();
+    m_JsonManager->TestJson_Parse();
+    m_JsonManager->TestJson_AddMember();
     m_camera->SetAspectRatio(this->GetAspectRatio());
 }
 
@@ -63,6 +67,7 @@ float AppBase::GetAspectRatio() const {
 
         //std::cout << "ratio : " << ratio << std::endl;
     return ratio;
+
 }
 
 int AppBase::Run() {

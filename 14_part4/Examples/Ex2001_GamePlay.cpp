@@ -5,6 +5,7 @@
 #include "GraphicsCommon.h"
 #include "OceanModel.h"
 #include "Character.h"
+#include "AppBase.h"
 
 namespace hlab {
 

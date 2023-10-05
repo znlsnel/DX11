@@ -183,6 +183,7 @@
     <ClCompile Include="GraphicsCommon.cpp" />
     <ClCompile Include="GraphicsPSO.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="JsonManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppBase.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="GraphicsPSO.h" />
     <ClInclude Include="GrassModel.h" />
     <ClInclude Include="Ex1901_Physx.h" />
+    <ClInclude Include="JsonManager.h" />
     <ClInclude Include="RigidBodyActor.h" />
     <ClInclude Include="SkeletalMeshActor.h" />
     <ClInclude Include="ImageFilter.h" />
