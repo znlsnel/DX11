@@ -55,8 +55,8 @@ bool Ex1803_Landscape::InitScene() {
             true; // GLTF는 true로
         m_terrain->m_materialConsts.GetCpu().roughnessFactor = 0.97f;
         m_terrain->m_materialConsts.GetCpu().metallicFactor = 0.03f;
-        m_terrain->UpdateWorldRow(Matrix::CreateScale(10.0f, 10.0f, 10.0f) *
-                                  Matrix::CreateTranslation(center));
+        //m_terrain->UpdateWorldRow(Matrix::CreateScale(10.0f, 10.0f, 10.0f) *
+        //                          Matrix::CreateTranslation(center));
         m_terrain->m_castShadow = true;
         m_pickedModel = m_terrain;
 
@@ -70,8 +70,8 @@ bool Ex1803_Landscape::InitScene() {
         m_ocean->m_castShadow = false;
 
         Vector3 position = Vector3(0.0f, -0.652f, 2.0f);
-        m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                Matrix::CreateTranslation(position));
+        //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                        Matrix::CreateTranslation(position));
 
         m_basicList.push_back(m_ocean);
     }
@@ -93,8 +93,8 @@ void Ex1803_Landscape::UpdateGUI() {
     static float oceanHeight = 0.0f;
     if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
         Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
-        m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                Matrix::CreateTranslation(position));
+        //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                        Matrix::CreateTranslation(position));
     }
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);

@@ -6,6 +6,7 @@
 #include "OceanModel.h"
 #include "Character.h"
 #include "AppBase.h"
+#include "JsonManager.h"
 
 namespace hlab {
 
@@ -50,8 +51,13 @@ bool Ex2001_GamePlay::InitScene() {
         m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
          
         Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
-        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                               Matrix::CreateTranslation(position));
+        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                       Matrix::CreateTranslation(position));
+        m_ground->UpdateTranseform(m_ground->GetScale(),
+                                   Vector3(3.141592f * 0.5f,
+                                           m_ground->GetRotation().y,
+                                           m_ground->GetRotation().z),
+                                   position);
       // m_ground->useTessellation = true; 
          
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
@@ -87,8 +93,10 @@ bool Ex2001_GamePlay::InitScene() {
         //    true; // GLTF는 true로
         m_terrain->m_materialConsts.GetCpu().roughnessFactor = 0.97f;
         m_terrain->m_materialConsts.GetCpu().metallicFactor = 0.03f;
-        m_terrain->UpdateWorldRow(Matrix::CreateScale(terrainScale) *
-                                  Matrix::CreateTranslation(center));
+        //m_terrain->UpdateWorldRow(Matrix::CreateScale(terrainScale) *
+        //                          Matrix::CreateTranslation(center));
+        m_terrain->UpdateTranseform(Vector3(terrainScale),
+                                    m_terrain->GetRotation(), center);
         m_terrain->m_castShadow = true;
         //m_pickedModel = m_terrain;
 
@@ -99,22 +107,27 @@ bool Ex2001_GamePlay::InitScene() {
 
     // Main Object
     {
-        vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",  "walk_end.fbx", "fireBall.fbx"};
-        string path = "../Assets/Characters/Mixamo/";
+        //ObjectSaveInfo temp;
+        //temp.meshID = (int)meshID::ECharacter;
+        //temp.scale = Vector3(0.2f);
+        //temp.position = Vector3(0.0f, 0.1f, 0.0f);
+        //m_JsonManager->CreateMesh(temp);
+      //  vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",  "walk_end.fbx", "fireBall.fbx"};
+      //  string path = "../Assets/Characters/Mixamo/";
 
-       // auto [meshes, _] =
-      //      GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
+      // // auto [meshes, _] =
+      ////      GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
 
-        m_player = make_shared<Character>(this, m_device, m_context, path,
-                "Character_Kachujin.fbx", clipNames );
+      //  m_player = make_shared<Character>(this, m_device, m_context, path,
+      //          "Character_Kachujin.fbx", clipNames );
 
-        m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
-        m_characters.push_back(m_player);
-        //m_pickedModel = m_player->GetMesh()->m_meshes;
-        m_pbrList.push_back(m_player->GetMesh()); // 리스트에 등록
+      //  m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
+      //  m_characters.push_back(m_player);
+      //  //m_pickedModel = m_player->GetMesh()->m_meshes;
+      //  m_pbrList.push_back(m_player->GetMesh()); // 리스트에 등록
 
-       
-        m_camera->SetTarget(m_player.get());
+      // 
+      //  m_camera->SetTarget(m_player.get());
     }
 
     InitPhysics(true);
@@ -129,9 +142,13 @@ bool Ex2001_GamePlay::InitScene() {
         m_ocean->m_castShadow = false;
 
         Vector3 position = Vector3(0.0f, 0.1f, 2.0f);
-        m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                Matrix::CreateTranslation(position));
-
+        //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                        Matrix::CreateTranslation(position));
+        m_ocean->UpdateTranseform(m_ocean->GetScale(),
+                                  Vector3(3.141592f * 0.5f,
+                                          m_ocean->GetRotation().y,
+                                          m_ocean->GetRotation().z),
+                                  position);
         m_basicList.push_back(m_ocean);
     }
 
@@ -162,7 +179,7 @@ void Ex2001_GamePlay::CreateStack(const PxTransform &t, int numStacks,
                 m_device, m_context, box); // <- 우리 렌더러에 추가
             m_newObj->m_materialConsts.GetCpu().albedoFactor = Vector3(0.8f);
             AppBase::m_basicList.push_back(m_newObj);
-            this->m_objects.push_back(m_newObj);
+            this->m_PhysicalObjects.push_back(m_newObj);
         }
     }
     shape->release();
@@ -219,7 +236,7 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
                            0.2f, Graphics::volumetricFirePS);
 
     AppBase::m_basicList.push_back(m_fireball);
-    this->m_objects.push_back(m_fireball);
+    this->m_PhysicalObjects.push_back(m_fireball);
 
     PxRigidDynamic *dynamic =
         PxCreateDynamic(*gPhysics, t, geometry, *gMaterial, 10.0f);
@@ -272,12 +289,17 @@ void Ex2001_GamePlay::Update(float dt) {
                 // bool speeping = actors[i]->is<PxRigidDynamic>() &&
                 //                 actors[i]->is<PxRigidDynamic>()->isSleeping();
 
-                m_objects[count]->UpdateWorldRow(
-                    Matrix(shapePose.front()) *
-                    Matrix::CreateScale(
-                        m_simToRenderScale) // PhysX to Render 스케일
-                );
-                m_objects[count]->UpdateConstantBuffers(m_device, m_context);
+                    
+                //m_PhysicalObjects[count]->UpdateWorldRow(
+                //    Matrix(shapePose.front()) *
+                //    Matrix::CreateScale(
+                //        m_simToRenderScale) // PhysX to Render 스케일
+                //);
+                m_PhysicalObjects[count]->UpdateScale(
+                    Vector3(*shapePose.front() * m_simToRenderScale));
+
+                m_PhysicalObjects[count]->UpdateConstantBuffers(m_device,
+                                                                m_context);
 
                 count++;
             }
@@ -351,14 +373,15 @@ void Ex2001_GamePlay::MousePicking() {
         
 
 
-        for (auto model : m_pbrList) {
+        for (auto object : m_objects) {
+                shared_ptr<Model> temp = object.second;
                 SimpleMath::Ray currRay = SimpleMath::Ray(cursorWorldNear, dir);
                 float dist = 0.0f;
                
-                bool selected = currRay.Intersects(model->m_boundingBox, dist);
+                bool selected = currRay.Intersects(temp->m_boundingBox, dist);
                 if (selected) {
                         std::cout << " selected!!!  !!  "  << std::endl;
-                        m_pickedModel = model;
+                        m_pickedModel = temp;
                         break;
                 }
         }
@@ -375,8 +398,14 @@ void Ex2001_GamePlay::UpdateGUI() {
         static float oceanHeight = 0.0f;
     if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
         Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
-        m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                Matrix::CreateTranslation(position));
+        //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                        Matrix::CreateTranslation(position));
+        m_ocean->UpdateTranseform(m_ocean->GetScale(),
+                                  Vector3(3.141592f * 0.5f,
+                                          m_ocean->GetRotation().y,
+                                          m_ocean->GetRotation().z),
+                                  position);
+
     }
 
     if (ImGui::TreeNode("General")) {

@@ -103,10 +103,10 @@ bool Ex1606_HybridWater::InitScene() {
     m_volumeModel->m_materialConsts.GetCpu().emissionFactor = Vector3(0.8f);
     m_volumeModel->m_materialConsts.GetCpu().metallicFactor = 0.1f;
     m_volumeModel->m_materialConsts.GetCpu().roughnessFactor = 0.9f;
-    m_volumeModel->UpdateWorldRow(
-        Matrix::CreateScale(1.0f * Vector3(1.0f, float(m_height) / m_width,
-                                           float(m_depth) / m_width)) *
-        Matrix::CreateTranslation(center));
+    //m_volumeModel->UpdateWorldRow(
+    //    Matrix::CreateScale(1.0f * Vector3(1.0f, float(m_height) / m_width,
+    //                                       float(m_depth) / m_width)) *
+     //   Matrix::CreateTranslation(center));
     m_volumeModel->UpdateConstantBuffers(m_device, m_context);
     m_volumeModel->m_meshes.front()->densityTex = m_density; // 고해상도
     m_volumeModel->m_meshes.front()->lightingTex.Initialize(

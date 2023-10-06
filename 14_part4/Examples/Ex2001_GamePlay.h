@@ -72,7 +72,7 @@ class Ex2001_GamePlay : public AppBase {
     PxReal stackZ = 10.0f;
 
     // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
-    vector<shared_ptr<Model>> m_objects; 
+    vector<shared_ptr<Model>> m_PhysicalObjects; 
     shared_ptr<Model> m_ocean;
 
     shared_ptr<BillboardModel> m_fireball;

@@ -47,8 +47,8 @@ bool Ex1801_Tree::InitScene() {
         m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
 
         Vector3 position = Vector3(0.0f, -0.5f, 2.0f);
-        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                 Matrix::CreateTranslation(position));
+        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                         Matrix::CreateTranslation(position));
 
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
         m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
@@ -70,8 +70,8 @@ bool Ex1801_Tree::InitScene() {
         m_leaves->m_materialConsts.GetCpu().albedoFactor = Vector3(0.3f);
         m_leaves->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
         m_leaves->m_materialConsts.GetCpu().metallicFactor = 0.2f;
-        m_leaves->UpdateWorldRow(Matrix::CreateScale(1.0f) *
-                                 Matrix::CreateTranslation(center));
+        //m_leaves->UpdateWorldRow(Matrix::CreateScale(1.0f) *
+        //                         Matrix::CreateTranslation(center));
 
         m_basicList.push_back(m_leaves); // 리스트에 등록
          
@@ -84,8 +84,8 @@ bool Ex1801_Tree::InitScene() {
         m_trunk->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
         m_trunk->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
         m_trunk->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-        m_trunk->UpdateWorldRow(Matrix::CreateScale(1.0f) *
-                                Matrix::CreateTranslation(center));
+        //m_trunk->UpdateWorldRow(Matrix::CreateScale(1.0f) *
+        //                        Matrix::CreateTranslation(center));
 
         m_basicList.push_back(m_trunk); // 리스트에 등록
     }

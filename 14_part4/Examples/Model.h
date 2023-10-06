@@ -20,6 +20,8 @@ using std::string;
 using std::vector;
 
 
+
+
 class Model {
   public:
     Model() {}
@@ -63,10 +65,40 @@ class Model {
     virtual void RenderNormals(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);
-    void UpdateWorldRow(const Matrix &worldRow);
+    
+    void UpdateScale(Vector3 scale);
+    void UpdatePosition(Vector3 position);
+    void UpdateRotation(Vector3 ratation);
+    void UpdateTranseform(Vector3 scale, Vector3 rotation, Vector3 position);
+    void AddYawOffset(float addYawOffset);
 
+    Vector3 GetPosition() { return m_position; };
+    Vector3 GetRotation() { return m_rotation; };
+    Vector3 GetScale() { return m_scale; };
+
+    static void ExtractEulerAnglesFromMatrix(const Matrix *worldRow, float &yaw,
+                                      float &roll, float &pitch) {
+        ExtractRollFromMatrix(worldRow, roll);
+        ExtractYawFromMatrix(worldRow, yaw);
+        ExtractPitchFromMatrix(worldRow, pitch);
+    };
+    static void ExtractRollFromMatrix(const Matrix *worldRow, float &roll) {
+        roll = std::atan2(worldRow->_12, worldRow->_11);
+    };
+    static void ExtractYawFromMatrix(const Matrix *worldRow, float &Yaw) {
+        Yaw = std::atan2(worldRow->_23, worldRow->_33);
+    };
+    static void ExtractPitchFromMatrix(const Matrix *worldRow, float &pitch) {
+        pitch = std::atan2(-worldRow->_13,
+                           std::sqrt(worldRow->_23 * worldRow->_23 +
+                                     worldRow->_33 * worldRow->_33));
+    };
+  private:
+    void UpdateWorldRow();
 
   public:
+
+
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
     Matrix m_worldITRow = Matrix(); // InverseTranspose
 
@@ -91,6 +123,10 @@ class Model {
   private:
     shared_ptr<Mesh> m_boundingBoxMesh;
     shared_ptr<Mesh> m_boundingSphereMesh;
+
+    Vector3 m_scale{1.f};
+    Vector3 m_position{0.f};
+    Vector3 m_rotation{0.f};
 };
 
 } // namespace hlab

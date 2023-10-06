@@ -47,8 +47,8 @@ bool Ex1802_Grass::InitScene() {
         m_ground->m_castShadow = false;
 
         Vector3 position = Vector3(0.0f, 0.0f, 2.0f);
-        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                 Matrix::CreateTranslation(position));
+        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                         Matrix::CreateTranslation(position));
 
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
         m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
@@ -95,8 +95,8 @@ bool Ex1802_Grass::InitScene() {
         }
 
         m_grass->Initialize(m_device, m_context);
-        m_grass->UpdateWorldRow(Matrix::CreateScale(0.5f) *
-                                Matrix::CreateTranslation(0.0f, 0.0f, 2.0f));
+        //m_grass->UpdateWorldRow(Matrix::CreateScale(0.5f) *
+        //                        Matrix::CreateTranslation(0.0f, 0.0f, 2.0f));
     }
 
     return true;

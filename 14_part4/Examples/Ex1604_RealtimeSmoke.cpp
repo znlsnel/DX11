@@ -100,10 +100,10 @@ bool Ex1604_RealtimeSmoke::InitScene() {
     Vector3 center(0.0f);
     m_volumeModel = make_shared<Model>(
         m_device, m_context, vector{GeometryGenerator::MakeBox(1.0f)});
-    m_volumeModel->UpdateWorldRow(
-        Matrix::CreateScale(2.0f * Vector3(1.0f, float(m_height) / m_width,
-                                           float(m_depth) / m_width)) *
-        Matrix::CreateTranslation(center));
+    //m_volumeModel->UpdateWorldRow(
+    //    Matrix::CreateScale(2.0f * Vector3(1.0f, float(m_height) / m_width,
+    //                                       float(m_depth) / m_width)) *
+       // Matrix::CreateTranslation(center));
     m_volumeModel->UpdateConstantBuffers(m_device, m_context);
     m_volumeModel->m_meshes.front()->densityTex = m_densityUp; // 고해상도
     m_volumeModel->m_meshes.front()->lightingTex.Initialize(

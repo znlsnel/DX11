@@ -12,9 +12,9 @@
 
 
 namespace hlab {
+using namespace std;
 
 class JsonManager {
-
   public:
     JsonManager(){};
     JsonManager(class AppBase* appBase);
@@ -29,6 +29,14 @@ class JsonManager {
 
     void LoadMesh();
    void SaveMesh();
+    void CreateMesh(struct ObjectSaveInfo temp);
+
+    shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
+    shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
+    shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 
+    shared_ptr<class Model> CreateGround(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateSphere(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateSquare(struct ObjectSaveInfo info);
 
    rapidjson::Document m_saveFile;
 };

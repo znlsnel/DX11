@@ -36,9 +36,8 @@ AppBase::AppBase()
 
     g_appBase = this;
     m_camera = make_shared<Camera>(g_appBase);
-    m_JsonManager = make_shared<JsonManager>();
-    m_JsonManager->TestJson_Parse();
-    m_JsonManager->TestJson_AddMember();
+    m_JsonManager = make_shared<JsonManager>(this);
+
     m_camera->SetAspectRatio(this->GetAspectRatio());
 }
 
@@ -179,8 +178,8 @@ bool AppBase::InitScene() {
             MeshData sphere = GeometryGenerator::MakeSphere(1.0f, 20, 20);
             m_lightSphere[i] =
                 make_shared<Model>(m_device, m_context, vector{sphere});
-            m_lightSphere[i]->UpdateWorldRow(Matrix::CreateTranslation(
-                m_globalConstsCPU.lights[i].position));
+            m_lightSphere[i]->UpdatePosition(
+                m_globalConstsCPU.lights[i].position);
             m_lightSphere[i]->m_materialConsts.GetCpu().albedoFactor =
                 Vector3(0.0f);
             m_lightSphere[i]->m_materialConsts.GetCpu().emissionFactor =
@@ -255,11 +254,13 @@ void AppBase::Update(float dt) {
         m_mirror->UpdateConstantBuffers(m_device, m_context);
 
     // 조명의 위치 반영
-    for (int i = 0; i < MAX_LIGHTS; i++)
-        m_lightSphere[i]->UpdateWorldRow(
-            Matrix::CreateScale(
-                std::max(0.01f, m_globalConstsCPU.lights[i].radius)) *
-            Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+
+        float scale = std::max(0.01f, m_globalConstsCPU.lights[i].radius);
+        m_lightSphere[i]->UpdateTranseform(
+            Vector3(scale), Vector3(0.0f),
+            m_globalConstsCPU.lights[i].position);
+    }
 
     // m_ground->UpdateConstantBuffers(m_device, m_context);
     //ProcessMouseControl();
@@ -972,20 +973,37 @@ void AppBase::ProcessMouseControl() {
         // m_pickedModel은 GUI 조작을 위해 마우스에서 손을 떼도 nullptr로
         // 설정하지 않음
     }
+    //pitch = std::atan2(-rotationMatrix[13],
+    //                   std::sqrt(rotationMatrix[23] * rotationMatrix[23] +
+    //                             rotationMatrix[33] * rotationMatrix[33]));
 
     // Cursor sphere 그리기
     if (activeModel) {
         Vector3 translation = activeModel->m_worldRow.Translation();
         activeModel->m_worldRow.Translation(Vector3(0.0f));
-        activeModel->UpdateWorldRow(
-            activeModel->m_worldRow * Matrix::CreateFromQuaternion(q) *
-            Matrix::CreateTranslation(dragTranslation + translation));
+
+        float pitch, roll, yaw;
+        Matrix tempRow =
+            activeModel->m_worldRow * Matrix::CreateFromQuaternion(q);
+
+        Model::ExtractEulerAnglesFromMatrix(&tempRow, yaw, roll,
+                                     pitch);
+
+        //activeModel->UpdateWorldRow(
+        //    activeModel->m_worldRow * Matrix::CreateFromQuaternion(q) *
+        //    Matrix::CreateTranslation(dragTranslation + translation));
+
+        activeModel->UpdateTranseform(activeModel->GetScale(),
+                                      Vector3(pitch, yaw, pitch),
+                                      dragTranslation + translation);
+
         activeModel->m_boundingSphere.Center =
             activeModel->m_worldRow.Translation();
 
         // 충돌 지점에 작은 구 그리기
         m_cursorSphere->m_isVisible = true;
-        m_cursorSphere->UpdateWorldRow(Matrix::CreateTranslation(pickPoint));
+        //m_cursorSphere->UpdateWorldRow(Matrix::CreateTranslation(pickPoint));
+        m_cursorSphere->UpdatePosition(pickPoint);
     } else {
         m_cursorSphere->m_isVisible = false;
     }

@@ -114,9 +114,9 @@ void Ex1901_PhysX::Update(float dt) {
                 // "
                 //      << speeping << endl;
 
-                m_objects[count]->UpdateWorldRow(Matrix(shapePose.front()) *
-                                                 Matrix::CreateScale(1.00f));
-                m_objects[count]->UpdateConstantBuffers(m_device, m_context);
+                //m_objects[count]->UpdateWorldRow(Matrix(shapePose.front()) *
+                //                                 Matrix::CreateScale(1.00f));
+                //m_objects[count]->UpdateConstantBuffers(m_device, m_context);
 
                 count++;
             }

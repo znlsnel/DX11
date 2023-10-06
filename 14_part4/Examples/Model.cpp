@@ -370,9 +370,45 @@ void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
     context->DrawIndexed(m_boundingSphereMesh->indexCount, 0, 0);
 }
 
-void Model::UpdateWorldRow(const Matrix &worldRow) {
-    this->m_worldRow = worldRow;
-    this->m_worldITRow = worldRow;
+void Model::UpdateScale(Vector3 scale) { 
+        m_scale = scale;
+    UpdateWorldRow();
+}
+
+void Model::UpdatePosition(Vector3 position) { 
+        m_position = position;
+    UpdateWorldRow();
+}
+
+void Model::UpdateRotation(Vector3 rotation) { 
+        m_rotation = rotation; 
+        UpdateWorldRow();
+}
+
+void Model::UpdateTranseform(Vector3 scale, Vector3 rotation,
+                             Vector3 position) {
+    m_scale = scale;
+    m_position = position;
+    m_rotation = rotation;
+
+    UpdateWorldRow();
+}
+
+void Model::AddYawOffset(float addYawOffset) 
+{ 
+        m_rotation.y += addYawOffset;
+    UpdateWorldRow();
+}
+
+void Model::UpdateWorldRow() {
+
+    m_worldRow = Matrix::CreateScale(m_scale.x) *
+                 Matrix::CreateRotationX(m_rotation.x) *
+                 Matrix::CreateRotationY(m_rotation.y) *
+                 Matrix::CreateRotationZ(m_rotation.z) *
+                 Matrix::CreateTranslation(m_position);
+
+    m_worldITRow = m_worldRow;
     m_worldITRow.Translation(Vector3(0.0f));
     m_worldITRow = m_worldITRow.Invert().Transpose();
 
@@ -381,7 +417,7 @@ void Model::UpdateWorldRow(const Matrix &worldRow) {
     // 구(sphere)라서 회전은 고려할 필요 없음
     m_boundingSphere.Center = this->m_worldRow.Translation();
 
-    m_meshConsts.GetCpu().world = worldRow.Transpose();
+    m_meshConsts.GetCpu().world = m_worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
 }

@@ -17,22 +17,23 @@ using std::vector;
  struct ObjectSaveInfo {
 
     int meshID = 0;
-    float objectID = 0.0f;
-    string meshName;
 
-    Vector3 scale;
-    Vector3 position;
-    Vector3 rotation;
-};
+    Vector3 scale{1.f};
+    Vector3 position{0.f};
+    Vector3 rotation{0.f};
+
+    string meshName;
+    float objectID;
+ };
 
  enum meshID : int { 
-	 character = 0,
-	 floor = 1,
-	 mountain = 2,
-	 Square = 3,
-	 box = 4,
-	 Sphere = 5,
-	 Cylinder = 6,
+	 ECharacter = 0,
+	 EGround = 1,
+	 EMountain = 2,
+	 ESquare = 3,
+	 EBox = 4,
+	 ESphere = 5,
+	 ECylinder = 6,
  };
 
 struct MeshData {

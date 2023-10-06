@@ -28,8 +28,9 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
         m_mesh->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
         m_mesh->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
         m_mesh->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-        m_mesh->UpdateWorldRow(Matrix::CreateScale(0.2f) *
-                                    Matrix::CreateTranslation(center));
+        //m_mesh->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+        //                            Matrix::CreateTranslation(center));
+        m_mesh->UpdateTranseform(Vector3(0.2f), m_mesh->GetRotation(), center);
         appBase = (Ex2001_GamePlay*)base;
 
 }
@@ -50,14 +51,17 @@ void hlab::Character::UpdateTransform(float dt)
                 return;
         if (appBase->m_keyPressed['A']) {
 
-                m_mesh->UpdateWorldRow(
-                    Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
-                    m_mesh->m_worldRow);
+                //m_mesh->UpdateWorldRow(
+                //    Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
+                //    m_mesh->m_worldRow);
+                m_mesh->AddYawOffset(-3.141592f * 120.f / 180.f * dt);
+                
                  
         } else if (appBase->m_keyPressed['D']) {
-                m_mesh->UpdateWorldRow(
-                    Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
-                    m_mesh->m_worldRow);
+                //m_mesh->UpdateWorldRow(
+                //    Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
+                //    m_mesh->m_worldRow);
+                m_mesh->AddYawOffset(3.141592f * 120.f / 180.f * dt);
         }
 
 
@@ -69,19 +73,11 @@ void hlab::Character::UpdateTransform(float dt)
 
                   dir.Normalize();
 
-                  Vector3 speed = m_mesh->m_worldRow.Translation() +
+                  Vector3 velocity = m_mesh->m_worldRow.Translation() +
                                   (Vector3(dir.x, dir.y, dir.z)) * dt * 5.0f;
                   
 
-                 DirectX::SimpleMath::Ray a;
-                  m_mesh->m_worldRow.Translation(Vector3(0.0f));
-
-                  m_mesh->UpdateWorldRow(
-                     // Matrix::CreateScale(0.2f) *
-                          //Matrix::CreateRotationY(appBase->m_camera.GetYaw())
-                          //* Matrix::CreateRotationY(3.141592f) *
-                          m_mesh->m_worldRow *
-                      Matrix::CreateTranslation(speed));
+                  m_mesh->UpdatePosition(velocity);
         }
 }
 

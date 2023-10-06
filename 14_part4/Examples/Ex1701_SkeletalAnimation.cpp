@@ -65,8 +65,12 @@ bool Ex1701_SkeletalAnimation::InitScene() {
         m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
 
         Vector3 position = Vector3(0.0f, 0.0f, 2.0f);
-        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                 Matrix::CreateTranslation(position));
+        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                         Matrix::CreateTranslation(position));
+        m_ground->UpdateTranseform(m_ground->GetScale(),
+                                   Vector3(0.0f, 3.141592f * 0.5f, 0.0f),
+                                   position);
+
         m_ground->m_castShadow = false; // 바닥은 그림자 만들기 생략
 
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
@@ -105,8 +109,8 @@ bool Ex1701_SkeletalAnimation::InitScene() {
         m_character->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
         m_character->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
         m_character->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-        m_character->UpdateWorldRow(Matrix::CreateScale(1.0f) *
-                                    Matrix::CreateTranslation(center));
+        //m_character->UpdateWorldRow(Matrix::CreateScale(1.0f) *
+        //                            Matrix::CreateTranslation(center));
 
         m_basicList.push_back(m_character); // 리스트에 등록
         m_pickedModel = m_character;

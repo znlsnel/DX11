@@ -50,8 +50,8 @@ bool ExampleApp::InitScene() {
         m_ground->m_name = "Ground";
 
         Vector3 position = Vector3(0.0f, -0.5f, 2.0f);
-        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                 Matrix::CreateTranslation(position));
+        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                         Matrix::CreateTranslation(position));
 
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
         m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
@@ -87,7 +87,7 @@ bool ExampleApp::InitScene() {
         newModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
         newModel->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
         newModel->m_materialConsts.GetCpu().metallicFactor = 0.8f;
-        newModel->UpdateWorldRow(Matrix::CreateTranslation(center));
+        //newModel->UpdateWorldRow(Matrix::CreateTranslation(center));
         newModel->m_isPickable = true; // 마우스로 선택/이동 가능
         newModel->m_name = "MainSphere";
 
@@ -99,7 +99,7 @@ bool ExampleApp::InitScene() {
         MeshData mesh = GeometryGenerator::MakeSphere(0.2f, 200, 200);
         Vector3 center(0.5f, 0.5f, 2.0f);
         auto newModel = make_shared<Model>(m_device, m_context, vector{mesh});
-        newModel->UpdateWorldRow(Matrix::CreateTranslation(center));
+        //newModel->UpdateWorldRow(Matrix::CreateTranslation(center));
         newModel->m_materialConsts.GetCpu().albedoFactor =
             Vector3(0.1f, 0.1f, 1.0f);
         newModel->m_materialConsts.GetCpu().roughnessFactor = 0.2f;
@@ -116,7 +116,7 @@ bool ExampleApp::InitScene() {
         MeshData mesh = GeometryGenerator::MakeBox(0.3f);
         Vector3 center(0.0f, 0.5f, 2.5f);
         auto newModel = make_shared<Model>(m_device, m_context, vector{mesh});
-        newModel->UpdateWorldRow(Matrix::CreateTranslation(center));
+        //newModel->UpdateWorldRow(Matrix::CreateTranslation(center));
         newModel->m_materialConsts.GetCpu().albedoFactor =
             Vector3(1.0f, 0.2f, 0.2f);
         newModel->m_materialConsts.GetCpu().roughnessFactor = 0.5f;

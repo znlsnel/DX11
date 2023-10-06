@@ -38,8 +38,8 @@ bool Ex1603_Cloud::InitScene() {
     Vector3 center(0.0f);
     m_volumeModel = make_shared<Model>(
         m_device, m_context, vector{GeometryGenerator::MakeBox(1.0f)});
-    m_volumeModel->UpdateWorldRow(Matrix::CreateScale(1.5f) *
-                                  Matrix::CreateTranslation(center));
+    //m_volumeModel->UpdateWorldRow(Matrix::CreateScale(1.5f) *
+    //                              Matrix::CreateTranslation(center));
     m_volumeModel->UpdateConstantBuffers(m_device, m_context);
 
     m_volumeModel->m_meshes.front()->densityTex.Initialize(
