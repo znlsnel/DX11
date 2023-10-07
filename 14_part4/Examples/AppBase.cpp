@@ -37,11 +37,13 @@ AppBase::AppBase()
     g_appBase = this;
     m_camera = make_shared<Camera>(g_appBase);
     m_JsonManager = make_shared<JsonManager>(this);
-
+    //m_JsonManager->TestJson_Parse();
+    //m_JsonManager->TestJson_AddMember();
     m_camera->SetAspectRatio(this->GetAspectRatio());
 }
 
 AppBase::~AppBase() {
+   // m_JsonManager->SaveMesh();
     g_appBase = nullptr;
 
     // Cleanup
@@ -142,7 +144,7 @@ bool AppBase::Initialize() {
 
     // 콘솔창이 렌더링 창을 덮는 것을 방지
     SetForegroundWindow(m_mainWindow);
-
+    m_JsonManager->LoadMesh();
     return true;
 }
 
@@ -604,18 +606,27 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (wParam == VK_ESCAPE) { // ESC키 종료
             DestroyWindow(hwnd);
         }
+
+        if (m_keyPressed[17]) { // ctrl
+            if (m_keyPressed['F']) {
+                m_camera->m_useFirstPersonView = !m_camera->m_useFirstPersonView;
+
+                m_keyPressed['F'] = false;
+            }
+            if (m_keyPressed['S']) {
+                m_JsonManager->SaveMesh();
+                m_keyPressed['S'] = false;
+            }
+        }
         //if (wParam == VK_SPACE) {
         //    m_lightRotate = !m_lightRotate;
         //}
         break;
     case WM_KEYUP:
         if (wParam == 'F') { // f키 일인칭 시점
-            if (m_keyPressed[17]) {
-                    m_camera->m_useFirstPersonView = !m_camera->m_useFirstPersonView;
-            } else {
+            if (m_keyPressed[17] == false) {
                 m_camera->m_isCameraLock = !m_camera->m_isCameraLock;
             }
-            
         }
         if (wParam == 'C') { // c키 화면 캡쳐
             ComPtr<ID3D11Texture2D> backBuffer;

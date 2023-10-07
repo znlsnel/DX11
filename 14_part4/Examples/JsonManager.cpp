@@ -13,7 +13,7 @@ namespace hlab {
 
 hlab::JsonManager::JsonManager(AppBase *appBase) {
     m_appBase = appBase;
-    m_saveFile = Document(kObjectType);
+    m_saveFile = Document(kArrayType);
 }
 
 bool hlab::JsonManager::ParseJson(rapidjson::Document &doc,
@@ -44,7 +44,10 @@ void hlab::JsonManager::TestJson_Parse() {
     const char *json = "{\"project\":\"rapidjson\",\"stars\":10}";
     Document doc;
     ParseJson(doc, json);
-
+   /* scale.AddMember("z", Value(meshInfo.scale.z), allocator);*/
+    Document::AllocatorType &allocator = doc.GetAllocator();
+    doc.AddMember("test", "testProject!", allocator);
+    
     // 2. Modify it by DOM.
     Value &s = doc["stars"];
     s.SetInt(s.GetInt() + 1);
@@ -91,39 +94,50 @@ void hlab::JsonManager::TestJson_AddMember() {
 
 void hlab::JsonManager::LoadMesh() {
     FILE *fp = fopen("saveFile.json", "r");
+    if (!fp) {
+            // file load failed
+        return;
+    }
+
     char readBuffer[65536];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
 
     m_saveFile.ParseStream(is);
+    fclose(fp);
 
-    for (rapidjson::SizeType i = 0; i < m_saveFile.Size(); ++i) {
-        ObjectSaveInfo temp;
-        temp.meshID = m_saveFile[i]["meshID"].GetInt();
-        temp.meshName = m_saveFile[i]["meshName"].GetString();
+    if (m_saveFile.IsArray()) {
+            for (rapidjson::SizeType i = 0; i < m_saveFile.Size(); ++i) {
+            const rapidjson::Value &object = m_saveFile[i];
 
-        auto position = m_saveFile[i]["position"].GetObj();
-        temp.position.x = position["x"].GetFloat();
-        temp.position.y = position["y"].GetFloat();
-        temp.position.z = position["z"].GetFloat();
+                ObjectSaveInfo temp;
+                temp.meshID = object["meshID"].GetInt();
+         //       temp.meshName = object["meshName"].GetString();
 
-        auto rotation = m_saveFile[i]["rotation"].GetObj();
-        temp.rotation.x = rotation["x"].GetFloat();
-        temp.rotation.y = rotation["y"].GetFloat();
-        temp.rotation.z = rotation["z"].GetFloat();
+                const rapidjson::Value & position = object["position"].GetObj();
+                temp.position.x = position["x"].GetFloat();
+                temp.position.y = position["y"].GetFloat();
+                temp.position.z = position["z"].GetFloat();
 
-        auto scale = m_saveFile[i]["scale"].GetObj();
-        temp.scale.x = scale["x"].GetFloat();
-        temp.scale.y = scale["y"].GetFloat();
-        temp.scale.z = scale["z"].GetFloat();
+                const rapidjson::Value &rotation = object["rotation"].GetObj();
+                temp.rotation.x = rotation["x"].GetFloat();
+                temp.rotation.y = rotation["y"].GetFloat();
+                temp.rotation.z = rotation["z"].GetFloat();
 
-        CreateMesh(temp);
+                const rapidjson::Value &scale = object["scale"].GetObj();
+                temp.scale.x = scale["x"].GetFloat();
+                temp.scale.y = scale["y"].GetFloat();
+                temp.scale.z = scale["z"].GetFloat();
+
+                CreateMesh(temp);
+            }
     }
 }
 
 void hlab::JsonManager::SaveMesh() {
-    m_saveFile.Clear();
+    //m_saveFile.Clear();
+    m_saveFile = Document(kArrayType);
     Document::AllocatorType &allocator = m_saveFile.GetAllocator();
-    m_saveFile.SetArray();
+    //m_saveFile.SetArray();
 
     for (auto object : m_appBase->m_objects) {
 
@@ -133,29 +147,31 @@ void hlab::JsonManager::SaveMesh() {
         meshInfo.position = object.second->GetPosition();
         meshInfo.rotation = object.second->GetRotation();
         meshInfo.scale = object.second->GetScale();
+        meshInfo.meshName = "tsetName";
 
-        rapidjson::Value value;
+        rapidjson::Value value(kObjectType);
         // rapidjson::Value value;
         value.AddMember("meshID", Value(meshInfo.meshID), allocator);
         value.AddMember("meshName", Value(*meshInfo.meshName.c_str()),
                         allocator);
 
-        rapidjson::Value scale;
+        rapidjson::Value scale(kObjectType);
         scale.AddMember("x", Value(meshInfo.scale.x), allocator);
         scale.AddMember("y", Value(meshInfo.scale.y), allocator);
         scale.AddMember("z", Value(meshInfo.scale.z), allocator);
-        value.AddMember("scale", scale, allocator);
 
-        rapidjson::Value position;
+        rapidjson::Value position(kObjectType);
         position.AddMember("x", Value(meshInfo.position.x), allocator);
         position.AddMember("y", Value(meshInfo.position.y), allocator);
         position.AddMember("z", Value(meshInfo.position.z), allocator);
-        value.AddMember("position", position, allocator);
 
-        rapidjson::Value rotation;
+        rapidjson::Value rotation(kObjectType);
         rotation.AddMember("x", Value(meshInfo.rotation.x), allocator);
         rotation.AddMember("y", Value(meshInfo.rotation.y), allocator);
         rotation.AddMember("z", Value(meshInfo.rotation.z), allocator);
+
+        value.AddMember("scale", scale, allocator);
+        value.AddMember("position", position, allocator);
         value.AddMember("rotation", rotation, allocator);
 
         m_saveFile.PushBack(value, allocator);

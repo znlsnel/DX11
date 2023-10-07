@@ -18,6 +18,7 @@ class JsonManager {
   public:
     JsonManager(){};
     JsonManager(class AppBase* appBase);
+    ~JsonManager() {  };
 
     bool ParseJson(rapidjson::Document &doc, const std::string &jsonData);
     std::string JsonDocToString(rapidjson::Document &doc,
