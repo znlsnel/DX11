@@ -80,6 +80,8 @@ class AppBase {
     void SetShadowViewport();
     void ComputeShaderBarrier();
 
+    void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
+                             ComPtr<ID3D11DeviceContext> &context);
   public:
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
     // 변수 이름을 줄이기 위해 d3d는 생략했습니다.
@@ -96,6 +98,7 @@ class AppBase {
     bool m_drawAsWire = false;
     bool m_drawOBB = false; // Draw Object Oriented Bounding Box
     bool m_drawBS = false;  // Draw Bounding Sphere
+    bool m_capture = false;
 
     DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -111,6 +114,14 @@ class AppBase {
     ComPtr<ID3D11Texture2D> m_resolvedBuffer;
     ComPtr<ID3D11Texture2D> m_postEffectsBuffer;
     ComPtr<ID3D11Texture2D> m_prevBuffer; // 간단한 모션 블러 효과
+    ComPtr<ID3D11Texture2D> m_tempTexture; // 간단한 모션 블러 효과
+
+    ComPtr<ID3D11Texture2D> m_indexTexture;
+    ComPtr<ID3D11Texture2D> m_indexTempTexture;
+    ComPtr<ID3D11Texture2D> m_indexStagingTexture;
+    ComPtr<ID3D11RenderTargetView> m_indexRenderTargetView;
+
+
     ComPtr<ID3D11RenderTargetView> m_floatRTV;
     ComPtr<ID3D11RenderTargetView> m_resolvedRTV;
     ComPtr<ID3D11RenderTargetView> m_postEffectsRTV;

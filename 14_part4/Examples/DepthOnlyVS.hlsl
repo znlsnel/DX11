@@ -1,8 +1,9 @@
 #include "Common.hlsli" // 쉐이더에서도 include 사용 가능
 
+
 float4 main(VertexShaderInput input) : SV_POSITION
 {
-    
+
 #ifdef SKINNED
     
     // 참고 자료: Luna DX 12 교재
@@ -43,4 +44,5 @@ float4 main(VertexShaderInput input) : SV_POSITION
     
     float4 pos = mul(float4(input.posModel, 1.0f), world);
     return mul(pos, viewProj);
+
 }

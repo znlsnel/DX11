@@ -24,7 +24,7 @@ using std::vector;
 
 class Model {
   public:
-    Model() {}
+    Model(){};
     Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
           const string &basePath, const string &filename);
     Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,

@@ -69,39 +69,7 @@ bool Ex2001_GamePlay::InitScene() {
     
         // terrain
     {
-        auto meshes = GeometryGenerator::ReadFromFile(
-            "../Assets/Terrain/Chalaadi/",
-            "2.fbx", false);
 
-        // meshes[0].albedoTextureFilename =
-        //     "../Assets/Terrain/snowy_mountain_with_slopes/"
-        //     "Texture.png";
-
-         //auto meshes = GeometryGenerator::ReadFromFile(
-         //    "../Assets/Terrain/Chalaadi/", "2.fbx", false);
-         for (auto &v : meshes[0].vertices)
-             v.texcoord /= 1024.0f;
-         meshes[0].albedoTextureFilename =
-             "../Assets/Terrain/Chalaadi/overlay.png";
-
-         float terrainScale = 100.f;
-
-        Vector3 center(0.f, 0.02f, 0.f);
-        m_terrain =
-            make_shared<Model>(m_device, m_context, meshes);
-        //m_terrain->m_materialConsts.GetCpu().invertNormalMapY =
-        //    true; // GLTF는 true로
-        m_terrain->m_materialConsts.GetCpu().roughnessFactor = 0.97f;
-        m_terrain->m_materialConsts.GetCpu().metallicFactor = 0.03f;
-        //m_terrain->UpdateWorldRow(Matrix::CreateScale(terrainScale) *
-        //                          Matrix::CreateTranslation(center));
-        m_terrain->UpdateTranseform(Vector3(terrainScale),
-                                    m_terrain->GetRotation(), center);
-        m_terrain->m_castShadow = true;
-        //m_pickedModel = m_terrain;
-
-        m_basicList.push_back(m_terrain); // 리스트에 등록
-        m_pbrList.push_back(m_terrain);   // 리스트에 등록
     }
 
 
@@ -380,7 +348,7 @@ void Ex2001_GamePlay::MousePicking() {
                
                 bool selected = currRay.Intersects(temp->m_boundingBox, dist);
                 if (selected) {
-                        std::cout << " selected!!!  !!  "  << std::endl;
+                        //std::cout << " selected!!!  !!  "  << std::endl;
                         m_pickedModel = temp;
                         break;
                 }

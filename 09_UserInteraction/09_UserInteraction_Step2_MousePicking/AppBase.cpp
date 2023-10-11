@@ -602,7 +602,6 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                 m_indexStagingTexture.GetAddressOf()))) {
                 cout << "Failed()" << endl;
         }
-
             D3D11_BOX box;
         box.left = std::clamp(m_cursorX-1, 0, (int)desc.Width - 1);
          box.right = m_cursorX;

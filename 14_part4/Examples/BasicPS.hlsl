@@ -22,6 +22,7 @@ float3 SchlickFresnel(float3 F0, float NdotH)
 struct PixelShaderOutput
 {
     float4 pixelColor : SV_Target0;
+    float4 indexColor : SV_Target1;
 };
 
 float3 GetNormal(PixelShaderInput input)
@@ -326,6 +327,8 @@ PixelShaderOutput main(PixelShaderInput input)
     PixelShaderOutput output;
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
+    //output.indexColor = indexColor;
+    output.indexColor = indexColor;
     
     return output;
 }

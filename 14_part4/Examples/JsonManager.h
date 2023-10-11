@@ -18,7 +18,7 @@ class JsonManager {
   public:
     JsonManager(){};
     JsonManager(class AppBase* appBase);
-    ~JsonManager() {  };
+    ~JsonManager() { SaveMesh(); };
 
     bool ParseJson(rapidjson::Document &doc, const std::string &jsonData);
     std::string JsonDocToString(rapidjson::Document &doc,
@@ -35,9 +35,10 @@ class JsonManager {
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 
-    shared_ptr<class Model> CreateGround(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreatePlane(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateSphere(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateSquare(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateBox(struct ObjectSaveInfo info);
 
    rapidjson::Document m_saveFile;
 };

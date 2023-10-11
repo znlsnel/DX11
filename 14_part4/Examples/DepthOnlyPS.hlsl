@@ -5,9 +5,21 @@ struct DepthOnlyPixelShaderInput
     float4 posProj : SV_POSITION;
 };
 
-void main(float4 pos : SV_POSITION)
+//struct PixelShaderOutput
+//{
+//    float4 IndexColor : SV_Target0;
+//};
+
+void main(DepthOnlyPixelShaderInput input) 
 {
-    // 아무것도 하지 않음 (Depth Only)
+   // // 아무것도 하지 않음 (Depth Only)
+   // PixelShaderOutput output;
+
+   //// output.IndexColor = indexColor;
+   // output.IndexColor = float4(0.1, 0.2, 0.3, 0.4);
+    
+   // return output;
+    
 }
 
 /* 비교: 반환 자료형 불필요

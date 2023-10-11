@@ -67,7 +67,7 @@ cbuffer GlobalConstants : register(b0)
     float envLodBias = 0.0f; // 환경맵 LodBias
     float lodBias = 2.0f; // 다른 물체들 LodBias
     float globalTime;
-    
+        
     Light lights[MAX_LIGHTS];
 };
 
@@ -76,6 +76,9 @@ cbuffer MeshConstants : register(b1)
     matrix world; // Model(또는 Object) 좌표계 -> World로 변환
     matrix worldIT; // World의 InverseTranspose
     matrix worldInv;
+    
+    float4 indexColor;
+    
     int useHeightMap;
     float heightScale;
     float windTrunk;

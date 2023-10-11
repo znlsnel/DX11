@@ -28,7 +28,7 @@ using std::vector;
 
  enum meshID : int { 
 	 ECharacter = 0,
-	 EGround = 1,
+	 EPlane = 1,
 	 EMountain = 2,
 	 ESquare = 3,
 	 EBox = 4,

@@ -1,10 +1,9 @@
 #include "JsonManager.h"
 #include "AppBase.h"
-#include "Model.h"
+
 #include "BillboardModel.h"
-#include "GeometryGenerator.h"
+
 #include "Character.h"
-#include "SkinnedMeshModel.h"
 
 
 using namespace std;
@@ -152,8 +151,6 @@ void hlab::JsonManager::SaveMesh() {
         rapidjson::Value value(kObjectType);
         // rapidjson::Value value;
         value.AddMember("meshID", Value(meshInfo.meshID), allocator);
-        value.AddMember("meshName", Value(*meshInfo.meshName.c_str()),
-                        allocator);
 
         rapidjson::Value scale(kObjectType);
         scale.AddMember("x", Value(meshInfo.scale.x), allocator);
@@ -191,41 +188,61 @@ void hlab::JsonManager::SaveMesh() {
 }
 
 void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
-    shared_ptr<Model> tempMesh = nullptr;
+    shared_ptr<Model> tempMesh = make_shared<Model>();
 
     switch ((meshID)temp.meshID) {
-    case meshID::ECharacter:
+    case meshID::ECharacter: {
         tempMesh = CreateCharacter(temp);
+        tempMesh->objectInfo.meshName = "Character";
+    }
         break;
-    case meshID::EMountain:
+    case meshID::EMountain: {
         tempMesh = CreateMountain(temp);
+        tempMesh->objectInfo.meshName = "Mountain";
+    }
         break;
-    case meshID::ECylinder:
+    case meshID::ECylinder: {
         tempMesh = CreateCylinder(temp);
+        tempMesh->objectInfo.meshName = "Cylinder";
+
+    }
         break;
-    case meshID::EGround:
-        tempMesh = CreateGround(temp);
+    case meshID::EPlane: {
+        tempMesh = CreatePlane(temp);
+        tempMesh->objectInfo.meshName = "Ground";
+    }
         break;
-    case meshID::ESphere:
+    case meshID::ESphere: {
         tempMesh = CreateSphere(temp);
+        tempMesh->objectInfo.meshName = "Sphere";
+    }
         break;
-    case meshID::ESquare:
+    case meshID::ESquare: {
         tempMesh = CreateSquare(temp);
+        tempMesh->objectInfo.meshName = "Square";
+    }
         break;
-    case meshID::EBox:
-        tempMesh = CreateSquare(temp);
+    case meshID::EBox: {
+        tempMesh = CreateBox(temp);
+        tempMesh->objectInfo.meshName = "Box";
+    }
         break;
     }
-    
-    static float objectID = 0.00001f;
+   
+    static float objectID = 0.01f;
     if (tempMesh != nullptr) {
         tempMesh->objectInfo.objectID = objectID;
+        tempMesh->m_meshConsts.GetCpu().indexColor[0] = objectID;
+    //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
+
+        std::cout << "Set [" <<  tempMesh->objectInfo.meshName << "] Object ID : " << objectID; 
+
         m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
         objectID += 0.00001f;
     }
 }
 
-std::shared_ptr<Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
+std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
     vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",
                                 "walk_end.fbx", "fireBall.fbx"};
     string path = "../Assets/Characters/Mixamo/";
@@ -254,26 +271,99 @@ std::shared_ptr<Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
 
     m_appBase->m_camera->SetTarget(m_player.get());
     return m_player->GetMesh();
+    //return make_shared
 }
 
-shared_ptr<class Model> JsonManager::CreateMountain(ObjectSaveInfo info) {
-    return shared_ptr<class Model>();
+shared_ptr<Model> JsonManager::CreateMountain(ObjectSaveInfo info) {
+
+    auto meshes = GeometryGenerator::ReadFromFile("../Assets/Terrain/Chalaadi/",
+                                                  "2.fbx", false);
+
+    for (auto &v : meshes[0].vertices)
+        v.texcoord /= 1024.0f;
+    meshes[0].albedoTextureFilename = "../Assets/Terrain/Chalaadi/overlay.png";
+
+    Vector3 center(0.f, 0.02f, 0.f);
+    shared_ptr<Model> tempModel =
+        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);
+
+    tempModel->m_materialConsts.GetCpu().roughnessFactor = 0.97f;
+    tempModel->m_materialConsts.GetCpu().metallicFactor = 0.03f;
+
+    // m_terrain->UpdateWorldRow(Matrix::CreateScale(terrainScale) *
+    //                           Matrix::CreateTranslation(center));
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+
+    m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
+    m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
+
+    return tempModel;
 }
 
-shared_ptr<class Model> JsonManager::CreateCylinder(ObjectSaveInfo info) {
-    return shared_ptr<class Model>();
+shared_ptr<Model> JsonManager::CreateCylinder(ObjectSaveInfo info) {
+
+    auto meshes = 
+        GeometryGenerator::MakeCylinder(1.0f, 1.0f, 1.0f, 100.f);
+    
+    shared_ptr<Model> tempModel = make_shared<Model>(
+        m_appBase->m_device, m_appBase->m_context, vector{meshes});
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+    m_appBase->m_basicList.push_back(tempModel);
+    m_appBase->m_pbrList.push_back(tempModel);
+    return tempModel;
 }
 
-shared_ptr<class Model> JsonManager::CreateGround(ObjectSaveInfo info) {
-    return shared_ptr<class Model>();
+shared_ptr<Model> JsonManager::CreatePlane(ObjectSaveInfo info) {
+
+
+    auto meshes = GeometryGenerator::MakeSquare();
+    shared_ptr<Model> tempModel = make_shared<Model>(
+        m_appBase->m_device, m_appBase->m_context, vector{meshes});
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+    m_appBase->m_basicList.push_back(tempModel);
+    m_appBase->m_pbrList.push_back(tempModel);
+    return tempModel;
 }
 
-shared_ptr<class Model> JsonManager::CreateSphere(ObjectSaveInfo info) {
-    return shared_ptr<class Model>();
+shared_ptr< Model> JsonManager::CreateSphere(ObjectSaveInfo info) {
+    auto meshes = GeometryGenerator::MakeSphere(1.f, 25, 25);
+    shared_ptr<Model> tempModel = make_shared<Model>(
+        m_appBase->m_device, m_appBase->m_context, vector{meshes});
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+    m_appBase->m_basicList.push_back(tempModel);
+    m_appBase->m_pbrList.push_back(tempModel);
+    return tempModel;
 }
 
-shared_ptr<class Model> JsonManager::CreateSquare(ObjectSaveInfo info) {
-    return shared_ptr<class Model>();
+shared_ptr<Model> JsonManager::CreateSquare(ObjectSaveInfo info) {
+
+    return make_shared<Model>();
+}
+
+shared_ptr<Model> JsonManager::CreateBox(ObjectSaveInfo info) {
+    auto meshes = GeometryGenerator::MakeBox(1.0f);
+    shared_ptr<Model> tempModel = make_shared<Model>(
+        m_appBase->m_device, m_appBase->m_context, vector{meshes});
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+    m_appBase->m_basicList.push_back(tempModel);
+    m_appBase->m_pbrList.push_back(tempModel);
+    return tempModel;
+    //return make_shared<Model>();
 }
 
 
