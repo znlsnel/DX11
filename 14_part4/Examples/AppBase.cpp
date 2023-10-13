@@ -64,7 +64,7 @@ AppBase::~AppBase() {
 
 float AppBase::GetAspectRatio() const {
 
-        float ratio = float(m_screenWidth - m_imGuiWidth) / m_screenHeight;
+        float ratio = float(m_screenWidth) / m_screenHeight;
 
         //std::cout << "ratio : " << ratio << std::endl;
     return ratio;
@@ -217,14 +217,14 @@ bool AppBase::InitScene() {
 
 void AppBase::UpdateGUI() {
 
-        float tempWidth = ImGui::GetWindowSize().x;
-    float posX = ImGui::GetWindowPos().x;
+   //     float tempWidth = ImGui::GetWindowSize().x;
+   // float posX = ImGui::GetWindowPos().x;
 
-        if (m_imGuiWidth == tempWidth && posX != 0.0f)
-        return; 
+   //     if (m_imGuiWidth == tempWidth && posX != 0.0f)
+   //     return; 
 
-    ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::SetWindowSize(ImVec2(m_imGuiWidth, m_screenHeight));
+   // ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+   // ImGui::SetWindowSize(ImVec2(m_imGuiWidth, m_screenHeight));
    // m_imGuiWidth = tempWidth;
 
    // ResizeSwapChain(m_screenWidth , m_screenHeight);
@@ -274,14 +274,17 @@ void AppBase::Update(float dt) {
     if (m_capture) {
         m_capture = false;
         ComPtr<ID3D11Texture2D> backBuffer;
-        m_swapChain->GetBuffer(1, IID_PPV_ARGS(backBuffer.GetAddressOf()));
+        m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
+        
         m_context->ResolveSubresource(m_indexTempTexture.Get(), 0,
-                                      backBuffer.Get(),
-                                      0,
-                                      DXGI_FORMAT_R8G8B8A8_UNORM);
-        //D3D11Utils::WriteToPngFile(m_device, m_context, m_indexTempTexture,
-        //                           "captured.png");
-        ReadPixelOfMousePos(m_device, m_context);
+                                      m_floatBuffer.Get(),
+                                     0,
+                                      DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+        D3D11Utils::WriteToPngFile(m_device, m_context, m_indexTempTexture,
+                                   "captured.png");
+
+        ReadPixelOfMousePos<uint16_t>(m_device, m_context);
     } 
 }
 
@@ -358,9 +361,10 @@ void AppBase::RenderDepthOnly(){
 
     m_context->ClearDepthStencilView(m_depthOnlyDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
                                      1.0f, 0);
+
     // Set -    -       -       -       -       -       -       -       -
-    m_context->OMSetRenderTargets(
-        0, NULL,  m_depthOnlyDSV.Get());
+    m_context->OMSetRenderTargets(0, m_indexRenderTargetView.GetAddressOf(),
+                                  m_depthOnlyDSV.Get());
  
     AppBase::SetGlobalConsts(m_globalConstsGPU);
 
@@ -368,6 +372,7 @@ void AppBase::RenderDepthOnly(){
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
+
 
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
@@ -410,11 +415,14 @@ void AppBase::RenderOpaqueObjects() {
     AppBase::SetMainViewport(); 
 
     // 거울 1. 거울은 빼고 원래 대로 그리기
-    const float clearColor[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+    const float clearColor[4] = {0.0f, 0.0f, 1.0f, 1.0f};
     m_context->ClearRenderTargetView(m_floatRTV.Get(), clearColor);
     m_context->ClearRenderTargetView(m_indexRenderTargetView.Get(), clearColor);
-    ID3D11RenderTargetView *targets[2] = {m_indexRenderTargetView.Get(),
-                                          m_floatRTV.Get()};
+
+    ID3D11RenderTargetView *targets[] = {
+                                         
+        m_indexRenderTargetView.Get(), m_floatRTV.Get()
+    };
 
     m_context->OMSetRenderTargets(2, targets,
                                   m_defaultDSV.Get());
@@ -425,6 +433,8 @@ void AppBase::RenderOpaqueObjects() {
     for (int i = 0; i < MAX_LIGHTS; i++) {
         shadowSRVs.push_back(m_shadowSRVs[i].Get());
     }
+
+
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
     m_context->ClearDepthStencilView(
@@ -442,6 +452,10 @@ void AppBase::RenderOpaqueObjects() {
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
+
+    
+
+
 
     // AppBase::SetPipelineState(m_ground->GetTerrainPSO(m_drawAsWire));
 
@@ -1185,10 +1199,10 @@ void AppBase::SetMainViewport() {
         // Set the viewport
         ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
 
-        m_screenViewport.TopLeftX = (float)200;
+        m_screenViewport.TopLeftX = 0;
         m_screenViewport.TopLeftY = 0;
         m_screenViewport.Width =
-            float(m_screenWidth) - m_screenViewport.TopLeftX;
+            float(m_screenWidth);
         m_screenViewport.Height = float(m_screenHeight);
         m_screenViewport.MinDepth = 0.0f;
         m_screenViewport.MaxDepth = 1.0f;
@@ -1204,9 +1218,9 @@ void AppBase::SetShadowViewport() {
     // Set the viewport
     D3D11_VIEWPORT shadowViewport;
     ZeroMemory(&shadowViewport, sizeof(D3D11_VIEWPORT));
-    shadowViewport.TopLeftX = float(m_imGuiWidth);
+    shadowViewport.TopLeftX =0;
     shadowViewport.TopLeftY = 0;
-    shadowViewport.Width = float(m_shadowWidth - m_imGuiWidth);
+    shadowViewport.Width = float(m_shadowWidth);
     shadowViewport.Height = float(m_shadowHeight);
     shadowViewport.MinDepth = 0.0f;
     shadowViewport.MaxDepth = 1.0f;
@@ -1231,6 +1245,7 @@ void AppBase::ComputeShaderBarrier() {
     m_context->CSSetUnorderedAccessViews(0, 6, nullUAV, NULL);
 }
 
+    template <typename T>
 void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                                   ComPtr<ID3D11DeviceContext> &context) {
     D3D11_TEXTURE2D_DESC desc;
@@ -1241,33 +1256,54 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     desc.MiscFlags = 0;
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // cpu에서 읽기 가능. 
     desc.Usage = D3D11_USAGE_STAGING;
-    //desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    //desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    ///desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     ThrowIfFailed(device->CreateTexture2D(
         &desc, NULL, m_indexStagingTexture.GetAddressOf()));
 
     D3D11_BOX box;
-    box.left = std::clamp(m_mouseX - 1, 0, (int)desc.Width - 1);
-    box.right = m_mouseX;
+    box.left = std::clamp(m_mouseX  - 1, 0, 
+                          (int)desc.Width - 1);
+    box.right = box.left + 1;
     box.top = std::clamp(m_mouseY - 1, 0, (int)desc.Height - 1);
-    box.bottom = m_mouseY;
-
+    box.bottom = box.top + 1;
     box.front = 0;
     box.back = 1;
-    context->CopySubresourceRegion(m_indexStagingTexture.Get(), 0, 0, 0, 0,
-                                   m_indexTempTexture.Get(), 0, &box);
+
+   //D3D11_BOX box;
+   // box.left = 0;
+   // box.right = desc.Width;
+   // box.top = 0;
+   // box.bottom = desc.Height;
+   // box.front = 0;
+   // box.back = 1;
+
+    cout << "mouse XY : " << box.left << " " << box.top << endl;
+    context->CopySubresourceRegion(m_indexStagingTexture.Get(), 0, 0, 0, 0, m_indexTempTexture.Get(), 0, &box);
 
     D3D11_MAPPED_SUBRESOURCE ms;
     context->Map(m_indexStagingTexture.Get(), NULL, D3D11_MAP_READ, NULL, &ms);
 
-    uint8_t *pData = (uint8_t *)ms.pData;
-    uint8_t temp[4] = {1};
-    memcpy(&temp[0], &pData[0], sizeof(uint8_t) * 4);
+    std::vector<T> pixels(desc.Width * desc.Height * 4);
+
+    T *pData = (T *)ms.pData;
+    //uint8_t temp[4] = {1,1,1,1};
+    //memcpy(&temp, &pData, sizeof(uint8_t) * 4);
+    //for (unsigned int h = 0; h < desc.Height; h++) {
+    //    memcpy(&pixels[h * desc.Width * 4], &pData[h * ms.RowPitch],
+    //           desc.Width * sizeof(T) * 4);
+    //}
+
     context->Unmap(m_indexStagingTexture.Get(), NULL);
 
+    
+    //D3D11Utils::stbi_write_png("test.png", desc.Width, desc.Height, 4, pixels.data(),
+    //               desc.Width * 4);
+    // 
    //  TODO  Object Check!
-    cout << "color : " << (int)temp[0] << " " << (int)temp[1] << " " << (int)temp[2] << " "
-         << (int)temp[3]
+    cout << "color : " << (float)pData[0] << " " << (float)pData[1] << " "
+         << (float)pData[2] << " " << (float)pData[3]
          << endl;
   //  cout << "mouse XY : " << m_mouseX << " " << m_mouseY << endl;
 
@@ -1283,7 +1319,6 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
 void AppBase::CreateBuffers() {
 
     // 레스터화 -> float/depthBuffer(MSAA) -> resolved -> backBuffer
-
     // BackBuffer는 화면으로 최종 출력 (SRV는 불필요)
     ComPtr<ID3D11Texture2D> backBuffer;
     ThrowIfFailed(
@@ -1302,20 +1337,18 @@ void AppBase::CreateBuffers() {
     // 이전 프레임 저장용
     ThrowIfFailed(
         m_device->CreateTexture2D(&desc, NULL, m_prevBuffer.GetAddressOf()));
-
-
-    ThrowIfFailed(m_device->CreateRenderTargetView(m_prevBuffer.Get(), NULL,
-                                                   m_prevRTV.GetAddressOf()));
-
-    ThrowIfFailed(m_device->CreateShaderResourceView(m_prevBuffer.Get(), NULL,
-                                                     m_prevSRV.GetAddressOf()));
+    ThrowIfFailed(m_device->CreateRenderTargetView(m_prevBuffer.Get(), NULL,  m_prevRTV.GetAddressOf()));
+    ThrowIfFailed(m_device->CreateShaderResourceView(m_prevBuffer.Get(), NULL,  m_prevSRV.GetAddressOf()));
 
     desc.MipLevels = desc.ArraySize = 1;
-
     desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    //desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
+  //  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     desc.MiscFlags = 0;
     desc.CPUAccessFlags = 0;
+
+    //desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     if (m_useMSAA && m_numQualityLevels) {
         desc.SampleDesc.Count = 4;
         desc.SampleDesc.Quality = m_numQualityLevels - 1;
@@ -1324,13 +1357,25 @@ void AppBase::CreateBuffers() {
         desc.SampleDesc.Quality = 0;
     }
 
-    ThrowIfFailed(
-        m_device->CreateTexture2D(&desc, NULL, m_floatBuffer.GetAddressOf()));
-     ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL,
-                                            m_indexTexture.GetAddressOf()));
+    // -        -       -       -       -       -       -       -       -       -       -       -       
+    
+
+    // -        -       -       -       -       -       -       -       -       -       -       -       
+
+    ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_floatBuffer.GetAddressOf()));
     ThrowIfFailed(m_device->CreateRenderTargetView(m_floatBuffer.Get(), NULL,m_floatRTV.GetAddressOf()));
-     ThrowIfFailed(m_device->CreateRenderTargetView(
-         m_indexTexture.Get(), NULL, m_indexRenderTargetView.GetAddressOf()));
+
+    //desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    //   backBuffer->GetDesc(&desc);
+    ThrowIfFailed(
+        m_device->CreateTexture2D(&desc, NULL, m_indexTexture.GetAddressOf()));
+    ThrowIfFailed(m_device->CreateRenderTargetView(
+        m_indexTexture.Get(), NULL, m_indexRenderTargetView.GetAddressOf()));
+
+    //D3D11_TEXTURE2D_DESC desc3;
+    //backBuffer->GetDesc(&desc3);
+    //cout << "cpuAccesccFlag" << desc3.CPUAccessFlags << endl; 
+
     // FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
@@ -1343,16 +1388,21 @@ void AppBase::CreateBuffers() {
 
     desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     desc.MiscFlags = 0;
+
+
+
     {
         D3D11_TEXTURE2D_DESC desc2;
         backBuffer->GetDesc(&desc2);
-        // 디버깅용
+        // 디버깅용 
         // cout << desc.Width << " " << desc.Height << " " << desc.Format <<
         // endl;
         desc2.SampleDesc.Count = 1;
         desc2.SampleDesc.Quality = 0;
-        desc2.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        desc2.BindFlags = D3D11_BIND_RENDER_TARGET |D3D11_BIND_SHADER_RESOURCE;
         desc2.MiscFlags = 0;
+        desc2.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        //desc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         ThrowIfFailed(
         m_device->CreateTexture2D(&desc2, NULL, m_tempTexture.GetAddressOf()));
 
@@ -1366,12 +1416,9 @@ void AppBase::CreateBuffers() {
         desc2.Height = 1;
         ThrowIfFailed(m_device->CreateTexture2D(
             &desc2, nullptr, m_indexStagingTexture.GetAddressOf()));
-        backBuffer->GetDesc(&desc2);
-        //ThrowIfFailed(m_device->CreateTexture2D(&desc2, NULL,
-        //                                        m_indexTexture.GetAddressOf()));
+
     }
     //desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-
 
 
 

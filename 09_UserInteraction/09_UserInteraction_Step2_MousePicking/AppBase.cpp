@@ -103,7 +103,7 @@ int AppBase::Run() {
                 m_swapChain->GetBuffer(0,
                                        IID_PPV_ARGS(backBuffer.GetAddressOf()));
                 m_context->ResolveSubresource(m_tempTexture.Get(), 0,
-                                              backBuffer.Get(), 0,
+                                              m_indexTexture.Get(), 0,
                                               DXGI_FORMAT_R8G8B8A8_UNORM);
 
                 D3D11Utils::WriteToFile(m_device, m_context, m_tempTexture,

@@ -330,5 +330,6 @@ PixelShaderOutput main(PixelShaderInput input)
     //output.indexColor = indexColor;
     output.indexColor = indexColor;
     
+    
     return output;
 }

@@ -16,7 +16,7 @@ namespace hlab {
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;
-//using DirectX::SimpleMath::Vector4;
+using DirectX::SimpleMath::Vector4;
 
 // DirectX-Graphics-Samples/MiniEngine을 따라서 파일이름 변경
 // __declspec(align(256)) : DX12에서는 256 align (예습)
@@ -28,7 +28,8 @@ __declspec(align(256)) struct MeshConstants {
     Matrix worldInv;
 
     //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-    float indexColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+   // int indexColor[4] = {0, 0, 0, 1};
 
     int useHeightMap = 0;
     float heightScale = 0.0f;

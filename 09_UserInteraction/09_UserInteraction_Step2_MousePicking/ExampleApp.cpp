@@ -19,12 +19,12 @@ bool ExampleApp::Initialize() {
         return false;
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
-        L"../Assets/Textures/Cubemaps/skybox/cubemap_diffuse.dds",
-        L"../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
+        L"../../Assets/Textures/Cubemaps/skybox/cubemap_diffuse.dds",
+        L"../../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
 
     MeshData ground = GeometryGenerator::MakeSquare(2.0f);
-    ground.textureFilename = "../Assets/Textures/blender_uv_grid_2k.png";
+    ground.textureFilename = "../../Assets/Textures/blender_uv_grid_2k.png";
     m_meshGroupGround.Initialize(m_device, {ground});
     m_meshGroupGround.m_diffuseResView = m_cubeMapping.m_diffuseResView;
     m_meshGroupGround.m_specularResView = m_cubeMapping.m_specularResView;
@@ -178,10 +178,8 @@ void ExampleApp::Render() {
     // Multiple render targets
     // 
     // 인덱스를 저장할 RenderTarget을 추가
-    ID3D11RenderTargetView *targets[] = {
-        m_renderTargetView.Get(),
+    ID3D11RenderTargetView *targets[] = {m_renderTargetView.Get(),
                                          m_indexRenderTargetView.Get()
-        
     };
     m_context->OMSetRenderTargets(2, targets, m_depthStencilView.Get());
     m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
@@ -204,8 +202,7 @@ void ExampleApp::Render() {
     // https://stackoverflow.com/questions/24269813/directx-newb-multisampled-texture2d-with-depth-on-a-billboard
     ComPtr<ID3D11Texture2D> backBuffer;
     m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
-    m_context->ResolveSubresource(m_tempTexture.Get(), 0, backBuffer.Get(), 0,
-                                  DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_context->ResolveSubresource(m_tempTexture.Get(), 0, backBuffer.Get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
 
     // 후처리 필터
     if (m_usePostProcessing) {

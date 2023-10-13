@@ -80,6 +80,7 @@ class AppBase {
     void SetShadowViewport();
     void ComputeShaderBarrier();
 
+    template <typename T>
     void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                              ComPtr<ID3D11DeviceContext> &context);
   public:
@@ -89,7 +90,7 @@ class AppBase {
            
 
         
-    int m_imGuiWidth = 378;
+    int m_imGuiWidth = 0;
     int m_screenWidth = 1280 + m_imGuiWidth;
     int m_screenHeight = 720;
     HWND m_mainWindow;
@@ -129,6 +130,7 @@ class AppBase {
     ComPtr<ID3D11ShaderResourceView> m_resolvedSRV;
     ComPtr<ID3D11ShaderResourceView> m_postEffectsSRV;
     ComPtr<ID3D11ShaderResourceView> m_prevSRV;
+
 
     // Depth buffer 관련
     ComPtr<ID3D11Texture2D> m_depthOnlyBuffer; // No MSAA
