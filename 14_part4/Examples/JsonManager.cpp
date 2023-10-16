@@ -229,16 +229,17 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
         break;
     }
    
-    static int objectID = 10;
+    static int objectID = 1;
     if (tempMesh != nullptr) {
         tempMesh->objectInfo.objectID = objectID;
-        tempMesh->m_meshConsts.GetCpu().indexColor.x = (float)objectID / 255;
+        tempMesh->m_meshConsts.GetCpu().indexColor[0] = 
+        (float)objectID / 255;
     //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
 
         std::cout << "Set [" << tempMesh->objectInfo.meshName
                   << "] Object ID : " << objectID << endl; 
 
-        m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
+        m_appBase->m_objects.insert(make_pair(objectID, tempMesh.get()));
         objectID++;
     }
 }

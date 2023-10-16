@@ -99,7 +99,7 @@ cbuffer MaterialConstants : register(b2)
     int useMetallicMap;
     int useRoughnessMap;
     int useEmissiveMap;
-    float dummy2;
+    int isSelected;
 };
 
 #ifdef SKINNED

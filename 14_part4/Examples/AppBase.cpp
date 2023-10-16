@@ -51,7 +51,7 @@ AppBase::~AppBase() {
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
-    DestroyWindow(m_mainWindow);
+    DestroyWindow(m_mainWindow); 
     // UnregisterClass(wc.lpszClassName, wc.hInstance);//생략
 
     // COMPtr에서 알아서 release
@@ -59,9 +59,9 @@ AppBase::~AppBase() {
     // interface pointer and releases the interface when the reference count
     // goes to zero.
     // https:learn.microsoft.com/en-us/cpp/cppcx/wrl/comptr-class?view=msvc-170
-    // 예시: m_d3dDevice.Reset(); 생략
+    // 예시: m_d3dDevice.Reset(); 생략 
 }
-
+ 
 float AppBase::GetAspectRatio() const {
 
         float ratio = float(m_screenWidth) / m_screenHeight;
@@ -250,9 +250,9 @@ void AppBase::Update(float dt) {
 
     // 공용 ConstantBuffer 업데이트
     AppBase::UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
-
+     
     // 거울은 따로 처리
-    if (m_mirror)
+    if (m_mirror) 
         m_mirror->UpdateConstantBuffers(m_device, m_context);
 
     // 조명의 위치 반영
@@ -276,15 +276,13 @@ void AppBase::Update(float dt) {
         ComPtr<ID3D11Texture2D> backBuffer;
         m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
         
-        m_context->ResolveSubresource(m_indexTempTexture.Get(), 0,
-                                      m_floatBuffer.Get(),
-                                     0,
-                                      DXGI_FORMAT_R16G16B16A16_FLOAT);
+                m_context->ResolveSubresource(m_indexTempTexture.Get(), 0, m_indexTexture.Get(), 0,
+                                      DXGI_FORMAT_R8G8B8A8_UNORM);
 
         D3D11Utils::WriteToPngFile(m_device, m_context, m_indexTempTexture,
                                    "captured.png");
 
-        ReadPixelOfMousePos<uint16_t>(m_device, m_context);
+        ReadPixelOfMousePos<UINT8>(m_device, m_context);
     } 
 }
 
@@ -362,9 +360,11 @@ void AppBase::RenderDepthOnly(){
     m_context->ClearDepthStencilView(m_depthOnlyDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
                                      1.0f, 0);
 
-    // Set -    -       -       -       -       -       -       -       -
+    // clearColor);
+
+    // Set -    -       -       -       -       -       -       -       - 
     m_context->OMSetRenderTargets(0, m_indexRenderTargetView.GetAddressOf(),
-                                  m_depthOnlyDSV.Get());
+                                  m_depthOnlyDSV.Get()); 
  
     AppBase::SetGlobalConsts(m_globalConstsGPU);
 
@@ -421,7 +421,7 @@ void AppBase::RenderOpaqueObjects() {
 
     ID3D11RenderTargetView *targets[] = {
                                          
-        m_indexRenderTargetView.Get(), m_floatRTV.Get()
+        m_floatRTV.Get(), m_indexRenderTargetView.Get()
     };
 
     m_context->OMSetRenderTargets(2, targets,
@@ -659,9 +659,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         if (m_keyPressed['C'])
             m_capture = true;
-        //if (wParam == VK_SPACE) {
-        //    m_lightRotate = !m_lightRotate;
-        //}
+
         break;
     case WM_KEYUP:
         if (wParam == 'F') { // f키 일인칭 시점
@@ -681,7 +679,6 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (wParam == 'Z') { // 카메라 설정 화면에 출력
             m_camera->PrintView();
         }
-        cout << wParam << endl;
         m_keyPressed[wParam] = false;
         break;
     case WM_MOUSEWHEEL: {
@@ -1256,9 +1253,6 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     desc.MiscFlags = 0;
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // cpu에서 읽기 가능. 
     desc.Usage = D3D11_USAGE_STAGING;
-    //desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-    ///desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
     ThrowIfFailed(device->CreateTexture2D(
         &desc, NULL, m_indexStagingTexture.GetAddressOf()));
 
@@ -1294,25 +1288,33 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     //    memcpy(&pixels[h * desc.Width * 4], &pData[h * ms.RowPitch],
     //           desc.Width * sizeof(T) * 4);
     //}
-
+     
     context->Unmap(m_indexStagingTexture.Get(), NULL);
-
-    
-    //D3D11Utils::stbi_write_png("test.png", desc.Width, desc.Height, 4, pixels.data(),
-    //               desc.Width * 4);
-    // 
-   //  TODO  Object Check!
-    cout << "color : " << (float)pData[0] << " " << (float)pData[1] << " "
-         << (float)pData[2] << " " << (float)pData[3]
-         << endl;
-  //  cout << "mouse XY : " << m_mouseX << " " << m_mouseY << endl;
-
-    //auto object = m_objects.find(temp[0]);
+     
    
-    //if (object->first > 0.f) {
-    //    float tempID = object->second->objectInfo.objectID;
-    //    std::cout << "Selected Object ID : " << tempID << std::endl;
-    //}
+     cout << "color : " << (int)pData[0] << " " << (int)pData[1] << " "
+         << (int)pData[2] << " " << (int)pData[3] << endl; 
+
+      int objID = (int)pData[0] + (int)pData[1] + (int)pData[2] + (int)pData[3];
+    auto object = m_objects.find(objID);
+    
+    if (object->first > 0.f) {
+        shared_ptr<Model> tempObj = object->second;
+        float tempID = tempObj->objectInfo.objectID;
+        string tempName = tempObj->objectInfo.meshName;
+        std::cout << "Selected [" << tempName << "] Object ID : " << tempID << std::endl;
+
+        if (m_pickedModel == tempObj) {
+            m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
+            m_pickedModel = nullptr;
+            return;
+        }
+
+        if (m_pickedModel != nullptr)
+                m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
+        m_pickedModel = tempObj;
+        m_pickedModel->m_materialConsts.GetCpu().isSelected = 1;
+    }
 
 }
 
@@ -1342,6 +1344,7 @@ void AppBase::CreateBuffers() {
 
     desc.MipLevels = desc.ArraySize = 1;
     desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    //desc.Format = DXGI_FORMAT_R16G16B16A16_UINT;
     //desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
   //  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -1361,16 +1364,20 @@ void AppBase::CreateBuffers() {
     
 
     // -        -       -       -       -       -       -       -       -       -       -       -       
-
     ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_floatBuffer.GetAddressOf()));
     ThrowIfFailed(m_device->CreateRenderTargetView(m_floatBuffer.Get(), NULL,m_floatRTV.GetAddressOf()));
 
-    //desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    //   backBuffer->GetDesc(&desc);
-    ThrowIfFailed(
-        m_device->CreateTexture2D(&desc, NULL, m_indexTexture.GetAddressOf()));
+    D3D11_TEXTURE2D_DESC descTemp;
+    descTemp = desc;
+    descTemp.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    // desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    // backBuffer->GetDesc(&desc);
+    ThrowIfFailed(m_device->CreateTexture2D(&descTemp, NULL,
+                                            m_indexTexture.GetAddressOf()));
     ThrowIfFailed(m_device->CreateRenderTargetView(
         m_indexTexture.Get(), NULL, m_indexRenderTargetView.GetAddressOf()));
+    //desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
 
     //D3D11_TEXTURE2D_DESC desc3;
     //backBuffer->GetDesc(&desc3);
@@ -1401,8 +1408,10 @@ void AppBase::CreateBuffers() {
         desc2.SampleDesc.Quality = 0;
         desc2.BindFlags = D3D11_BIND_RENDER_TARGET |D3D11_BIND_SHADER_RESOURCE;
         desc2.MiscFlags = 0;
-        desc2.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-        //desc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        //desc2.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+       // desc2.Format = DXGI_FORMAT_R16G16B16A16_UINT;
+        desc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        
         ThrowIfFailed(
         m_device->CreateTexture2D(&desc2, NULL, m_tempTexture.GetAddressOf()));
 

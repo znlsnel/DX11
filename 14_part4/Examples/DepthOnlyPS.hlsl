@@ -5,10 +5,10 @@ struct DepthOnlyPixelShaderInput
     float4 posProj : SV_POSITION;
 };
 
-struct PixelShaderOutput
-{
-    float4 IndexColor : SV_Target0;
-};
+//struct PixelShaderOutput
+//{
+//    float4 IndexColor : SV_Target0;
+//};
 
 float4 main(DepthOnlyPixelShaderInput input) : SV_Target0
 {

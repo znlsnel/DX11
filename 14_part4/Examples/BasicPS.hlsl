@@ -22,7 +22,7 @@ float3 SchlickFresnel(float3 F0, float NdotH)
 struct PixelShaderOutput
 {
     float4 pixelColor : SV_Target0;
-    float4 indexColor : SV_Target1;
+    float4  indexColor : SV_Target1;
 };
 
 float3 GetNormal(PixelShaderInput input)
@@ -253,12 +253,21 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
 
 PixelShaderOutput main(PixelShaderInput input)
 {
+    PixelShaderOutput output;
+    
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input);
     
     float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias) * float4(albedoFactor, 1)
                                  : float4(albedoFactor, 1);
     
+    if (isSelected)
+    {
+        output.pixelColor = albedo;
+        output.pixelColor *= 2.0;
+        output.indexColor = indexColor;
+        return output;
+    }
     clip(albedo.a - 0.5); // Tree leaves
     
     float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).r : 1.0;
@@ -324,11 +333,14 @@ PixelShaderOutput main(PixelShaderInput input)
         }
     }
     
-    PixelShaderOutput output;
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
-    //output.indexColor = indexColor;
+
+    
+
+    
     output.indexColor = indexColor;
+    //output.indexColor = float4(0.1, 0.0, 200.0, 1.0);
     
     
     return output;

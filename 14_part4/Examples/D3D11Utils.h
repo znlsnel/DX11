@@ -273,6 +273,7 @@ class D3D11Utils {
                            const int height, const int depth,
                            const DXGI_FORMAT pixelFormat);
 
+
     static void WriteToPngFile(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context,
                                ComPtr<ID3D11Texture2D> &textureToWrite,

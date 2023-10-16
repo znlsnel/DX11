@@ -520,9 +520,10 @@ bool AppBase::CreateRenderTargetView() {
 
         // m_device->CreateShaderResourceView(backBuffer.Get(), nullptr,
         // m_shaderResourceView.GetAddressOf());
-
         D3D11_TEXTURE2D_DESC desc;
         backBuffer->GetDesc(&desc);
+        cout << " desc.Format : " << desc.Format << endl;
+        desc.Format = DXGI_FORMAT_B4G4R4A4_UNORM;
         // 디버깅용
         // cout << desc.Width << " " << desc.Height << " " << desc.Format <<
         // endl;

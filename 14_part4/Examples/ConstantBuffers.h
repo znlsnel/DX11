@@ -28,8 +28,9 @@ __declspec(align(256)) struct MeshConstants {
     Matrix worldInv;
 
     //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-    Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-   // int indexColor[4] = {0, 0, 0, 1};
+    //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    float indexColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+   //int indexColor[4] = {0, 0, 0, 255};
 
     int useHeightMap = 0;
     float heightScale = 0.0f;
@@ -61,7 +62,7 @@ __declspec(align(256)) struct MaterialConstants {
     int useMetallicMap = 0;
     int useRoughnessMap = 0;
     int useEmissiveMap = 0;
-    float dummy = 0.0f;
+    int isSelected = 0;
 
     // 참고 flags 구현
     /* union {

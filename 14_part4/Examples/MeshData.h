@@ -23,7 +23,7 @@ using std::vector;
     Vector3 rotation{0.f};
 
     string meshName;
-    float objectID;
+    int objectID;
  };
 
  enum meshID : int { 
