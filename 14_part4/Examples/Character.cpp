@@ -89,7 +89,7 @@ void hlab::Character::UpdateState(float dt) {
                   if (appBase->m_keyPressed[VK_SPACE]) {
                 state = EActorState::attack;
                   } 
-                  else if (appBase->m_keyPressed['W'])
+                  else if (appBase->m_keyPressed['W'] && appBase->m_camera->m_useFirstPersonView)
                         state = EActorState::walk;
         }
                 break;

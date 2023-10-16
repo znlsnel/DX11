@@ -1,19 +1,19 @@
 #pragma once
-#include <string>
 #include <sstream>
 #include <iostream>
+#include <map>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h" 
 #include "rapidjson/filereadstream.h"
-
-
+#include "MeshData.h"
 
 namespace hlab {
 using namespace std;
 
+        
 class JsonManager {
   public:
     JsonManager(){};
@@ -39,6 +39,11 @@ class JsonManager {
     shared_ptr<class Model> CreateSphere(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateSquare(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateBox(struct ObjectSaveInfo info);
+
+    map<meshID, std::string> objectInfo = {
+            {meshID::ESphere, "Sphere"},
+                {meshID::EBox, "Box"}
+    };
 
    rapidjson::Document m_saveFile;
 };

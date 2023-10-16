@@ -6,6 +6,7 @@
 namespace hlab {
 
 using DirectX::SimpleMath::Vector2;
+using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector4;
 

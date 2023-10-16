@@ -1,10 +1,5 @@
 #pragma once
-
-
-#include <directxtk/SimpleMath.h>
 #include <string>
-#include <vector>
-
 #include "Vertex.h"
 
 

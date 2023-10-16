@@ -52,16 +52,8 @@ AppBase::~AppBase() {
     ImGui::DestroyContext();
 
     DestroyWindow(m_mainWindow); 
-    // UnregisterClass(wc.lpszClassName, wc.hInstance);//생략
-
-    // COMPtr에서 알아서 release
-    // ComPtr automatically maintains a reference count for the underlying
-    // interface pointer and releases the interface when the reference count
-    // goes to zero.
-    // https:learn.microsoft.com/en-us/cpp/cppcx/wrl/comptr-class?view=msvc-170
-    // 예시: m_d3dDevice.Reset(); 생략 
 }
- 
+  
 float AppBase::GetAspectRatio() const {
 
         float ratio = float(m_screenWidth) / m_screenHeight;
@@ -70,7 +62,25 @@ float AppBase::GetAspectRatio() const {
     return ratio;
 
 }
+void AppBase::MousePicking() {
 
+    if (m_leftButton == false)
+        return;
+
+    m_leftButton = false;
+
+    ComPtr<ID3D11Texture2D> backBuffer;
+    m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
+
+    m_context->ResolveSubresource(m_indexTempTexture.Get(), 0,
+                                  m_indexTexture.Get(), 0,
+                                  DXGI_FORMAT_R8G8B8A8_UNORM);
+
+    //D3D11Utils::WriteToPngFile(m_device, m_context, m_indexTempTexture,
+      //                         "captured.png");
+
+    ReadPixelOfMousePos<UINT8>(m_device, m_context);
+}
 int AppBase::Run() {
 
     // Main message loop
@@ -137,7 +147,7 @@ bool AppBase::Initialize() {
         m_device, m_context, vector{GeometryGenerator::MakeSquare()});
 
     // 환경 박스 초기화
-    MeshData skyboxMesh = GeometryGenerator::MakeBox(40.0f);
+    MeshData skyboxMesh = GeometryGenerator::MakeBox(400.0f);
     std::reverse(skyboxMesh.indices.begin(), skyboxMesh.indices.end());
     m_skybox = make_shared<Model>(m_device, m_context, vector{skyboxMesh});
     m_skybox->m_name = "SkyBox";
@@ -271,19 +281,7 @@ void AppBase::Update(float dt) {
     }
 
 
-    if (m_capture) {
-        m_capture = false;
-        ComPtr<ID3D11Texture2D> backBuffer;
-        m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
-        
-                m_context->ResolveSubresource(m_indexTempTexture.Get(), 0, m_indexTexture.Get(), 0,
-                                      DXGI_FORMAT_R8G8B8A8_UNORM);
 
-        D3D11Utils::WriteToPngFile(m_device, m_context, m_indexTempTexture,
-                                   "captured.png");
-
-        ReadPixelOfMousePos<UINT8>(m_device, m_context);
-    } 
 }
 
 void AppBase::UpdateLights(float dt) {
@@ -584,7 +582,7 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
 }
 
 void AppBase::OnMouseWheel(float wheelDt) {
-    //std::cout << "wheelDt : " << wheelDt << std::endl;
+    //std::cout << "wheelDt : " << wheelDt << std::endl; 
 
         if (m_camera->m_useFirstPersonView) {
             m_camera->cameraDistance += (float)-wheelDt * 0.001f;
@@ -657,8 +655,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 m_keyPressed['S'] = false;
             }
         }
-        if (m_keyPressed['C'])
-            m_capture = true;
+
 
         break;
     case WM_KEYUP:
@@ -1298,7 +1295,7 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
       int objID = (int)pData[0] + (int)pData[1] + (int)pData[2] + (int)pData[3];
     auto object = m_objects.find(objID);
     
-    if (object->first > 0.f) {
+    if (object->second != nullptr) {
         shared_ptr<Model> tempObj = object->second;
         float tempID = tempObj->objectInfo.objectID;
         string tempName = tempObj->objectInfo.meshName;

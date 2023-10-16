@@ -33,13 +33,13 @@ class GeometryGenerator {
                                    const float scale = 1.0f,
                                    const Vector2 texScale = Vector2(1.0f));
     static MeshData MakeGrass();
-    static MeshData MakeBox(const float scale = 1.0f);
+    static MeshData MakeBox(float scale = 1.0f);
     static MeshData MakeWireBox(const Vector3 center, const Vector3 extents);
     static MeshData MakeWireSphere(const Vector3 center, const float radius);
     static MeshData MakeCylinder(const float bottomRadius,
                                  const float topRadius, float height,
                                  int numSlices);
-    static MeshData MakeSphere(const float radius, const int numSlices,
+    static MeshData MakeSphere(float radius, const int numSlices,
                                const int numStacks,
                                const Vector2 texScale = Vector2(1.0f));
     static MeshData MakeTetrahedron();

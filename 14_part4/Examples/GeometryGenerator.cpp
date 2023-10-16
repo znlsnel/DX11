@@ -121,12 +121,13 @@ MeshData GeometryGenerator::MakeGrass() {
     return grid;
 }
 
-MeshData GeometryGenerator::MakeBox(const float scale) {
+MeshData GeometryGenerator::MakeBox(float scale) {
 
     vector<Vector3> positions;
     vector<Vector3> colors;
     vector<Vector3> normals;
     vector<Vector2> texcoords; // 텍스춰 좌표
+    scale *= 0.1f;
 
     // 윗면
     positions.push_back(Vector3(-1.0f, 1.0f, -1.0f) * scale);
@@ -431,7 +432,7 @@ MeshData GeometryGenerator::MakeCylinder(const float bottomRadius,
     return meshData;
 }
 
-MeshData GeometryGenerator::MakeSphere(const float radius, const int numSlices,
+MeshData GeometryGenerator::MakeSphere(float radius, const int numSlices,
                                        const int numStacks,
                                        const Vector2 texScale) {
 
@@ -442,6 +443,7 @@ MeshData GeometryGenerator::MakeSphere(const float radius, const int numSlices,
 
     const float dTheta = -XM_2PI / float(numSlices);
     const float dPhi = -XM_PI / float(numStacks);
+    radius *= 0.1f;
 
     MeshData meshData;
 

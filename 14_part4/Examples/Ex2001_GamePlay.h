@@ -54,7 +54,6 @@ class Ex2001_GamePlay : public AppBase {
     void UpdateAnim(float dt);
     void Render() override;
     void InitAudio();
-    void MousePicking();
 
     double GetTimeSeconds() { return timeSeconds; };
 

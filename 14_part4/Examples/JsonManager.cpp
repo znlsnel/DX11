@@ -1,3 +1,4 @@
+#pragma once
 #include "JsonManager.h"
 #include "AppBase.h"
 
@@ -228,10 +229,11 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     }
         break;
     }
-   
+    
     static int objectID = 1;
     if (tempMesh != nullptr) {
         tempMesh->objectInfo.objectID = objectID;
+        tempMesh->objectInfo.meshID = temp.meshID;
         tempMesh->m_meshConsts.GetCpu().indexColor[0] = 
         (float)objectID / 255;
     //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
@@ -271,7 +273,7 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
     // m_pickedModel = m_player->GetMesh()->m_meshes;
     m_appBase->m_pbrList.push_back(m_player->GetMesh()); // 리스트에 등록
 
-    m_appBase->m_camera->SetTarget(m_player.get());
+    m_appBase->m_camera->SetTarget(m_player);
     return m_player->GetMesh();
     //return make_shared
 }

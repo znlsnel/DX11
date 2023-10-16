@@ -79,6 +79,7 @@ class AppBase {
     void SetMainViewport();
     void SetShadowViewport();
     void ComputeShaderBarrier();
+    void MousePicking();
 
     template <typename T>
     void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
@@ -91,7 +92,7 @@ class AppBase {
 
         
     int m_imGuiWidth = 0;
-    int m_screenWidth = 1280 + m_imGuiWidth;
+    int m_screenWidth = 1920;
     int m_screenHeight = 720;
     HWND m_mainWindow;
     bool m_useMSAA = true;
@@ -99,7 +100,6 @@ class AppBase {
     bool m_drawAsWire = false;
     bool m_drawOBB = false; // Draw Object Oriented Bounding Box
     bool m_drawBS = false;  // Draw Bounding Sphere
-    bool m_capture = false;
 
     DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 

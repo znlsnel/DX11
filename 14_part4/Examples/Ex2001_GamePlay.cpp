@@ -35,7 +35,7 @@ bool Ex2001_GamePlay::InitScene() {
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
         //auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
-        auto mesh =  GeometryGenerator::MakeSquareGrid(10, 10);
+        auto mesh =  GeometryGenerator::MakeSquareGrid(10, 10, 10.f);
         string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
         mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
         mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
@@ -104,7 +104,7 @@ bool Ex2001_GamePlay::InitScene() {
 
     // ocean
         {
-        auto mesh = GeometryGenerator::MakeSquare(20.0, {10.0f, 10.0f});
+        auto mesh = GeometryGenerator::MakeSquare(200.0, {10.0f, 10.0f});
         m_ocean =
             make_shared<OceanModel>(m_device, m_context, vector{mesh});
         m_ocean->m_castShadow = false;
@@ -319,207 +319,231 @@ void Ex2001_GamePlay::InitAudio() {
         
 }
 
-void Ex2001_GamePlay::MousePicking() {
 
-        if (m_leftButton == false)
-                return;
-
-        m_leftButton = false;
-
-        Vector3 cursorNdcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
-        Vector3 cursorNdcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
-
-        Matrix inverseProjView =
-            (m_camera->GetViewRow() * m_camera->GetProjRow()).Invert();
-
-        Vector3 cursorWorldNear =
-            Vector3::Transform(cursorNdcNear, inverseProjView);
-        Vector3 cursorWorldFar =
-            Vector3::Transform(cursorNdcFar, inverseProjView);
-        Vector3 dir = cursorWorldFar - cursorWorldNear;
-        dir.Normalize();
-        
-
-
-        for (auto object : m_objects) {
-                shared_ptr<Model> temp = object.second;
-                SimpleMath::Ray currRay = SimpleMath::Ray(cursorWorldNear, dir);
-                float dist = 0.0f;
-               
-                bool selected = currRay.Intersects(temp->m_boundingBox, dist);
-                if (selected) {
-                        //std::cout << " selected!!!  !!  "  << std::endl;
-                        m_pickedModel = temp;
-                        break;
-                }
-        }
-
-}
 
 
 
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
  //   ImGui::SetNextItemOpen(false, ImGuiCond_Once);
-    ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
+    if (ImGui::TreeNode("Basic")) {
+    
+            ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
 
-        static float oceanHeight = 0.0f;
-    if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
-        Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
-        //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-        //                        Matrix::CreateTranslation(position));
-        m_ocean->UpdateTranseform(m_ocean->GetScale(),
-                                  Vector3(3.141592f * 0.5f,
-                                          m_ocean->GetRotation().y,
-                                          m_ocean->GetRotation().z),
-                                  position);
+                static float oceanHeight = 0.0f;
+            if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
+                Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
+                //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+                //                        Matrix::CreateTranslation(position));
+                m_ocean->UpdateTranseform(m_ocean->GetScale(),
+                                          Vector3(3.141592f * 0.5f,
+                                                  m_ocean->GetRotation().y,
+                                                  m_ocean->GetRotation().z),
+                                          position);
 
-    }
-
-    if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
-        ImGui::Checkbox("Wireframe", &m_drawAsWire);
-        ImGui::Checkbox("DrawOBB", &m_drawOBB);
-        ImGui::Checkbox("DrawBSphere", &m_drawBS);
-        if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
-            CreateBuffers();
-        }
-        ImGui::TreePop();
-    }
-
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Skybox")) {
-        ImGui::SliderFloat("Strength", &m_globalConstsCPU.strengthIBL, 0.0f,
-                           0.5f);
-        ImGui::RadioButton("Env", &m_globalConstsCPU.textureToDraw, 0);
-        ImGui::SameLine();
-        ImGui::RadioButton("Specular", &m_globalConstsCPU.textureToDraw, 1);
-        ImGui::SameLine();
-        ImGui::RadioButton("Irradiance", &m_globalConstsCPU.textureToDraw, 2);
-        ImGui::SliderFloat("EnvLodBias", &m_globalConstsCPU.envLodBias, 0.0f,
-                           10.0f);
-        ImGui::TreePop();
-    }
-
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Post Effects")) {
-        int flag = 0;
-        flag += ImGui::RadioButton("Render", &m_postEffectsConstsCPU.mode, 1);
-        ImGui::SameLine();
-        flag += ImGui::RadioButton("Depth", &m_postEffectsConstsCPU.mode, 2);
-        flag += ImGui::SliderFloat(
-            "DepthScale", &m_postEffectsConstsCPU.depthScale, 0.0, 1.0);
-        flag += ImGui::SliderFloat("Fog", &m_postEffectsConstsCPU.fogStrength,
-                                   0.0, 10.0);
-
-        if (flag)
-            D3D11Utils::UpdateBuffer(m_context, m_postEffectsConstsCPU,
-                                     m_postEffectsConstsGPU);
-
-        ImGui::TreePop();
-    }
-
-    if (ImGui::TreeNode("Post Processing")) {
-        int flag = 0;
-        flag += ImGui::SliderFloat(
-            "Bloom Strength",
-            &m_postProcess.m_combineFilter.m_constData.strength, 0.0f, 1.0f);
-        flag += ImGui::SliderFloat(
-            "Exposure", &m_postProcess.m_combineFilter.m_constData.option1,
-            0.0f, 10.0f);
-        flag += ImGui::SliderFloat(
-            "Gamma", &m_postProcess.m_combineFilter.m_constData.option2, 0.1f,
-            5.0f);
-        // 편의상 사용자 입력이 인식되면 바로 GPU 버퍼를 업데이트
-        if (flag) {
-            m_postProcess.m_combineFilter.UpdateConstantBuffers(m_context);
-        }
-        ImGui::TreePop();
-    }
-
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (m_mirror && ImGui::TreeNode("Mirror")) {
-
-        ImGui::SliderFloat("Alpha", &m_mirrorAlpha, 0.0f, 1.0f);
-        const float blendColor[4] = {m_mirrorAlpha, m_mirrorAlpha,
-                                     m_mirrorAlpha, 1.0f};
-        if (m_drawAsWire)
-            Graphics::mirrorBlendWirePSO.SetBlendFactor(blendColor);
-        else
-            Graphics::mirrorBlendSolidPSO.SetBlendFactor(blendColor);
-
-        ImGui::SliderFloat("Metallic",
-                           &m_mirror->m_materialConsts.GetCpu().metallicFactor,
-                           0.0f, 1.0f);
-        ImGui::SliderFloat("Roughness",
-                           &m_mirror->m_materialConsts.GetCpu().roughnessFactor,
-                           0.0f, 1.0f);
-
-        ImGui::TreePop();
-    }
-
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Light")) {
-        // ImGui::SliderFloat3("Position",
-        // &m_globalConstsCPU.lights[0].position.x,
-        //                     -5.0f, 5.0f);
-        ImGui::SliderFloat("Halo Radius",
-                           &m_globalConstsCPU.lights[1].haloRadius, 0.0f, 2.0f);
-        ImGui::SliderFloat("Halo Strength",
-                           &m_globalConstsCPU.lights[1].haloStrength, 0.0f,
-                           1.0f);
-        ImGui::SliderFloat("Radius", &m_globalConstsCPU.lights[1].radius, 0.0f,
-                           0.5f);
-        ImGui::TreePop();
-    }
-
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Material")) {
-        ImGui::SliderFloat("LodBias", &m_globalConstsCPU.lodBias, 0.0f, 10.0f);
-
-        int flag = 0;
-
-        if (m_pickedModel) {
-            flag += ImGui::SliderFloat(
-                "Metallic",
-                &m_pickedModel->m_materialConsts.GetCpu().metallicFactor, 0.0f,
-                1.0f);
-            flag += ImGui::SliderFloat(
-                "Roughness",
-                &m_pickedModel->m_materialConsts.GetCpu().roughnessFactor, 0.0f,
-                1.0f);
-            flag += ImGui::CheckboxFlags(
-                "AlbedoTexture",
-                &m_pickedModel->m_materialConsts.GetCpu().useAlbedoMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "EmissiveTexture",
-                &m_pickedModel->m_materialConsts.GetCpu().useEmissiveMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "Use NormalMapping",
-                &m_pickedModel->m_materialConsts.GetCpu().useNormalMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "Use AO", &m_pickedModel->m_materialConsts.GetCpu().useAOMap,
-                1);
-            flag += ImGui::CheckboxFlags(
-                "Use HeightMapping",
-                &m_pickedModel->m_meshConsts.GetCpu().useHeightMap, 1);
-            flag += ImGui::SliderFloat(
-                "HeightScale",
-                &m_pickedModel->m_meshConsts.GetCpu().heightScale, 0.0f, 0.1f);
-            flag += ImGui::CheckboxFlags(
-                "Use MetallicMap",
-                &m_pickedModel->m_materialConsts.GetCpu().useMetallicMap, 1);
-            flag += ImGui::CheckboxFlags(
-                "Use RoughnessMap",
-                &m_pickedModel->m_materialConsts.GetCpu().useRoughnessMap, 1);
-            if (flag) {
-                m_pickedModel->UpdateConstantBuffers(m_device, m_context);
             }
-            ImGui::Checkbox("Draw Normals", &m_pickedModel->m_drawNormals);
-        }
+
+            if (ImGui::TreeNode("General")) {
+                ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
+                ImGui::Checkbox("Wireframe", &m_drawAsWire);
+                ImGui::Checkbox("DrawOBB", &m_drawOBB);
+                ImGui::Checkbox("DrawBSphere", &m_drawBS);
+                if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
+                    CreateBuffers();
+                }
+                ImGui::TreePop();
+            }
+
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if (ImGui::TreeNode("Skybox")) {
+                ImGui::SliderFloat("Strength", &m_globalConstsCPU.strengthIBL, 0.0f,
+                                   0.5f);
+                ImGui::RadioButton("Env", &m_globalConstsCPU.textureToDraw, 0);
+                ImGui::SameLine();
+                ImGui::RadioButton("Specular", &m_globalConstsCPU.textureToDraw, 1);
+                ImGui::SameLine();
+                ImGui::RadioButton("Irradiance", &m_globalConstsCPU.textureToDraw, 2);
+                ImGui::SliderFloat("EnvLodBias", &m_globalConstsCPU.envLodBias, 0.0f,
+                                   10.0f);
+                ImGui::TreePop();
+            }
+
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if (ImGui::TreeNode("Post Effects")) {
+                int flag = 0;
+                flag += ImGui::RadioButton("Render", &m_postEffectsConstsCPU.mode, 1);
+                ImGui::SameLine();
+                flag += ImGui::RadioButton("Depth", &m_postEffectsConstsCPU.mode, 2);
+                flag += ImGui::SliderFloat(
+                    "DepthScale", &m_postEffectsConstsCPU.depthScale, 0.0, 1.0);
+                flag += ImGui::SliderFloat("Fog", &m_postEffectsConstsCPU.fogStrength,
+                                           0.0, 10.0);
+
+                if (flag)
+                    D3D11Utils::UpdateBuffer(m_context, m_postEffectsConstsCPU,
+                                             m_postEffectsConstsGPU);
+
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNode("Post Processing")) {
+                int flag = 0;
+                flag += ImGui::SliderFloat(
+                    "Bloom Strength",
+                    &m_postProcess.m_combineFilter.m_constData.strength, 0.0f, 1.0f);
+                flag += ImGui::SliderFloat(
+                    "Exposure", &m_postProcess.m_combineFilter.m_constData.option1,
+                    0.0f, 10.0f);
+                flag += ImGui::SliderFloat(
+                    "Gamma", &m_postProcess.m_combineFilter.m_constData.option2, 0.1f,
+                    5.0f);
+                // 편의상 사용자 입력이 인식되면 바로 GPU 버퍼를 업데이트
+                if (flag) {
+                    m_postProcess.m_combineFilter.UpdateConstantBuffers(m_context);
+                }
+                ImGui::TreePop();
+            }
+
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if (m_mirror && ImGui::TreeNode("Mirror")) {
+
+                ImGui::SliderFloat("Alpha", &m_mirrorAlpha, 0.0f, 1.0f);
+                const float blendColor[4] = {m_mirrorAlpha, m_mirrorAlpha,
+                                             m_mirrorAlpha, 1.0f};
+                if (m_drawAsWire)
+                    Graphics::mirrorBlendWirePSO.SetBlendFactor(blendColor);
+                else
+                    Graphics::mirrorBlendSolidPSO.SetBlendFactor(blendColor);
+
+                ImGui::SliderFloat("Metallic",
+                                   &m_mirror->m_materialConsts.GetCpu().metallicFactor,
+                                   0.0f, 1.0f);
+                ImGui::SliderFloat("Roughness",
+                                   &m_mirror->m_materialConsts.GetCpu().roughnessFactor,
+                                   0.0f, 1.0f);
+
+                ImGui::TreePop();
+            }
+
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if (ImGui::TreeNode("Light")) {
+                // ImGui::SliderFloat3("Position",
+                // &m_globalConstsCPU.lights[0].position.x,
+                //                     -5.0f, 5.0f);
+                ImGui::SliderFloat("Halo Radius",
+                                   &m_globalConstsCPU.lights[1].haloRadius, 0.0f, 2.0f);
+                ImGui::SliderFloat("Halo Strength",
+                                   &m_globalConstsCPU.lights[1].haloStrength, 0.0f,
+                                   1.0f);
+                ImGui::SliderFloat("Radius", &m_globalConstsCPU.lights[1].radius, 0.0f,
+                                   0.5f);
+                ImGui::TreePop();
+            }
+    }
+
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+    if (m_pickedModel) {
+    
+            if (ImGui::TreeNode("Transform")) {
+
+                float modelLocation[3] = {m_pickedModel->GetPosition().x,
+                                          m_pickedModel->GetPosition().y,
+                                          m_pickedModel->GetPosition().z};
+                float modelRotation[3] = {m_pickedModel->GetRotation().x,
+                                          m_pickedModel->GetRotation().y,
+                                          m_pickedModel->GetRotation().z};
+                float modelScale[3] = {m_pickedModel->GetScale().x,
+                                       m_pickedModel->GetScale().y,
+                                       m_pickedModel->GetScale().z};
+
+                int flagLotation =
+                    ImGui::DragFloat3("Position", modelLocation, 0.01f, -5.0f, 5.f);
+                int flagRotation = 
+                    ImGui::DragFloat3("Rotation", modelRotation, 0.01f,-5.0f, 5.f);
+                int flagScale = 
+                    ImGui::DragFloat3("Scale", modelScale, 0.01f, -5.0f, 5.f);
+                
+                
+
+                if (flagLotation) {
+                    m_pickedModel->UpdatePosition(
+                        Vector3(modelLocation[0], modelLocation[1], modelLocation[2]));
+                }
+                if (flagRotation) {
+                    m_pickedModel->UpdateRotation(
+                        Vector3(modelRotation[0], modelRotation[1], modelRotation[2]));
+                }
+                if (flagScale) {
+                    m_pickedModel->UpdateScale(Vector3(modelScale[0], modelScale[1], modelScale[2]));
+                }
+            }
+
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if (ImGui::TreeNode("Material")) {
+                ImGui::SliderFloat("LodBias", &m_globalConstsCPU.lodBias, 0.0f, 10.0f);
+                int flag = 0;
+
+                if (m_pickedModel) {
+
+
+                    flag += ImGui::SliderFloat(
+                        "Metallic",
+                        &m_pickedModel->m_materialConsts.GetCpu().metallicFactor, 0.0f,
+                        1.0f);
+                    flag += ImGui::SliderFloat(
+                        "Roughness",
+                        &m_pickedModel->m_materialConsts.GetCpu().roughnessFactor, 0.0f,
+                        1.0f);
+                    flag += ImGui::CheckboxFlags(
+                        "AlbedoTexture",
+                        &m_pickedModel->m_materialConsts.GetCpu().useAlbedoMap, 1);
+                    flag += ImGui::CheckboxFlags(
+                        "EmissiveTexture",
+                        &m_pickedModel->m_materialConsts.GetCpu().useEmissiveMap, 1);
+                    flag += ImGui::CheckboxFlags(
+                        "Use NormalMapping",
+                        &m_pickedModel->m_materialConsts.GetCpu().useNormalMap, 1);
+                    flag += ImGui::CheckboxFlags(
+                        "Use AO", &m_pickedModel->m_materialConsts.GetCpu().useAOMap,
+                        1);
+                    flag += ImGui::CheckboxFlags(
+                        "Use HeightMapping",
+                        &m_pickedModel->m_meshConsts.GetCpu().useHeightMap, 1);
+                    flag += ImGui::SliderFloat(
+                        "HeightScale",
+                        &m_pickedModel->m_meshConsts.GetCpu().heightScale, 0.0f, 0.1f);
+                    flag += ImGui::CheckboxFlags(
+                        "Use MetallicMap",
+                        &m_pickedModel->m_materialConsts.GetCpu().useMetallicMap, 1);
+                    flag += ImGui::CheckboxFlags(
+                        "Use RoughnessMap",
+                        &m_pickedModel->m_materialConsts.GetCpu().useRoughnessMap, 1);
+                    if (flag) {
+                        m_pickedModel->UpdateConstantBuffers(m_device, m_context);
+                    }
+
+                    ImGui::Checkbox("Draw Normals", &m_pickedModel->m_drawNormals);
+                }
+    }
+
 
         ImGui::TreePop();
     }
+
+    if (ImGui::TreeNode("Load Object")) {
+        for (auto object : m_JsonManager->objectInfo) {
+                if (ImGui::Button(object.second.c_str(), ImVec2(70, 70))) {
+                    ObjectSaveInfo temp;
+                    temp.meshID = (int)object.first;
+                    m_JsonManager->CreateMesh(temp);
+                }
+        }
+            /*if (ImGui::Button("Test", ImVec2(100, 100)))*/
+                
+
+    }
+
 }
 
 } // namespace hlab

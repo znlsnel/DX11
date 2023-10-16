@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <directxtk/SimpleMath.h>
+#include <memory>
 
 namespace hlab {
 
@@ -32,7 +33,7 @@ class Camera {
     void SetAspectRatio(float aspect);
     void SetLocation(Vector3 pos);
     void PrintView();
-    void SetTarget(class Character *target) { m_target = target; };
+    void SetTarget(std::shared_ptr<class Character> target) { m_target = target; };
 
     Vector3 GetForwardVector();
     Vector3 GetPosision();
@@ -64,7 +65,7 @@ class Camera {
 
     bool m_usePerspectiveProjection = true;
 
-    class Character* m_target;
+   std::shared_ptr< class Character> m_target;
     class AppBase *m_appBase;
 };
 
