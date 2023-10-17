@@ -324,6 +324,7 @@ void ExampleApp::Render() {
     // 공용 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
     vector<ID3D11ShaderResourceView *> commonSRVs = {
         m_envSRV.Get(), m_specularSRV.Get(), m_irradianceSRV.Get(),
+
         m_brdfSRV.Get()};
     m_context->PSSetShaderResources(10, UINT(commonSRVs.size()),
                                     commonSRVs.data());

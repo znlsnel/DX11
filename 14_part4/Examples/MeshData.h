@@ -17,11 +17,14 @@ using std::vector;
     Vector3 position{0.f};
     Vector3 rotation{0.f};
 
-    string meshName;
+    string meshName = "";
+    string meshPath = "";
+    string previewPath = "";
     int objectID;
  };
 
- enum meshID : int { 
+ enum meshID : int {
+	ELoadToPath = -1,
 	 ECharacter = 0,
 	 EPlane = 1,
 	 EMountain = 2,

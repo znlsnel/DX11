@@ -2,12 +2,14 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <filesystem>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h" 
 #include "rapidjson/filereadstream.h"
+
 #include "MeshData.h"
 
 namespace hlab {
@@ -18,20 +20,22 @@ class JsonManager {
   public:
     JsonManager(){};
     JsonManager(class AppBase* appBase);
-    ~JsonManager() { SaveMesh(); };
+    ~JsonManager()  {};
 
     bool ParseJson(rapidjson::Document &doc, const std::string &jsonData);
     std::string JsonDocToString(rapidjson::Document &doc,
                                       bool isPretty = false);
-    void TestJson_Parse();
-    void TestJson_AddMember();
 
     class AppBase *m_appBase = nullptr;
+
+    void LoadObjectPathInFolder();
+    void SearchModelFiles(const filesystem::path& directory);
 
     void LoadMesh();
    void SaveMesh();
     void CreateMesh(struct ObjectSaveInfo temp);
 
+    shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 
@@ -44,6 +48,9 @@ class JsonManager {
             {meshID::ESphere, "Sphere"},
                 {meshID::EBox, "Box"}
     };
+
+    map < string, pair<string, string>> meshPaths;
+    string modelsPath;
 
    rapidjson::Document m_saveFile;
 };

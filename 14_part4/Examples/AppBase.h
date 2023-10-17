@@ -70,6 +70,7 @@ class AppBase {
     void SetPipelineState(const ComputePSO &pso);
     shared_ptr<Model> PickClosest(const Ray &pickingRay, float &minDist);
     void ProcessMouseControl();
+    virtual void MousePicking();
 
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();
@@ -79,7 +80,6 @@ class AppBase {
     void SetMainViewport();
     void SetShadowViewport();
     void ComputeShaderBarrier();
-    void MousePicking();
 
     template <typename T>
     void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,

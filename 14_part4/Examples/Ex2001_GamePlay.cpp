@@ -35,7 +35,7 @@ bool Ex2001_GamePlay::InitScene() {
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
         //auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
-        auto mesh =  GeometryGenerator::MakeSquareGrid(10, 10, 10.f);
+        auto mesh =  GeometryGenerator::MakeSquareGrid(10, 10, 1.f);
         string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
         mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
         mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
@@ -220,7 +220,6 @@ void Ex2001_GamePlay::Update(float dt) {
     timeSeconds += dt;
 
     AppBase::Update(dt);
-    MousePicking();
 
 
     UpdateAnim(dt);
@@ -439,6 +438,7 @@ void Ex2001_GamePlay::UpdateGUI() {
                                    0.5f);
                 ImGui::TreePop();
             }
+            ImGui::TreePop();
     }
 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -531,14 +531,31 @@ void Ex2001_GamePlay::UpdateGUI() {
         ImGui::TreePop();
     }
 
+            ImGui::NewLine();
     if (ImGui::TreeNode("Load Object")) {
+           
+       
+        ImGui::BeginListBox("Object List", ImVec2(300, 300));
         for (auto object : m_JsonManager->objectInfo) {
-                if (ImGui::Button(object.second.c_str(), ImVec2(70, 70))) {
+                if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
                     ObjectSaveInfo temp;
                     temp.meshID = (int)object.first;
                     m_JsonManager->CreateMesh(temp);
                 }
         }
+        for (auto object : m_JsonManager->meshPaths) {
+                if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) 
+                {
+
+                    ObjectSaveInfo temp;
+                    temp.meshID = -1;
+                    temp.meshName = object.first;
+                    temp.meshPath = object.second.first;
+                    temp.previewPath = object.second.second;
+                    m_JsonManager->CreateMesh(temp);
+                }
+        }
+        ImGui::EndListBox();
             /*if (ImGui::Button("Test", ImVec2(100, 100)))*/
                 
 

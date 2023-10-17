@@ -46,6 +46,9 @@ AppBase::~AppBase() {
    // m_JsonManager->SaveMesh();
     g_appBase = nullptr;
 
+    m_JsonManager->SaveMesh();
+    m_objects.clear();
+    
     // Cleanup
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
@@ -68,6 +71,17 @@ void AppBase::MousePicking() {
         return;
 
     m_leftButton = false;
+    
+
+    ImVec2 imPos = ImGui::GetWindowPos();
+    ImVec2 imSize = ImGui::GetWindowSize();
+    
+    bool inX = m_mouseX > imPos.x && m_mouseX < imPos.x + imSize.x;
+    bool inY = m_mouseY > imPos.y && m_mouseY < imPos.y + imSize.y;
+
+    if (inX && inY) {
+        return;
+    }
 
     ComPtr<ID3D11Texture2D> backBuffer;
     m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
@@ -102,6 +116,7 @@ int AppBase::Run() {
                         ImGui::GetIO().Framerate);
 
             UpdateGUI(); // 추가적으로 사용할 GUI
+           MousePicking();
 
             ImGui::End();
             ImGui::Render();
@@ -1279,13 +1294,7 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     std::vector<T> pixels(desc.Width * desc.Height * 4);
 
     T *pData = (T *)ms.pData;
-    //uint8_t temp[4] = {1,1,1,1};
-    //memcpy(&temp, &pData, sizeof(uint8_t) * 4);
-    //for (unsigned int h = 0; h < desc.Height; h++) {
-    //    memcpy(&pixels[h * desc.Width * 4], &pData[h * ms.RowPitch],
-    //           desc.Width * sizeof(T) * 4);
-    //}
-     
+
     context->Unmap(m_indexStagingTexture.Get(), NULL);
      
    
@@ -1295,7 +1304,7 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
       int objID = (int)pData[0] + (int)pData[1] + (int)pData[2] + (int)pData[3];
     auto object = m_objects.find(objID);
     
-    if (object->second != nullptr) {
+    if (object!= m_objects.end()) {
         shared_ptr<Model> tempObj = object->second;
         float tempID = tempObj->objectInfo.objectID;
         string tempName = tempObj->objectInfo.meshName;

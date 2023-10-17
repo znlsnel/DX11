@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include "JsonManager.h"
 #include "AppBase.h"
 
@@ -9,11 +10,13 @@
 
 using namespace std;
 using namespace rapidjson;
+namespace fs = std::filesystem;
 namespace hlab {
 
 hlab::JsonManager::JsonManager(AppBase *appBase) {
     m_appBase = appBase;
     m_saveFile = Document(kArrayType);
+    LoadObjectPathInFolder();
 }
 
 bool hlab::JsonManager::ParseJson(rapidjson::Document &doc,
@@ -22,6 +25,7 @@ bool hlab::JsonManager::ParseJson(rapidjson::Document &doc,
         return false;
     }
 
+    
     return doc.IsObject();
 }
 
@@ -39,60 +43,74 @@ std::string hlab::JsonManager::JsonDocToString(rapidjson::Document &doc,
     return buffer.GetString();
 }
 
-void hlab::JsonManager::TestJson_Parse() {
-    // 1. Parse a JSON string into DOM.
-    const char *json = "{\"project\":\"rapidjson\",\"stars\":10}";
-    Document doc;
-    ParseJson(doc, json);
-   /* scale.AddMember("z", Value(meshInfo.scale.z), allocator);*/
-    Document::AllocatorType &allocator = doc.GetAllocator();
-    doc.AddMember("test", "testProject!", allocator);
-    
-    // 2. Modify it by DOM.
-    Value &s = doc["stars"];
-    s.SetInt(s.GetInt() + 1);
+void JsonManager::LoadObjectPathInFolder() { 
+        
+        const fs::path projectPath =
+            fs::current_path().parent_path().parent_path();
+        const fs::path tempPath =
+            projectPath / "models" / "glTF-Sample-Models-master" / "2.0";
+        modelsPath = tempPath.string();
 
-    std::string jsonString = JsonDocToString(doc, true);
-
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-
-    doc.Accept(writer);
-
-    FILE *fp = fopen("saveFile.json", "wb");
-    fwrite(buffer.GetString(), sizeof(char), buffer.GetSize(), fp);
-    fclose(fp);
-
-    printf(jsonString.c_str());
+        SearchModelFiles(tempPath);
+        
 }
 
-void hlab::JsonManager::TestJson_AddMember() {
+void JsonManager::SearchModelFiles(const filesystem::path &directory) {
 
-    //        // 1. Parse a JSON string into DOM.
-    //// Document doc;
-    //// doc.SetObject();
-    // Document doc(kObjectType);
 
-    // Document::AllocatorType &allocator = doc.GetAllocator();
-    // doc.AddMember("project", "rapidjson", allocator);
-    // doc.AddMember("stars", 10, allocator);
-    // doc.AddMember("abcd", 0.0, allocator);
+        for (const auto &entry : fs::directory_iterator(directory)) {
 
-    // std::string jsonString = JsonDocToString(doc, true);
+                if (entry.is_directory()) {
+                            SearchModelFiles(entry);
+        
+                } else if (entry.is_regular_file()) {
 
-    Document doc;
 
-    FILE *fp = fopen("saveFile.json", "r");
-    char readBuffer[65536];
-    rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    doc.ParseStream(is);
-    doc["stars"].SetInt(102);
+                        const auto &filePath = entry.path();
+                            const auto &fileName = entry.path()
+                                                       .parent_path()
+                                                       .parent_path()
+                                                       .filename();
 
-    std::string jsonString = JsonDocToString(doc, true);
-    printf(jsonString.c_str());
+                        if (filePath.parent_path().filename() == "glTF" 
+                                && filePath.extension() == ".gltf") {
+
+                            cout << "##########" << fileName
+                                 << "##########" << endl;
+                                       
+                            std::cout << "Found gltf file : "
+                                      << filePath.filename()
+                                << endl;
+                            meshPaths.insert(make_pair(fileName.string(),
+                                          make_pair(filePath.filename().string(), "")));
+
+                        }
+                        
+                        if (filePath.parent_path().filename() == "screenshot" &&
+                            filePath.stem() == "screenshot") {
+                        
+                                std::cout << "Found screenshot file : "
+                                      << filePath.filename() << endl;
+                                auto value = meshPaths.find(fileName.string());
+
+                                if (value != meshPaths.end()) 
+                                        value->second.second = filePath.filename().string();
+                                
+                                
+                        }
+        
+                }
+
+
+
+                
+
+        }
 }
+
 
 void hlab::JsonManager::LoadMesh() {
+
     FILE *fp = fopen("saveFile.json", "r");
     if (!fp) {
             // file load failed
@@ -111,6 +129,14 @@ void hlab::JsonManager::LoadMesh() {
 
                 ObjectSaveInfo temp;
                 temp.meshID = object["meshID"].GetInt();
+                if (temp.meshID == -1) {
+                        const rapidjson::Value &path =
+                                object["filePath"].GetObj();
+                        temp.meshName = path["object"].GetString();
+                        temp.meshPath = path["objectPath"].GetString();
+                        temp.previewPath =
+                                path["screenshotPath"].GetString();
+                }
          //       temp.meshName = object["meshName"].GetString();
 
                 const rapidjson::Value & position = object["position"].GetObj();
@@ -142,16 +168,29 @@ void hlab::JsonManager::SaveMesh() {
     for (auto object : m_appBase->m_objects) {
 
             // TODO ObjectSaveInfo 정보를 새롭게 갱신해서 넣어주기
-        ObjectSaveInfo meshInfo;
-        meshInfo.meshID = object.second->objectInfo.meshID;
-        meshInfo.position = object.second->GetPosition();
-        meshInfo.rotation = object.second->GetRotation();
-        meshInfo.scale = object.second->GetScale();
-        meshInfo.meshName = "tsetName";
+            ObjectSaveInfo meshInfo;
+            meshInfo.meshID = object.second->objectInfo.meshID;
+            meshInfo.position = object.second->GetPosition();
+            meshInfo.rotation = object.second->GetRotation();
+            meshInfo.scale = object.second->GetScale();
+            // meshInfo.meshName = "tsetName";
 
-        rapidjson::Value value(kObjectType);
-        // rapidjson::Value value;
-        value.AddMember("meshID", Value(meshInfo.meshID), allocator);
+            rapidjson::Value value(kObjectType);
+            // rapidjson::Value value;
+            value.AddMember("meshID", Value(meshInfo.meshID), allocator);
+
+            const char* name = meshInfo.meshName.c_str();
+            const char* meshPath = meshInfo.meshPath.c_str();
+            const char* previewPath = meshInfo.previewPath.c_str();
+            rapidjson::GenericStringRef nameRef(name);
+            rapidjson::GenericStringRef meshPathRef(meshPath);
+            rapidjson::GenericStringRef previewPathRef(previewPath);
+
+        rapidjson:Value filePath(kObjectType);
+        filePath.AddMember("object", nameRef, allocator);
+        filePath.AddMember("objectPath", meshPathRef, allocator);
+        filePath.AddMember("screenshotPath", previewPathRef,
+                        allocator);
 
         rapidjson::Value scale(kObjectType);
         scale.AddMember("x", Value(meshInfo.scale.x), allocator);
@@ -168,6 +207,7 @@ void hlab::JsonManager::SaveMesh() {
         rotation.AddMember("y", Value(meshInfo.rotation.y), allocator);
         rotation.AddMember("z", Value(meshInfo.rotation.z), allocator);
 
+        value.AddMember("filePath", filePath, allocator);
         value.AddMember("scale", scale, allocator);
         value.AddMember("position", position, allocator);
         value.AddMember("rotation", rotation, allocator);
@@ -192,6 +232,13 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     shared_ptr<Model> tempMesh = make_shared<Model>();
 
     switch ((meshID)temp.meshID) {
+    case meshID::ELoadToPath: {
+        tempMesh = CreateModel(temp);
+        tempMesh->objectInfo.meshName = temp.meshName;
+        tempMesh->objectInfo.meshPath = temp.meshPath;
+        tempMesh->objectInfo.previewPath = temp.previewPath;
+    } 
+                            break;
     case meshID::ECharacter: {
         tempMesh = CreateCharacter(temp);
         tempMesh->objectInfo.meshName = "Character";
@@ -241,9 +288,26 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
         std::cout << "Set [" << tempMesh->objectInfo.meshName
                   << "] Object ID : " << objectID << endl; 
 
-        m_appBase->m_objects.insert(make_pair(objectID, tempMesh.get()));
+        m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
         objectID++;
     }
+}
+
+shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
+
+    auto meshes = GeometryGenerator::ReadFromFile(
+        modelsPath + "\\" + info.meshName + "\\glTF\\", info.meshPath, false, true);
+
+    shared_ptr<Model> tempModel =
+        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+    m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
+    m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
+
+    return tempModel;
 }
 
 std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
