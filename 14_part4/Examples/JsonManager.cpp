@@ -75,12 +75,12 @@ void JsonManager::SearchModelFiles(const filesystem::path &directory) {
                         if (filePath.parent_path().filename() == "glTF" 
                                 && filePath.extension() == ".gltf") {
 
-                            cout << "##########" << fileName
-                                 << "##########" << endl;
-                                       
-                            std::cout << "Found gltf file : "
-                                      << filePath.filename()
-                                << endl;
+                            //cout << "##########" << fileName
+                            //     << "##########" << endl;
+                            //           
+                            //std::cout << "Found gltf file : "
+                            //          << filePath.filename()
+                            //    << endl;
                             meshPaths.insert(make_pair(fileName.string(),
                                           make_pair(filePath.filename().string(), "")));
 
@@ -89,8 +89,8 @@ void JsonManager::SearchModelFiles(const filesystem::path &directory) {
                         if (filePath.parent_path().filename() == "screenshot" &&
                             filePath.stem() == "screenshot") {
                         
-                                std::cout << "Found screenshot file : "
-                                      << filePath.filename() << endl;
+                                //std::cout << "Found screenshot file : "
+                                //      << filePath.filename() << endl;
                                 auto value = meshPaths.find(fileName.string());
 
                                 if (value != meshPaths.end()) 
@@ -169,8 +169,8 @@ void hlab::JsonManager::SaveMesh() {
 
             // TODO ObjectSaveInfo 정보를 새롭게 갱신해서 넣어주기
             ObjectSaveInfo meshInfo;
-            meshInfo.meshID = object.second->objectInfo.meshID;
-            meshInfo.position = object.second->GetPosition();
+            meshInfo = object.second->objectInfo;
+            meshInfo.position = object.second->GetPosition(); 
             meshInfo.rotation = object.second->GetRotation();
             meshInfo.scale = object.second->GetScale();
             // meshInfo.meshName = "tsetName";
@@ -182,15 +182,23 @@ void hlab::JsonManager::SaveMesh() {
             const char* name = meshInfo.meshName.c_str();
             const char* meshPath = meshInfo.meshPath.c_str();
             const char* previewPath = meshInfo.previewPath.c_str();
-            rapidjson::GenericStringRef nameRef(name);
-            rapidjson::GenericStringRef meshPathRef(meshPath);
-            rapidjson::GenericStringRef previewPathRef(previewPath);
 
-        rapidjson:Value filePath(kObjectType);
-        filePath.AddMember("object", nameRef, allocator);
-        filePath.AddMember("objectPath", meshPathRef, allocator);
-        filePath.AddMember("screenshotPath", previewPathRef,
-                        allocator);
+        rapidjson:Value filePath(kObjectType); 
+                cout << "meshName : "  << name << endl;
+
+                //rapidjson::CharType
+                filePath.AddMember("object",
+                                   rapidjson::Value().SetString(name, allocator), 
+                                allocator) ;
+                filePath.AddMember(
+                    "objectPath",
+                    rapidjson::Value().SetString(meshPath, allocator),
+                                allocator);
+                filePath.AddMember("screenshotPath",
+                    rapidjson::Value().SetString(previewPath, allocator),
+                                allocator);
+            
+            
 
         rapidjson::Value scale(kObjectType);
         scale.AddMember("x", Value(meshInfo.scale.x), allocator);
