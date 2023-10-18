@@ -24,13 +24,13 @@ Matrix Camera::GetViewRow() {
 Vector3 Camera::GetEyePos() { return m_position; }
 void Camera::UpdatePos() {
 
-        if (m_target != nullptr && m_useFirstPersonView) {
+        if (m_target != nullptr && m_objectTargetCameraMode) {
                 Vector3 tempPos = m_target->GetMesh()->m_worldRow.Translation();
                 //
                 tempPos += -GetForwardVector() * cameraDistance;
                 SetLocation(tempPos);
         } 
-        else 
+        else if (m_isCameraLock == false)
         {
                 Vector3 moveDir{0.f, 0.f, 0.f};
                 
@@ -54,10 +54,17 @@ void Camera::UpdatePos() {
                     moveDir += m_upDir;
 
                 moveDir.Normalize();
-                SetLocation(m_position + moveDir * 0.1 * cameraSpeed);
-        
-        }
 
+                if (moveDir.Length() == 0.f)
+                    m_moveDir = m_moveDir * 0.97f;
+                else
+                        m_moveDir = moveDir;
+        }
+        
+
+        if (m_moveDir.Length() > 0.02f)
+                SetLocation(m_position + m_moveDir * 0.1 * cameraSpeed);
+        m_moveDir *= 0.97f;
 }
 
 void Camera::UpdateViewDir() {
@@ -90,13 +97,25 @@ void Camera::UpdateKeyboard(const float dt, bool const keyPressed[256]) {
     //}
 }
 
-void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
+void Camera::RotateCamera(float addYaw, float addPitch) {
         // 얼마나 회전할지 계산
     if (m_isCameraLock)
                 return;
 
-        m_yaw = mouseNdcX * DirectX::XM_2PI;       // 좌우 360도
-        m_pitch = -mouseNdcY * DirectX::XM_PIDIV2; // 위 아래 90도
+        m_yaw += addYaw * DirectX::XM_2PI;         // 좌우 360도
+        m_pitch += addPitch * DirectX::XM_PIDIV2; // 위 아래 90도
+
+        if (m_yaw > DirectX::XM_2PI)
+                m_yaw = -DirectX::XM_2PI;
+        if (m_yaw < -DirectX::XM_2PI)
+                m_yaw = DirectX::XM_2PI;
+
+        //if (m_yaw > DirectX::XM_2PI)
+        //        m_yaw = -DirectX::XM_2PI;
+        //if (m_yaw < -DirectX::XM_2PI)
+        //        m_yaw = DirectX::XM_2PI;
+
+        m_pitch = std::clamp(m_pitch, -DirectX::XM_PIDIV2, DirectX::XM_PIDIV2);
         UpdateViewDir();
     
 }

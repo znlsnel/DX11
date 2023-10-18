@@ -26,7 +26,7 @@ class Camera {
     void UpdatePos();
     void UpdateViewDir();
     void UpdateKeyboard(const float dt, bool const keyPressed[256]);
-    void UpdateMouse(float mouseNdcX, float mouseNdcY);
+    void RotateCamera(float addYaw, float addPitch);
     void MoveForward(float dt);
     void MoveRight(float dt);
     void MoveUp(float dt);
@@ -39,8 +39,8 @@ class Camera {
     Vector3 GetPosision();
     float GetYaw() { return m_yaw; };
   public:
-    bool m_useFirstPersonView = false;
-    bool m_isCameraLock = false;
+    bool m_objectTargetCameraMode = false;
+    bool m_isCameraLock = true;
     float cameraDistance = 1.0f;
     float cameraSpeed = 1.0f;
 
@@ -50,7 +50,7 @@ class Camera {
     Vector3 m_forwardDir = Vector3(0.0f, 0.0f, 1.0f);
     Vector3 m_upDir = Vector3(0.0f, 1.0f, 0.0f); // +Y 방향으로 고정
     Vector3 m_rightDir = Vector3(1.0f, 0.0f, 0.0f);
-
+    Vector3 m_moveDir = Vector3(0.0f, 0.0f, 0.0f);
     // roll, pitch, yaw
     // https://en.wikipedia.org/wiki/Aircraft_principal_axes
     float m_yaw = -0.0589047f, m_pitch = 0.213803f;

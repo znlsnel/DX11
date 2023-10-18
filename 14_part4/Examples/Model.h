@@ -107,6 +107,7 @@ class Model {
     bool m_castShadow = true;
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
     bool useTessellation = false;
+    bool isDestory = false;
 
     vector<shared_ptr<Mesh>> m_meshes;
 

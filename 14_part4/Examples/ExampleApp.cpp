@@ -144,7 +144,7 @@ void ExampleApp::UpdateGUI() {
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_objectTargetCameraMode);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         ImGui::Checkbox("DrawOBB", &m_drawOBB);
         ImGui::Checkbox("DrawBSphere", &m_drawBS);

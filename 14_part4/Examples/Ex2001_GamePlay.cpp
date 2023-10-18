@@ -343,7 +343,7 @@ void Ex2001_GamePlay::UpdateGUI() {
             }
 
             if (ImGui::TreeNode("General")) {
-                ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
+                ImGui::Checkbox("Use FPV", &m_camera->m_objectTargetCameraMode);
                 ImGui::Checkbox("Wireframe", &m_drawAsWire);
                 ImGui::Checkbox("DrawOBB", &m_drawOBB);
                 ImGui::Checkbox("DrawBSphere", &m_drawBS);
@@ -445,6 +445,10 @@ void Ex2001_GamePlay::UpdateGUI() {
 
     if (m_pickedModel) {
     
+            if (ImGui::Button("Delete Object", ImVec2(100, 50))){
+                DestroyObject(m_pickedModel);
+                
+            }
             if (ImGui::TreeNode("Transform")) {
 
                 float modelLocation[3] = {m_pickedModel->GetPosition().x,

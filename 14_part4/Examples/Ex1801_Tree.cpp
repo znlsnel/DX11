@@ -117,7 +117,7 @@ void Ex1801_Tree::UpdateGUI() {
 
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
-        ImGui::Checkbox("Use FPV", &m_camera->m_useFirstPersonView);
+        ImGui::Checkbox("Use FPV", &m_camera->m_objectTargetCameraMode);
         ImGui::Checkbox("Wireframe", &m_drawAsWire);
         if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
             CreateBuffers();

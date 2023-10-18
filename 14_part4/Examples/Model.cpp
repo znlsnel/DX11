@@ -371,6 +371,8 @@ void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
     context->DrawIndexed(m_boundingSphereMesh->indexCount, 0, 0);
 }
 
+
+
 void Model::UpdateScale(Vector3 scale) { 
         m_scale = scale;
     UpdateWorldRow();

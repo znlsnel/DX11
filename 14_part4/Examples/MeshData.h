@@ -32,6 +32,7 @@ using std::vector;
 	 EBox = 4,
 	 ESphere = 5,
 	 ECylinder = 6,
+	 ETest = 7,
  };
 
 struct MeshData {

@@ -71,6 +71,7 @@ class AppBase {
     shared_ptr<Model> PickClosest(const Ray &pickingRay, float &minDist);
     void ProcessMouseControl();
     virtual void MousePicking();
+    void DestroyObject(shared_ptr<class Model> object);
 
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();
@@ -163,11 +164,11 @@ class AppBase {
     float m_wheelDelta = 0.0f;
     int m_mouseX = -1;
     int m_mouseY = -1;
-
+    int m_preMouse[2] = {0, 0};
     float cameraDistance_min = 0.3f;
     float cameraDistance_max = 10.f;
 
-    float cameraSpeed_min = 0.1f;
+    float cameraSpeed_min = 0.01f;
     float cameraSpeed_max = 2.0f;
 
     // 렌더링 -> PostEffects -> PostProcess

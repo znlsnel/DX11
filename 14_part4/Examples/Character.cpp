@@ -47,7 +47,7 @@ void hlab::Character::BeginPlay() {
 
 void hlab::Character::UpdateTransform(float dt) 
 {
-        if (appBase->m_camera->m_useFirstPersonView == false)
+        if (appBase->m_camera->m_objectTargetCameraMode == false)
                 return;
         if (appBase->m_keyPressed['A']) {
 
@@ -89,7 +89,7 @@ void hlab::Character::UpdateState(float dt) {
                   if (appBase->m_keyPressed[VK_SPACE]) {
                 state = EActorState::attack;
                   } 
-                  else if (appBase->m_keyPressed['W'] && appBase->m_camera->m_useFirstPersonView)
+                  else if (appBase->m_keyPressed['W'] && appBase->m_camera->m_objectTargetCameraMode)
                         state = EActorState::walk;
         }
                 break;

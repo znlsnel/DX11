@@ -95,6 +95,13 @@ void AppBase::MousePicking() {
 
     ReadPixelOfMousePos<UINT8>(m_device, m_context);
 }
+void AppBase::DestroyObject(shared_ptr<class Model> object) {
+    if (m_pickedModel == object)
+        m_pickedModel = nullptr;
+   
+    object->isDestory = true;
+    object->m_isVisible = false;
+}
 int AppBase::Run() {
 
     // Main message loop
@@ -162,7 +169,7 @@ bool AppBase::Initialize() {
         m_device, m_context, vector{GeometryGenerator::MakeSquare()});
 
     // 환경 박스 초기화
-    MeshData skyboxMesh = GeometryGenerator::MakeBox(400.0f);
+    MeshData skyboxMesh = GeometryGenerator::MakeBox(500.0f);
     std::reverse(skyboxMesh.indices.begin(), skyboxMesh.indices.end());
     m_skybox = make_shared<Model>(m_device, m_context, vector{skyboxMesh});
     m_skybox->m_name = "SkyBox";
@@ -569,22 +576,25 @@ void AppBase::Render() {
 
 void AppBase::OnMouseMove(int mouseX, int mouseY) {
 
-    m_mouseX = mouseX;
+
+    m_mouseX = mouseX ;
     m_mouseY = mouseY;
+    cout << "mouse xy : " << m_mouseX << ", " << m_mouseY << endl;
 
     // 마우스 커서의 위치를 NDC로 변환
     // 마우스 커서는 좌측 상단 (0, 0), 우측 하단(width-1, height-1)
     // NDC는 좌측 하단이 (-1, -1), 우측 상단(1, 1)
-    m_mouseNdcX = mouseX * 2.0f / m_screenWidth - 1.0f;
-    m_mouseNdcY = -mouseY * 2.0f / m_screenHeight + 1.0f;
+    m_mouseNdcX = m_mouseX * 2.0f / m_screenWidth - 1.0f;
+    m_mouseNdcY = -m_mouseY * 2.0f / m_screenHeight + 1.0f;
 
     // 커서가 화면 밖으로 나갔을 경우 범위 조절
     // 게임에서는 클램프를 안할 수도 있습니다.
+    //m_camera->RotateCamera(m_mouseNdcX, m_mouseNdcY);
+
     m_mouseNdcX = std::clamp(m_mouseNdcX, -1.0f, 1.0f);
-    m_mouseNdcY = std::clamp(m_mouseNdcY, -1.0f, 1.0f);
+    m_mouseNdcY = std::clamp(m_mouseNdcY, -0.7f, 0.7f);
 
     // 카메라 시점 회전
-    m_camera->UpdateMouse(m_mouseNdcX, m_mouseNdcY);
 }
 
 void AppBase::OnMouseClick(int mouseX, int mouseY) {
@@ -599,7 +609,7 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
 void AppBase::OnMouseWheel(float wheelDt) {
     //std::cout << "wheelDt : " << wheelDt << std::endl; 
 
-        if (m_camera->m_useFirstPersonView) {
+        if (m_camera->m_objectTargetCameraMode) {
             m_camera->cameraDistance += (float)-wheelDt * 0.001f;
             m_camera->cameraDistance = std::clamp(
                 m_camera->cameraDistance, cameraDistance_min, cameraDistance_max);    
@@ -623,6 +633,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int height = int(HIWORD(lParam));
         //cout << "width : " << width << "height : " << height << endl; 
         // 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
+
         ResizeSwapChain(width, height);
     }
         break;
@@ -630,8 +641,26 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
             return 0;
         break;
-    case WM_MOUSEMOVE:
-        OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+    case WM_MOUSEMOVE: {
+                    int currX =  LOWORD(lParam);
+                    int currY =   HIWORD(lParam);
+                    OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+                if (m_camera->m_isCameraLock == false) {
+
+                        float addYaw = (float)(currX - m_preMouse[0]) * 0.0003f;
+                        float addPitch = (float)(currY - m_preMouse[1]) * 0.001f;
+
+                        if (std::abs(currX - m_preMouse[0]) > 10000)
+                                addYaw = 0.0f;
+                        if (std::abs(currY - m_preMouse[1]) > 10000)
+                                addPitch = 0.0f;
+
+                        m_camera->RotateCamera(addYaw, addPitch);
+                }
+                    m_preMouse[0] = currX;
+                    m_preMouse[1] = currY;
+    
+    }
         break;
     case WM_LBUTTONDOWN:
         if (!m_leftButton) {
@@ -645,12 +674,19 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         m_leftButton = false;
         break;
     case WM_RBUTTONDOWN:
+        m_preMouse[0] = LOWORD(lParam);
+        m_preMouse[1] = HIWORD(lParam);
+        m_camera->m_isCameraLock = false;
+
         if (!m_rightButton) {
             m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
         }
         m_rightButton = true;
+
         break;
     case WM_RBUTTONUP:
+        m_camera->m_isCameraLock = true;
+
         m_rightButton = false;
         break;
     case WM_KEYDOWN:
@@ -661,7 +697,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         if (m_keyPressed[17]) { // ctrl
             if (m_keyPressed['F']) {
-                m_camera->m_useFirstPersonView = !m_camera->m_useFirstPersonView;
+                m_camera->m_objectTargetCameraMode = !m_camera->m_objectTargetCameraMode;
 
                 m_keyPressed['F'] = false;
             }
@@ -675,15 +711,11 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
     case WM_KEYUP:
         if (wParam == 'F') { // f키 일인칭 시점
-            if (m_keyPressed[17] == false) {
-                m_camera->m_isCameraLock = !m_camera->m_isCameraLock;
-            }
+            //if (m_keyPressed[17] == false) {
+            //    m_camera->m_isCameraLock = !m_camera->m_isCameraLock;
+            //}
         }
-        if (wParam == 'C') { // c키 화면 캡쳐
-            //ComPtr<ID3D11Texture2D> backBuffer;
-            //m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
-            //D3D11Utils::WriteToPngFile(m_device, m_context, backBuffer,
-            //                           "captured.png");
+        if (wParam == 'C') { 
         }
         if (wParam == 'P') { // 애니메이션 일시중지할 때 사용
             m_pauseAnimation = !m_pauseAnimation;

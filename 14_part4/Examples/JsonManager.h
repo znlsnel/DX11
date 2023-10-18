@@ -36,6 +36,7 @@ class JsonManager {
     void CreateMesh(struct ObjectSaveInfo temp);
 
     shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateUnrealFBXModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 
@@ -46,7 +47,8 @@ class JsonManager {
 
     map<meshID, std::string> objectInfo = {
             {meshID::ESphere, "Sphere"},
-                {meshID::EBox, "Box"}
+                {meshID::EBox, "Box"},
+                                           {meshID::ETest, "Test"},
     };
 
     map < string, pair<string, string>> meshPaths;

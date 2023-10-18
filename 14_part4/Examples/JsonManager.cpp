@@ -166,7 +166,8 @@ void hlab::JsonManager::SaveMesh() {
     //m_saveFile.SetArray();
 
     for (auto object : m_appBase->m_objects) {
-
+            if (object.second->isDestory)
+                continue;
             // TODO ObjectSaveInfo 정보를 새롭게 갱신해서 넣어주기
             ObjectSaveInfo meshInfo;
             meshInfo = object.second->objectInfo;
@@ -251,6 +252,7 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
         tempMesh = CreateCharacter(temp);
         tempMesh->objectInfo.meshName = "Character";
     }
+
         break;
     case meshID::EMountain: {
         tempMesh = CreateMountain(temp);
@@ -283,6 +285,10 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
         tempMesh->objectInfo.meshName = "Box";
     }
         break;
+    case meshID::ETest: {
+        tempMesh = CreateUnrealFBXModel(temp);
+        tempMesh->objectInfo.meshName = "test";
+    }
     }
     
     static int objectID = 1;
@@ -316,6 +322,34 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
     m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
 
     return tempModel;
+}
+
+shared_ptr<class Model> JsonManager::CreateUnrealFBXModel(ObjectSaveInfo info) {
+    auto meshes =
+        GeometryGenerator::ReadFromFile("../../Assets/test/", "test.fbx", false,
+        false);
+    meshes[0].albedoTextureFilename = "../../Assets/test/T_Japanese_Mossy_Boulder_veqhehl_2K_D.HDR";
+    meshes[0].normalTextureFilename =
+        "../../Assets/test/T_Japanese_Mossy_Boulder_veqhehl_2K_N.HDR";
+    meshes[0].aoTextureFilename =
+        "../../Assets/test/T_JapaneseMossyBoulder_veqhehl_2K_DpRF.HDR";
+    meshes[0].roughnessTextureFilename =
+        "../../Assets/test/T_JapaneseMossyBoulder_veqhehl_2K_DpRF.HDR";
+    meshes[0].metallicTextureFilename =
+        "../../Assets/test/T_JapaneseMossyBoulder_veqhehl_2K_DpRF.HDR";
+
+    shared_ptr<Model> tempModel =
+        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);
+
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+
+    m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
+    m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
+
+    return tempModel;
+
 }
 
 std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
