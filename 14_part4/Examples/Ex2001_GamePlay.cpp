@@ -66,37 +66,6 @@ bool Ex2001_GamePlay::InitScene() {
       
         m_pbrList.push_back(m_ground);   // 리스트에 등록
     }
-    
-        // terrain
-    {
-
-    }
-
-
-    // Main Object
-    {
-        //ObjectSaveInfo temp;
-        //temp.meshID = (int)meshID::ECharacter;
-        //temp.scale = Vector3(0.2f);
-        //temp.position = Vector3(0.0f, 0.1f, 0.0f);
-        //m_JsonManager->CreateMesh(temp);
-      //  vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",  "walk_end.fbx", "fireBall.fbx"};
-      //  string path = "../Assets/Characters/Mixamo/";
-
-      // // auto [meshes, _] =
-      ////      GeometryGenerator::ReadAnimationFromFile(path, "Character_Kachujin.fbx");
-
-      //  m_player = make_shared<Character>(this, m_device, m_context, path,
-      //          "Character_Kachujin.fbx", clipNames );
-
-      //  m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
-      //  m_characters.push_back(m_player);
-      //  //m_pickedModel = m_player->GetMesh()->m_meshes;
-      //  m_pbrList.push_back(m_player->GetMesh()); // 리스트에 등록
-
-      // 
-      //  m_camera->SetTarget(m_player.get());
-    }
 
     InitPhysics(true);
 
@@ -127,7 +96,7 @@ bool Ex2001_GamePlay::InitScene() {
 void Ex2001_GamePlay::CreateStack(const PxTransform &t, int numStacks,
                                   int numWidth, PxReal halfExtent) {
 
-    vector<MeshData> box = {GeometryGenerator::MakeBox(halfExtent)};
+    vector<MeshData> box = {GeometryGenerator::MakeBox(halfExtent * 10)};
 
     PxShape *shape = gPhysics->createShape(
         PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
@@ -194,8 +163,8 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
                                                const PxVec3 &velocity) {
 
     m_fireball = std::make_shared<BillboardModel>();
-    // m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
-    //                        1.0f, L"GameExplosionPS.hlsl");
+     //m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
+     //                       1.0f, L"GameExplosionPS.hlsl");
     Vector3 dir(velocity.x, velocity.y, velocity.z);
     dir.Normalize();
     m_fireball->m_billboardConsts.m_cpu.directionWorld = dir;
@@ -221,8 +190,6 @@ void Ex2001_GamePlay::Update(float dt) {
 
     AppBase::Update(dt);
 
-
-    UpdateAnim(dt);
 
     // 이하 물리엔진 관련
 
@@ -256,14 +223,20 @@ void Ex2001_GamePlay::Update(float dt) {
                 // bool speeping = actors[i]->is<PxRigidDynamic>() &&
                 //                 actors[i]->is<PxRigidDynamic>()->isSleeping();
 
+                    Matrix temp = Matrix(shapePose.front()) *
+                              Matrix::CreateScale(
+                                  m_simToRenderScale); // PhysX to Render 스케일
                     
-                //m_PhysicalObjects[count]->UpdateWorldRow(
-                //    Matrix(shapePose.front()) *
-                //    Matrix::CreateScale(
-                //        m_simToRenderScale) // PhysX to Render 스케일
-                //);
-                m_PhysicalObjects[count]->UpdateScale(
-                    Vector3(*shapePose.front() * m_simToRenderScale));
+                    Vector3 tempRot, tempPos;
+                    Model::ExtractEulerAnglesFromMatrix(&temp, tempRot);
+                    Model::ExtractPositionFromMatrix(&temp, tempPos);
+
+                    m_PhysicalObjects[count]->UpdateTranseform(
+                        Vector3(m_simToRenderScale), tempRot, tempPos);
+
+                //m_PhysicalObjects[count]->UpdateWorldRow(temp );
+                //m_PhysicalObjects[count]->UpdateScale(
+                //    Vector3(*shapePose.front() * m_simToRenderScale));
 
                 m_PhysicalObjects[count]->UpdateConstantBuffers(m_device,
                                                                 m_context);
@@ -297,10 +270,6 @@ void Ex2001_GamePlay::Update(float dt) {
         }
     }
     */
-}
-
-void Ex2001_GamePlay::UpdateAnim(float dt) {
-
 }
 
 void Ex2001_GamePlay::Render() {
@@ -444,11 +413,20 @@ void Ex2001_GamePlay::UpdateGUI() {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
     if (m_pickedModel) {
-    
-            if (ImGui::Button("Delete Object", ImVec2(100, 50))){
-                DestroyObject(m_pickedModel);
-                
+            if (m_keyPressed['Q']) {
+                    if (ImGui::ColorButton("Pos", ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 0,
+                                           ImVec2(30, 30))) {
+                        cout << "Click! Pos Button" << endl;
+                    }
+            } else if (m_keyPressed['W']) {
+                    if (ImGui::ColorButton("Rot",
+                                           ImVec4(1.0f, 1.0f, 0.0f, 1.0f), 0,
+                                           ImVec2(30, 30))) {
+                        cout << "Click! Pos Button" << endl;
+                    }
             }
+            
+
             if (ImGui::TreeNode("Transform")) {
 
                 float modelLocation[3] = {m_pickedModel->GetPosition().x,
@@ -481,7 +459,9 @@ void Ex2001_GamePlay::UpdateGUI() {
                 if (flagScale) {
                     m_pickedModel->UpdateScale(Vector3(modelScale[0], modelScale[1], modelScale[2]));
                 }
+                ImGui::TreePop();
             }
+
 
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
             if (ImGui::TreeNode("Material")) {
@@ -528,7 +508,16 @@ void Ex2001_GamePlay::UpdateGUI() {
                     }
 
                     ImGui::Checkbox("Draw Normals", &m_pickedModel->m_drawNormals);
+                    ImGui::TreePop();
+
                 }
+
+
+                }
+
+        if (ImGui::Button("Delete Object", ImVec2(100, 50))) {
+                DestroyObject(m_pickedModel);
+            
     }
 
 

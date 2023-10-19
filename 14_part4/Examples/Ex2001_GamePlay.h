@@ -48,10 +48,11 @@ class Ex2001_GamePlay : public AppBase {
     void CreateStack(const PxTransform &t, int numStacks, int numSlices,
                      PxReal halfExtent);
     void InitPhysics(bool interactive);
+
     void UpdateLights(float dt) override;
     void UpdateGUI() override;
     void Update(float dt) override;
-    void UpdateAnim(float dt);
+
     void Render() override;
     void InitAudio();
 

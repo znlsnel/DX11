@@ -291,16 +291,31 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     }
     }
     
-    static int objectID = 1;
+    // 256 = 1
+    // 512 = 2
+    static int objectID = 10000000;
     if (tempMesh != nullptr) {
+        int id_R = 0, id_G =0, id_B =0, id_A=0;
+        id_R = objectID % 256;
+
+        if (objectID > 255)
+                id_G = (objectID / 256) % 256;
+
+        if (objectID > 65536)
+                id_B = (objectID / 65536) % 256;
+        
+
         tempMesh->objectInfo.objectID = objectID;
         tempMesh->objectInfo.meshID = temp.meshID;
         tempMesh->m_meshConsts.GetCpu().indexColor[0] = 
-        (float)objectID / 255;
+        (float)id_R / 255;
+        tempMesh->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
+        tempMesh->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
+
     //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
 
-        std::cout << "Set [" << tempMesh->objectInfo.meshName
-                  << "] Object ID : " << objectID << endl; 
+        //std::cout << "Set [" << tempMesh->objectInfo.meshName
+        //          << "] Object ID : " << id_R << " " << id_G << " " << id_B << endl; 
 
         m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
         objectID++;

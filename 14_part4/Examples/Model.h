@@ -76,11 +76,21 @@ class Model {
     Vector3 GetRotation() { return m_rotation; };
     Vector3 GetScale() { return m_scale; };
 
-    static void ExtractEulerAnglesFromMatrix(const Matrix *worldRow, float &yaw,
-                                      float &roll, float &pitch) {
-        ExtractRollFromMatrix(worldRow, roll);
-        ExtractYawFromMatrix(worldRow, yaw);
-        ExtractPitchFromMatrix(worldRow, pitch);
+    static void ExtractEulerAnglesFromMatrix(const Matrix *worldRow, Vector3 &angle) {
+        ExtractRollFromMatrix(worldRow, angle.z);
+        ExtractYawFromMatrix(worldRow, angle.y);
+        ExtractPitchFromMatrix(worldRow, angle.x);
+    };
+    static void ExtractPositionFromMatrix(const Matrix *worldRow, Vector3 &pos){
+        pos.x = worldRow->_41;
+        pos.y = worldRow->_42;
+        pos.z = worldRow->_43;
+    };
+    static void ExtractScaleFromMatrix(const Matrix *worldRow,
+                                          Vector3 &scale) {
+        scale.x = worldRow->_11;
+        scale.y = worldRow->_22;
+        scale.z = worldRow->_33;
     };
     static void ExtractRollFromMatrix(const Matrix *worldRow, float &roll) {
         roll = std::atan2(worldRow->_12, worldRow->_11);
@@ -93,6 +103,10 @@ class Model {
                            std::sqrt(worldRow->_23 * worldRow->_23 +
                                      worldRow->_33 * worldRow->_33));
     };
+
+    public:
+        void UpdateWorldRow(Matrix& mat);
+
   private:
     void UpdateWorldRow();
 

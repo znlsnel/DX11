@@ -403,9 +403,26 @@ void Model::AddYawOffset(float addYawOffset)
     UpdateWorldRow();
 }
 
+void Model::UpdateWorldRow(Matrix &mat) {
+    m_worldRow = mat;
+
+    m_worldITRow = m_worldRow;
+    m_worldITRow.Translation(Vector3(0.0f));
+    m_worldITRow = m_worldITRow.Invert().Transpose();
+
+    // 바운딩스피어 위치 업데이트
+    // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
+    // 구(sphere)라서 회전은 고려할 필요 없음
+    m_boundingSphere.Center = this->m_worldRow.Translation();
+
+    m_meshConsts.GetCpu().world = m_worldRow.Transpose();
+    m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
+    m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
+}
+
 void Model::UpdateWorldRow() {
 
-    m_worldRow = Matrix::CreateScale(m_scale.x) *
+    m_worldRow = Matrix::CreateScale(m_scale.x, m_scale.y, m_scale.z) *
                  Matrix::CreateRotationX(m_rotation.x) *
                  Matrix::CreateRotationY(m_rotation.y) *
                  Matrix::CreateRotationZ(m_rotation.z) *
@@ -419,7 +436,7 @@ void Model::UpdateWorldRow() {
     // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
     // 구(sphere)라서 회전은 고려할 필요 없음
     m_boundingSphere.Center = this->m_worldRow.Translation();
-
+    m_boundingSphere.Radius = max(m_scale.x, max(m_scale.y, m_scale.z));
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();

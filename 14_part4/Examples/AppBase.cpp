@@ -67,10 +67,10 @@ float AppBase::GetAspectRatio() const {
 }
 void AppBase::MousePicking() {
 
-    if (m_leftButton == false)
+    if (m_pickingButton == false || m_keyPressed['Q'] || m_keyPressed['W'])
         return;
 
-    m_leftButton = false;
+    m_pickingButton = false;
     
 
     ImVec2 imPos = ImGui::GetWindowPos();
@@ -95,6 +95,134 @@ void AppBase::MousePicking() {
 
     ReadPixelOfMousePos<UINT8>(m_device, m_context);
 }
+void AppBase::ObjectDrag() {
+    if (m_pickedModel == nullptr || m_leftButton == false)
+        return;
+
+        Matrix viewRow = m_camera->GetViewRow();
+        Matrix projRow = m_camera->GetProjRow();
+        Vector3 eyeWorld = m_camera->GetEyePos();
+
+        static float prevRatio = 0.0f;
+        static Vector3 prevPos(0.0f);
+
+        Vector3 dragTranslation(0.0f);
+
+        static Vector3 prevVector(0.0f);
+        Quaternion q =
+        Quaternion::CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), 0.0f);
+
+        if (m_keyPressed['Q']) {
+            //    cout << "Object Drag" << endl;
+
+                Vector3 cursorNdcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
+                Vector3 cursorNdcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
+                Matrix inverseProjView = (viewRow * projRow).Invert();
+
+                Vector3 cursorWorldNear =
+                        Vector3::Transform(cursorNdcNear, inverseProjView);
+                Vector3 cursorWorldFar =
+                        Vector3::Transform(cursorNdcFar, inverseProjView);
+
+                Vector3 dir = cursorWorldFar - cursorWorldNear;
+                dir.Normalize();
+
+                SimpleMath::Ray ray = SimpleMath::Ray(cursorWorldNear, dir);
+                float dist = 0.0f;
+                m_selected = ray.Intersects(m_pickedModel->m_boundingSphere, dist);
+                if (m_selected == false)
+                    cout << "No Touch" << endl;
+                if (m_selected) 
+                {
+                        Vector3 pickPoint = cursorWorldNear + dist * dir;
+                        m_cursorSphere->UpdatePosition(pickPoint);
+
+                        if (m_dragStartFlag) 
+                        {
+                                m_dragStartFlag = false;
+                                prevRatio = dist / (cursorWorldFar - cursorWorldNear).Length();
+                                prevPos = pickPoint;
+                        } 
+                        else 
+                        {
+                                float currDist =
+                                        prevRatio * (cursorWorldFar - cursorWorldNear).Length();
+                                Vector3 currPickPoint = cursorWorldNear + dir * currDist;
+
+                                if ((currPickPoint - prevPos).Length() > 1e-3) 
+                                {
+                                        dragTranslation = currPickPoint - prevPos;
+                                        //dragTranslation.y = prevPos.y;
+                                        prevPos = currPickPoint;
+                                        Vector3 pos =
+                                            m_pickedModel->GetPosition() +
+                                            dragTranslation;
+                                        m_pickedModel->UpdatePosition(pos);
+                                }
+                        }
+                        
+                } 
+                
+
+        } else if (m_keyPressed['W']) {
+                Vector3 cursorNdcNear{m_mouseNdcX, m_mouseNdcY, 0.f};
+                Vector3 cursorNdcFar{m_mouseNdcX, m_mouseNdcY, 1.f};
+
+                Matrix inverseProjView = (viewRow * projRow).Invert();
+
+                Vector3 cursorWorldNear =
+                    Vector3::Transform(cursorNdcNear, inverseProjView);
+
+                Vector3 cursorWorldFar =
+                    Vector3::Transform(cursorNdcFar, inverseProjView);
+
+                Vector3 dir = cursorWorldFar - cursorWorldNear;
+                dir.Normalize();
+
+                SimpleMath::Ray r = SimpleMath::Ray(cursorWorldNear, dir);
+                float dist = 0.0f;
+                m_selected =
+                    r.Intersects(m_pickedModel->m_boundingSphere, dist);
+                if (m_selected) {
+                        Vector3 pickPoint = cursorWorldNear + dist * dir;
+
+                        if (m_dragStartFlag) {
+                                m_dragStartFlag = false;
+                                prevVector =
+                                    pickPoint -
+                                    m_pickedModel->m_boundingSphere.Center;
+                                prevVector.Normalize();
+                        } else {
+                                Vector3 currentVector =
+                                    pickPoint -
+                                    m_pickedModel->m_boundingSphere.Center;
+                                currentVector.Normalize();
+
+                                float rotateTheta =
+                                    acos(prevVector.Dot(currentVector));
+                                if (rotateTheta > 3.141592f / 180.f) {
+                                        Vector3 RotateAxis =
+                                            prevVector.Cross(currentVector);
+                                        RotateAxis.Normalize();
+                                        q = Quaternion::CreateFromAxisAngle(
+                                            RotateAxis, rotateTheta);
+
+                                        prevVector = currentVector;
+                                        Matrix temp =
+                                            Matrix::CreateFromQuaternion(q);
+                                        
+                                        Vector3 tempRot;
+                                        Model::ExtractEulerAnglesFromMatrix(
+                                            &temp, tempRot);
+                                        tempRot += m_pickedModel->GetRotation();
+                                        m_pickedModel->UpdateRotation(tempRot);
+                                        cout << "Rotate" << endl;
+                                }
+                        }
+                }
+        }
+}
+
 void AppBase::DestroyObject(shared_ptr<class Model> object) {
     if (m_pickedModel == object)
         m_pickedModel = nullptr;
@@ -303,7 +431,6 @@ void AppBase::Update(float dt) {
     }
 
 
-
 }
 
 void AppBase::UpdateLights(float dt) {
@@ -473,6 +600,8 @@ void AppBase::RenderOpaqueObjects() {
         model->Render(m_context);
     }
 
+    if (m_selected)
+        m_cursorSphere->Render(m_context);
     
 
 
@@ -579,7 +708,7 @@ void AppBase::OnMouseMove(int mouseX, int mouseY) {
 
     m_mouseX = mouseX ;
     m_mouseY = mouseY;
-    cout << "mouse xy : " << m_mouseX << ", " << m_mouseY << endl;
+    //cout << "mouse xy : " << m_mouseX << ", " << m_mouseY << endl;
 
     // 마우스 커서의 위치를 NDC로 변환
     // 마우스 커서는 좌측 상단 (0, 0), 우측 하단(width-1, height-1)
@@ -595,6 +724,7 @@ void AppBase::OnMouseMove(int mouseX, int mouseY) {
     m_mouseNdcY = std::clamp(m_mouseNdcY, -0.7f, 0.7f);
 
     // 카메라 시점 회전
+    ObjectDrag();
 }
 
 void AppBase::OnMouseClick(int mouseX, int mouseY) {
@@ -608,13 +738,16 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
 
 void AppBase::OnMouseWheel(float wheelDt) {
     //std::cout << "wheelDt : " << wheelDt << std::endl; 
-
+        int sign = wheelDt > 0.0f ? 1 : -1;
         if (m_camera->m_objectTargetCameraMode) {
-            m_camera->cameraDistance += (float)-wheelDt * 0.001f;
+        m_camera->cameraDistance +=
+            (cameraDistance_max - cameraDistance_min) * 0.05f  *sign;
             m_camera->cameraDistance = std::clamp(
                 m_camera->cameraDistance, cameraDistance_min, cameraDistance_max);    
         } else {
-            m_camera->cameraSpeed += (float)wheelDt * 0.001f;
+
+            m_camera->cameraSpeed += (cameraSpeed_max - cameraSpeed_min) * 0.05f * sign;
+
             m_camera->cameraSpeed =
                 std::clamp(m_camera->cameraSpeed, 
                         cameraSpeed_min, cameraSpeed_max);
@@ -668,6 +801,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
         }
         m_leftButton = true;
+        m_pickingButton = true;
         OnMouseClick(LOWORD(lParam), HIWORD(lParam));
         break;
     case WM_LBUTTONUP:
@@ -691,6 +825,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
     case WM_KEYDOWN:
         m_keyPressed[wParam] = true;
+        m_keyToggle[wParam] = !m_keyToggle[wParam];
         if (wParam == VK_ESCAPE) { // ESC키 종료
             DestroyWindow(hwnd);
         }
@@ -698,8 +833,6 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (m_keyPressed[17]) { // ctrl
             if (m_keyPressed['F']) {
                 m_camera->m_objectTargetCameraMode = !m_camera->m_objectTargetCameraMode;
-
-                m_keyPressed['F'] = false;
             }
             if (m_keyPressed['S']) {
                 m_JsonManager->SaveMesh();
@@ -1075,20 +1208,30 @@ void AppBase::ProcessMouseControl() {
         Vector3 translation = activeModel->m_worldRow.Translation();
         activeModel->m_worldRow.Translation(Vector3(0.0f));
 
-        float pitch, roll, yaw;
+
         Matrix tempRow =
             activeModel->m_worldRow * Matrix::CreateFromQuaternion(q);
 
-        Model::ExtractEulerAnglesFromMatrix(&tempRow, yaw, roll,
-                                     pitch);
 
         //activeModel->UpdateWorldRow(
-        //    activeModel->m_worldRow * Matrix::CreateFromQuaternion(q) *
+        //    activeModel->m_worldRow *
+        //        Matrix::CreateFromQuaternion(q) *
         //    Matrix::CreateTranslation(dragTranslation + translation));
 
-        activeModel->UpdateTranseform(activeModel->GetScale(),
-                                      Vector3(pitch, yaw, pitch),
-                                      dragTranslation + translation);
+        Matrix temp = activeModel->m_worldRow *
+                      Matrix::CreateFromQuaternion(q) *
+                      Matrix::CreateTranslation(dragTranslation + translation);
+
+        //activeModel->UpdateWorldRow(temp);
+
+        Vector3 tempAngle, tempPos, tempScale;
+        Model::ExtractEulerAnglesFromMatrix(&temp, tempAngle);
+        Model::ExtractPositionFromMatrix(&temp, tempPos);
+        Model::ExtractScaleFromMatrix(&temp, tempScale);
+        //activeModel->UpdateTranseform(activeModel->GetScale(),
+        //                              Vector3(pitch, yaw, pitch),
+        //                              dragTranslation + translation);
+        activeModel->UpdateTranseform(tempScale, tempAngle, tempPos);
 
         activeModel->m_boundingSphere.Center =
             activeModel->m_worldRow.Translation();
@@ -1317,7 +1460,7 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
    // box.front = 0;
    // box.back = 1;
 
-    cout << "mouse XY : " << box.left << " " << box.top << endl;
+    //cout << "mouse XY : " << box.left << " " << box.top << endl;
     context->CopySubresourceRegion(m_indexStagingTexture.Get(), 0, 0, 0, 0, m_indexTempTexture.Get(), 0, &box);
 
     D3D11_MAPPED_SUBRESOURCE ms;
@@ -1330,31 +1473,37 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     context->Unmap(m_indexStagingTexture.Get(), NULL);
      
    
-     cout << "color : " << (int)pData[0] << " " << (int)pData[1] << " "
-         << (int)pData[2] << " " << (int)pData[3] << endl; 
-
-      int objID = (int)pData[0] + (int)pData[1] + (int)pData[2] + (int)pData[3];
+     //cout << "color : " << (int)pData[0] << " " << (int)pData[1] << " "
+     //    << (int)pData[2] << " " << (int)pData[3] << endl; 
+      int objID = (int)pData[0] + (int)pData[1] * 256 +
+                 (int)pData[2] * 65536; //+ (int)pData[3];
     auto object = m_objects.find(objID);
+    //  cout << "object ID : " << objID << endl; 
     
     if (object!= m_objects.end()) {
         shared_ptr<Model> tempObj = object->second;
         float tempID = tempObj->objectInfo.objectID;
         string tempName = tempObj->objectInfo.meshName;
-        std::cout << "Selected [" << tempName << "] Object ID : " << tempID << std::endl;
+        //std::cout << "Selected [" << tempName << "] Object ID : " << tempID << std::endl;
 
-        if (m_pickedModel == tempObj) {
+        if (m_pickedModel == tempObj && m_keyPressed['Q'] == false) {
             m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
             m_pickedModel = nullptr;
             return;
         }
 
-        if (m_pickedModel != nullptr)
+        if (m_pickedModel != nullptr) {
                 m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
-        m_pickedModel = tempObj;
-        m_pickedModel->m_materialConsts.GetCpu().isSelected = 1;
+        }
+                m_pickedModel = tempObj;
+                m_pickedModel->m_materialConsts.GetCpu().isSelected = 1;
+    } else {
+        if (m_pickedModel != nullptr) {
+                m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
+                m_pickedModel = nullptr;
+        }
     }
-
-}
+    }
 
 void AppBase::CreateBuffers() {
 

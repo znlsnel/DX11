@@ -70,7 +70,6 @@ class AppBase {
     void SetPipelineState(const ComputePSO &pso);
     shared_ptr<Model> PickClosest(const Ray &pickingRay, float &minDist);
     void ProcessMouseControl();
-    virtual void MousePicking();
     void DestroyObject(shared_ptr<class Model> object);
 
   protected: // 상속 받은 클래스에서도 접근 가능
@@ -82,6 +81,8 @@ class AppBase {
     void SetShadowViewport();
     void ComputeShaderBarrier();
 
+    virtual void MousePicking();
+    virtual void ObjectDrag();
     template <typename T>
     void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                              ComPtr<ID3D11DeviceContext> &context);
@@ -101,6 +102,7 @@ class AppBase {
     bool m_drawAsWire = false;
     bool m_drawOBB = false; // Draw Object Oriented Bounding Box
     bool m_drawBS = false;  // Draw Bounding Sphere
+    bool m_selected = false;
 
     DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -153,8 +155,12 @@ class AppBase {
     bool m_keyPressed[256] = {
         false,
     };
+    bool m_keyToggle[256] = {
+        false,
+    };
 
     bool m_leftButton = false;
+    bool m_pickingButton = false;
     bool m_rightButton = false;
     bool m_dragStartFlag = false;
 
