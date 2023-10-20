@@ -105,10 +105,10 @@ void AppBase::ObjectDrag() {
 
         static float prevRatio = 0.0f;
         static Vector3 prevPos(0.0f);
+        static Vector3 prevVector(0.0f);
 
         Vector3 dragTranslation(0.0f);
 
-        static Vector3 prevVector(0.0f);
         Quaternion q =
         Quaternion::CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), 0.0f);
 
@@ -179,20 +179,26 @@ void AppBase::ObjectDrag() {
                 Vector3 dir = cursorWorldFar - cursorWorldNear;
                 dir.Normalize();
 
+                
+
                 SimpleMath::Ray r = SimpleMath::Ray(cursorWorldNear, dir);
                 float dist = 0.0f;
                 m_selected =
                     r.Intersects(m_pickedModel->m_boundingSphere, dist);
-                if (m_selected) {
+                if (m_selected) 
+                {
                         Vector3 pickPoint = cursorWorldNear + dist * dir;
 
-                        if (m_dragStartFlag) {
+                        if (m_dragStartFlag) 
+                        {
                                 m_dragStartFlag = false;
                                 prevVector =
                                     pickPoint -
                                     m_pickedModel->m_boundingSphere.Center;
                                 prevVector.Normalize();
-                        } else {
+                        } 
+                        else 
+                        {
                                 Vector3 currentVector =
                                     pickPoint -
                                     m_pickedModel->m_boundingSphere.Center;
@@ -200,23 +206,26 @@ void AppBase::ObjectDrag() {
 
                                 float rotateTheta =
                                     acos(prevVector.Dot(currentVector));
-                                if (rotateTheta > 3.141592f / 180.f) {
+
+                                if (rotateTheta > 3.141592f / 180.f) 
+                                {
                                         Vector3 RotateAxis =
                                             prevVector.Cross(currentVector);
                                         RotateAxis.Normalize();
-                                        q = Quaternion::CreateFromAxisAngle(
-                                            RotateAxis, rotateTheta);
 
+                                        q = Quaternion::FromToRotation(
+                                            prevVector, currentVector);
                                         prevVector = currentVector;
+
                                         Matrix temp =
                                             Matrix::CreateFromQuaternion(q);
-                                        
+
                                         Vector3 tempRot;
                                         Model::ExtractEulerAnglesFromMatrix(
                                             &temp, tempRot);
+
                                         tempRot += m_pickedModel->GetRotation();
                                         m_pickedModel->UpdateRotation(tempRot);
-                                        cout << "Rotate" << endl;
                                 }
                         }
                 }
@@ -630,6 +639,8 @@ void AppBase::RenderOpaqueObjects() {
         }
     }
 
+    m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock;
+
     if (AppBase::m_drawBS) {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingSphere(m_context);
@@ -826,6 +837,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN:
         m_keyPressed[wParam] = true;
         m_keyToggle[wParam] = !m_keyToggle[wParam];
+
         if (wParam == VK_ESCAPE) { // ESC키 종료
             DestroyWindow(hwnd);
         }

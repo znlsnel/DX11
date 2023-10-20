@@ -536,6 +536,8 @@ void Ex2001_GamePlay::UpdateGUI() {
                     m_JsonManager->CreateMesh(temp);
                 }
         }
+        ImGui::EndListBox();
+        ImGui::BeginListBox("GlTF List", ImVec2(300, 300));
         for (auto object : m_JsonManager->meshPaths) {
                 if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) 
                 {
@@ -549,6 +551,18 @@ void Ex2001_GamePlay::UpdateGUI() {
                 }
         }
         ImGui::EndListBox();
+        ImGui::BeginListBox("Quicell List", ImVec2(300, 300));
+        for (auto object : m_JsonManager->quicellPaths) {
+                if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300, 30))) 
+                {
+                    ObjectSaveInfo temp;
+                    temp.meshID = -2;
+                    temp.quicellPath = object.first;
+                    m_JsonManager->CreateMesh(temp);
+                }
+        }
+        ImGui::EndListBox();
+
             /*if (ImGui::Button("Test", ImVec2(100, 100)))*/
                 
 

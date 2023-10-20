@@ -15,7 +15,16 @@
 namespace hlab {
 using namespace std;
 
-        
+struct QuicellMeshPathInfo {
+    string mesh;
+    string Diffuse; // D
+    string Normal; // N 
+    string Occlusion; // O
+    string Roughness; // R
+    string Displacement; // dp
+    string metallic; // F
+        };
+
 class JsonManager {
   public:
     JsonManager(){};
@@ -29,6 +38,7 @@ class JsonManager {
     class AppBase *m_appBase = nullptr;
 
     void LoadObjectPathInFolder();
+    void SearchQuicellModels(const filesystem::path &directory, int count = 0);
     void SearchModelFiles(const filesystem::path& directory);
 
     void LoadMesh();
@@ -36,7 +46,7 @@ class JsonManager {
     void CreateMesh(struct ObjectSaveInfo temp);
 
     shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
-    shared_ptr<class Model> CreateUnrealFBXModel(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateQuicellModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 
@@ -46,12 +56,14 @@ class JsonManager {
     shared_ptr<class Model> CreateBox(struct ObjectSaveInfo info);
 
     map<meshID, std::string> objectInfo = {
-            {meshID::ESphere, "Sphere"},
-                {meshID::EBox, "Box"},
-                                           {meshID::ETest, "Test"},
+        {meshID::ESphere, "Sphere"},
+        {meshID::EBox, "Box"},
     };
 
     map < string, pair<string, string>> meshPaths;
+    map<string, QuicellMeshPathInfo> quicellPaths;
+    
+
     string modelsPath;
 
    rapidjson::Document m_saveFile;

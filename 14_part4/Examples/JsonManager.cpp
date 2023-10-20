@@ -50,9 +50,95 @@ void JsonManager::LoadObjectPathInFolder() {
         const fs::path tempPath =
             projectPath / "models" / "glTF-Sample-Models-master" / "2.0";
         modelsPath = tempPath.string();
-
         SearchModelFiles(tempPath);
-        
+
+        fs::path quikcellPath =
+            fs::current_path().parent_path().parent_path();
+        quikcellPath = quikcellPath / "Assets" / "Quicells";
+
+        SearchQuicellModels(quikcellPath);
+      //  C:\Users\dudth\Documents\Megascans Library\Downloaded\UAssets
+        int a = 5;
+}
+
+void JsonManager::SearchQuicellModels(const filesystem::path &directory, int count) {
+
+        if (count > 2)
+                return;
+
+        for (const auto &entry : fs::directory_iterator(directory)) {
+                 
+                if (entry.is_directory())
+                        SearchQuicellModels(entry, count + 1);
+                else if (entry.is_regular_file()) {
+                
+                        const auto &filePath = entry.path().parent_path();
+                        const auto &fileName = entry.path().filename();
+
+                        if (entry.path().extension() == ".FBX") 
+                        {
+                            auto it = quicellPaths.find(filePath.string() + "\\");
+
+                            QuicellMeshPathInfo *temp = new QuicellMeshPathInfo();
+                            if (it != quicellPaths.end())
+                                temp = &it->second;
+
+                            temp->mesh = fileName.string();
+
+                            if (it == quicellPaths.end()) 
+                            {
+                                quicellPaths.insert(
+                                    make_pair(filePath.string() + "\\", *temp));
+                            }
+
+                        }
+                        
+                        else if (entry.path().extension() == ".HDR") {
+                                
+                                auto it =
+                                    quicellPaths.find(filePath.string() + "\\");
+                                QuicellMeshPathInfo *temp = new QuicellMeshPathInfo(); 
+                                                           
+                                if (it != quicellPaths.end())
+                                    temp = &it->second;
+
+                                int formatIndex =
+                                    fileName.string().size() - (string(".HDR").size() + 1);
+
+                                // DpRF , ORDp, DpR, DpRA
+                                char format = fileName.string()[formatIndex];
+
+                                if (format == 'D')
+                                    temp->Diffuse = fileName.string();
+                                else if (format == 'N')
+                                    temp->Normal = fileName.string();
+
+                                else if (format == 'F') {
+                                    temp->Displacement = fileName.string();
+                                    temp->Roughness = fileName.string();
+                                    temp->metallic = fileName.string();
+                                } else if (format == 'p') {
+                                    temp->Occlusion = fileName.string();
+                                    temp->Roughness = fileName.string();
+                                    temp->Displacement = fileName.string();
+                                } else if (format == 'R') {
+                                    temp->Displacement = fileName.string();
+                                    temp->Roughness = fileName.string();
+                                } else if (format == 'A') {
+                                    temp->Displacement = fileName.string();
+                                    temp->Roughness = fileName.string();
+                                    temp->Displacement = fileName.string();
+                                }
+
+                                if (it == quicellPaths.end()) {
+                                    quicellPaths.insert(make_pair(
+                                        filePath.string() + "\\", *temp));
+                                }
+
+                        }
+                }
+
+        }
 }
 
 void JsonManager::SearchModelFiles(const filesystem::path &directory) {
@@ -75,12 +161,6 @@ void JsonManager::SearchModelFiles(const filesystem::path &directory) {
                         if (filePath.parent_path().filename() == "glTF" 
                                 && filePath.extension() == ".gltf") {
 
-                            //cout << "##########" << fileName
-                            //     << "##########" << endl;
-                            //           
-                            //std::cout << "Found gltf file : "
-                            //          << filePath.filename()
-                            //    << endl;
                             meshPaths.insert(make_pair(fileName.string(),
                                           make_pair(filePath.filename().string(), "")));
 
@@ -137,6 +217,11 @@ void hlab::JsonManager::LoadMesh() {
                         temp.previewPath =
                                 path["screenshotPath"].GetString();
                 }
+                if (temp.meshID == -2) {
+                        const rapidjson::Value &path =
+                            object["filePath"].GetObj();
+                        temp.quicellPath = path["quicellPath"].GetString();
+                }
          //       temp.meshName = object["meshName"].GetString();
 
                 const rapidjson::Value & position = object["position"].GetObj();
@@ -183,6 +268,7 @@ void hlab::JsonManager::SaveMesh() {
             const char* name = meshInfo.meshName.c_str();
             const char* meshPath = meshInfo.meshPath.c_str();
             const char* previewPath = meshInfo.previewPath.c_str();
+            const char *quicellPath = meshInfo.quicellPath.c_str();
 
         rapidjson:Value filePath(kObjectType); 
                 cout << "meshName : "  << name << endl;
@@ -198,7 +284,10 @@ void hlab::JsonManager::SaveMesh() {
                 filePath.AddMember("screenshotPath",
                     rapidjson::Value().SetString(previewPath, allocator),
                                 allocator);
-            
+                filePath.AddMember(
+                    "quicellPath",
+                    rapidjson::Value().SetString(quicellPath, allocator),
+                    allocator);
             
 
         rapidjson::Value scale(kObjectType);
@@ -280,21 +369,28 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
         tempMesh->objectInfo.meshName = "Square";
     }
         break;
-    case meshID::EBox: {
+    case meshID::EBox: 
+    {
         tempMesh = CreateBox(temp);
         tempMesh->objectInfo.meshName = "Box";
     }
         break;
-    case meshID::ETest: {
-        tempMesh = CreateUnrealFBXModel(temp);
-        tempMesh->objectInfo.meshName = "test";
-    }
+    case meshID::EQuicellPath: 
+    {
+        tempMesh = CreateQuicellModel(temp);
+        auto it = quicellPaths.find(temp.quicellPath);
+        if (it != quicellPaths.end()) {
+                tempMesh->objectInfo.meshName =   it->second.mesh;
+                tempMesh->objectInfo.quicellPath = it->first;
+        }
+    } 
+        break;
     }
     
     // 256 = 1
     // 512 = 2
     static int objectID = 10000000;
-    if (tempMesh != nullptr) {
+    if (tempMesh.get() != nullptr) {
         int id_R = 0, id_G =0, id_B =0, id_A=0;
         id_R = objectID % 256;
 
@@ -339,19 +435,35 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
     return tempModel;
 }
 
-shared_ptr<class Model> JsonManager::CreateUnrealFBXModel(ObjectSaveInfo info) {
-    auto meshes =
-        GeometryGenerator::ReadFromFile("../../Assets/test/", "test.fbx", false,
-        false);
-    meshes[0].albedoTextureFilename = "../../Assets/test/T_Japanese_Mossy_Boulder_veqhehl_2K_D.HDR";
+shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
+
+    QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
+    auto meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
+                                                  temp->mesh, false, false);
+
+    //auto meshes = GeometryGenerator::ReadFromFile(
+    //    "../Assets/Tier2/",
+    //    "MI_White_Cloth_sbklx0p0_2K.uasset", false, false);
+    // 
+    meshes[0].albedoTextureFilename =
+        temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+
     meshes[0].normalTextureFilename =
-        "../../Assets/test/T_Japanese_Mossy_Boulder_veqhehl_2K_N.HDR";
+        temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
+
     meshes[0].aoTextureFilename =
-        "../../Assets/test/T_JapaneseMossyBoulder_veqhehl_2K_DpRF.HDR";
+        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
+
+    if (temp->Displacement == "")
+        meshes[0].aoTextureFilename =
+            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
+
     meshes[0].roughnessTextureFilename =
-        "../../Assets/test/T_JapaneseMossyBoulder_veqhehl_2K_DpRF.HDR";
+        temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
+
     meshes[0].metallicTextureFilename =
-        "../../Assets/test/T_JapaneseMossyBoulder_veqhehl_2K_DpRF.HDR";
+        temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
+    
 
     shared_ptr<Model> tempModel =
         make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);

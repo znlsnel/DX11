@@ -20,10 +20,12 @@ using std::vector;
     string meshName = "";
     string meshPath = "";
     string previewPath = "";
+    string quicellPath = "";
     int objectID;
  };
 
  enum meshID : int {
+	 EQuicellPath = -2,
 	ELoadToPath = -1,
 	 ECharacter = 0,
 	 EPlane = 1,
@@ -32,7 +34,6 @@ using std::vector;
 	 EBox = 4,
 	 ESphere = 5,
 	 ECylinder = 6,
-	 ETest = 7,
  };
 
 struct MeshData {

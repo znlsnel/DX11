@@ -142,6 +142,7 @@ class Model {
     Vector3 m_scale{1.f};
     Vector3 m_position{0.f};
     Vector3 m_rotation{0.f};
+    float m_boundingSphereRadius = 0.0f;
 };
 
 } // namespace hlab
