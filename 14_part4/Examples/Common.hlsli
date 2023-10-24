@@ -24,9 +24,10 @@ SamplerState pointClampSampler : register(s6);
 TextureCube envIBLTex : register(t10);
 TextureCube specularIBLTex : register(t11);
 TextureCube irradianceIBLTex : register(t12);
-Texture2D brdfTex : register(t13);
 
+Texture2D brdfTex : register(t13);
 Texture2D shadowMaps[MAX_LIGHTS] : register(t15);
+Texture2DArray g_treeTexArray : register(t20);
 //Texture2D shadowMap1 : register(t16);
 //Texture2D shadowMap2 : register(t17);
 

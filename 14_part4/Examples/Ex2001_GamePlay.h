@@ -83,7 +83,6 @@ class Ex2001_GamePlay : public AppBase {
 
     std::unique_ptr<DirectX::AudioEngine> m_audEngine;
     std::unique_ptr<DirectX::SoundEffect> m_sound;
-    double timeSeconds = 0.0;
 
     float metallicFactor = 0.0f;
     float roughnessFactor = 0.0f;

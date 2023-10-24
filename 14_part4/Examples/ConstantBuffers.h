@@ -29,7 +29,7 @@ __declspec(align(256)) struct MeshConstants {
 
     //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
     //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-    float indexColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    float indexColor[4] = {0.0f, 0.0f, 0.0f, 0.7865f};
    //int indexColor[4] = {0, 0, 0, 255};
 
     int useHeightMap = 0;
@@ -115,13 +115,13 @@ __declspec(align(256)) struct GlobalConstants {
     Matrix viewProj;
     Matrix invViewProj; // Proj -> World
     Matrix invView;
-
+     
     Vector3 eyeWorld;
-    float strengthIBL = 0.0f;
+    float strengthIBL = 0.5f;
 
     int textureToDraw = 0; // 0: Env, 1: Specular, 2: Irradiance, 그외: 검은색
     float envLodBias = 0.0f; // 환경맵 LodBias
-    float lodBias = 2.0f;    // 다른 물체들 LodBias
+    float lodBias = 0.0f;    // 다른 물체들 LodBias
     float globalTime = 0.0f;
 
     Light lights[MAX_LIGHTS];

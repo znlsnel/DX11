@@ -22,6 +22,10 @@ using std::vector;
     string previewPath = "";
     string quicellPath = "";
     int objectID;
+
+    float metallic = 0.0f;
+    float roughness = 0.0f;
+    
  };
 
  enum meshID : int {
@@ -34,6 +38,8 @@ using std::vector;
 	 EBox = 4,
 	 ESphere = 5,
 	 ECylinder = 6,
+	 ETree = 7,
+	 EBillboardTree = 8,
  };
 
 struct MeshData {

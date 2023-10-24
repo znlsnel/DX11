@@ -18,7 +18,7 @@ Ex2001_GamePlay::Ex2001_GamePlay() : AppBase() {}
 
 bool Ex2001_GamePlay::InitScene() {
 
-    AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
+    AppBase::m_globalConstsCPU.strengthIBL = 0.5f;
     AppBase::m_globalConstsCPU.lodBias = 0.0f;
 
     AppBase::m_camera->Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
@@ -29,43 +29,10 @@ bool Ex2001_GamePlay::InitScene() {
         L"skySpecularHDR.dds", L"skyDiffuseHDR.dds",
         L"skyBrdf.dds");
 
-    AppBase::InitScene();
+    AppBase::InitScene(); 
      
     // 바닥(거울)
-    {
-        // https://freepbr.com/materials/stringy-marble-pbr/
-        //auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
-        auto mesh =  GeometryGenerator::MakeSquareGrid(10, 10, 1.f);
-        string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
-        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
-        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
-      //  mesh.metallicTextureFilename = path + "";
-        mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
-        mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
-         
-        m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
-        m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
-        m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
-        m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
-        m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
-         
-        Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
-        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-        //                       Matrix::CreateTranslation(position));
-        m_ground->UpdateTranseform(m_ground->GetScale(),
-                                   Vector3(3.141592f * 0.5f,
-                                           m_ground->GetRotation().y,
-                                           m_ground->GetRotation().z),
-                                   position);
-      // m_ground->useTessellation = true; 
-         
-        m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
-        // m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
-        m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
-      
-        m_pbrList.push_back(m_ground);   // 리스트에 등록
-    }
+
 
     InitPhysics(true);
 
@@ -78,7 +45,7 @@ bool Ex2001_GamePlay::InitScene() {
             make_shared<OceanModel>(m_device, m_context, vector{mesh});
         m_ocean->m_castShadow = false;
 
-        Vector3 position = Vector3(0.0f, 0.1f, 2.0f);
+        Vector3 position = Vector3(0.0f, -0.2f, 2.0f);
         //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
         //                        Matrix::CreateTranslation(position));
         m_ocean->UpdateTranseform(m_ocean->GetScale(),
@@ -97,7 +64,7 @@ void Ex2001_GamePlay::CreateStack(const PxTransform &t, int numStacks,
                                   int numWidth, PxReal halfExtent) {
 
     vector<MeshData> box = {GeometryGenerator::MakeBox(halfExtent * 10)};
-
+    
     PxShape *shape = gPhysics->createShape(
         PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
 
@@ -162,7 +129,8 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
                                                const PxGeometry &geometry,
                                                const PxVec3 &velocity) {
 
-    m_fireball = std::make_shared<BillboardModel>();
+    m_fireball = std::make_shared<BillboardModel>(this, 2.0f);
+    
      //m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
      //                       1.0f, L"GameExplosionPS.hlsl");
     Vector3 dir(velocity.x, velocity.y, velocity.z);
@@ -171,7 +139,7 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
     m_fireball->m_castShadow = false;
     m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
                            0.2f, Graphics::volumetricFirePS);
-
+   
     AppBase::m_basicList.push_back(m_fireball);
     this->m_PhysicalObjects.push_back(m_fireball);
 
@@ -298,7 +266,7 @@ void Ex2001_GamePlay::UpdateGUI() {
     
             ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
 
-                static float oceanHeight = 0.0f;
+                static float oceanHeight = -0.2f;
             if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
                 Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
                 //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
@@ -353,7 +321,7 @@ void Ex2001_GamePlay::UpdateGUI() {
 
                 ImGui::TreePop();
             }
-
+              
             if (ImGui::TreeNode("Post Processing")) {
                 int flag = 0;
                 flag += ImGui::SliderFloat(
@@ -413,6 +381,8 @@ void Ex2001_GamePlay::UpdateGUI() {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
     if (m_pickedModel) {
+            ImGui::Checkbox("ObjectLock", &m_pickedModel->isObjectLock);
+
             if (m_keyPressed['Q']) {
                     if (ImGui::ColorButton("Pos", ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 0,
                                            ImVec2(30, 30))) {
@@ -435,16 +405,22 @@ void Ex2001_GamePlay::UpdateGUI() {
                 float modelRotation[3] = {m_pickedModel->GetRotation().x,
                                           m_pickedModel->GetRotation().y,
                                           m_pickedModel->GetRotation().z};
+
+                modelRotation[0] *= 180.f / 3.141592f;
+                modelRotation[1] *= 180.f / 3.141592f;
+                modelRotation[2] *= 180.f / 3.141592f;
+
+
                 float modelScale[3] = {m_pickedModel->GetScale().x,
                                        m_pickedModel->GetScale().y,
                                        m_pickedModel->GetScale().z};
 
                 int flagLotation =
-                    ImGui::DragFloat3("Position", modelLocation, 0.01f, -5.0f, 5.f);
+                    ImGui::DragFloat3("Position", modelLocation, 0.01f, -30.0f, 30.f);
                 int flagRotation = 
-                    ImGui::DragFloat3("Rotation", modelRotation, 0.01f,-5.0f, 5.f);
+                    ImGui::DragFloat3("Rotation", modelRotation, 5.f,-720.0f, 720.f);
                 int flagScale = 
-                    ImGui::DragFloat3("Scale", modelScale, 0.01f, -5.0f, 5.f);
+                    ImGui::DragFloat3("Scale", modelScale, 0.01f, -50.0f, -50.f);
                 
                 
 
@@ -453,6 +429,10 @@ void Ex2001_GamePlay::UpdateGUI() {
                         Vector3(modelLocation[0], modelLocation[1], modelLocation[2]));
                 }
                 if (flagRotation) {
+                    modelRotation[0] *= 3.141592f / 180.f;
+                    modelRotation[1] *= 3.141592f  /180.f;
+                    modelRotation[2] *= 3.141592f / 180.f;
+
                     m_pickedModel->UpdateRotation(
                         Vector3(modelRotation[0], modelRotation[1], modelRotation[2]));
                 }
@@ -524,10 +504,9 @@ void Ex2001_GamePlay::UpdateGUI() {
         ImGui::TreePop();
     }
 
-            ImGui::NewLine();
+        ImGui::NewLine();
     if (ImGui::TreeNode("Load Object")) {
-           
-       
+
         ImGui::BeginListBox("Object List", ImVec2(300, 300));
         for (auto object : m_JsonManager->objectInfo) {
                 if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {

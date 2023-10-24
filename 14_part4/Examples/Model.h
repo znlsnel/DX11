@@ -104,13 +104,12 @@ class Model {
                                      worldRow->_33 * worldRow->_33));
     };
 
-    public:
-        void UpdateWorldRow(Matrix& mat);
+    void SetChildModel(shared_ptr<Model> model);
 
   private:
-    void UpdateWorldRow();
+    void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
 
-  public:
+public:
 
 
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
@@ -122,6 +121,8 @@ class Model {
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
     bool useTessellation = false;
     bool isDestory = false;
+    bool isChildModel = false;
+    bool isObjectLock = false;
 
     vector<shared_ptr<Mesh>> m_meshes;
 
@@ -133,9 +134,9 @@ class Model {
 
     string m_name = "NoName";
     ObjectSaveInfo objectInfo;
+    vector<shared_ptr<Model>> childModels;
 
-
-  private:
+  protected:
     shared_ptr<Mesh> m_boundingBoxMesh;
     shared_ptr<Mesh> m_boundingSphereMesh;
 

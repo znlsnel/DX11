@@ -80,12 +80,15 @@ class AppBase {
     void SetMainViewport();
     void SetShadowViewport();
     void ComputeShaderBarrier();
+    void replicateObject();
 
     virtual void MousePicking();
     virtual void ObjectDrag();
     template <typename T>
     void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                              ComPtr<ID3D11DeviceContext> &context);
+
+    
   public:
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
     // 변수 이름을 줄이기 위해 d3d는 생략했습니다.
@@ -118,6 +121,7 @@ class AppBase {
     ComPtr<ID3D11Texture2D> m_resolvedBuffer;
     ComPtr<ID3D11Texture2D> m_postEffectsBuffer;
     ComPtr<ID3D11Texture2D> m_prevBuffer; // 간단한 모션 블러 효과
+    ComPtr<ID3D11Texture2D> m_texArray;
     ComPtr<ID3D11Texture2D> m_tempTexture; // 간단한 모션 블러 효과
 
     ComPtr<ID3D11Texture2D> m_indexTexture;
@@ -133,6 +137,7 @@ class AppBase {
     ComPtr<ID3D11ShaderResourceView> m_resolvedSRV;
     ComPtr<ID3D11ShaderResourceView> m_postEffectsSRV;
     ComPtr<ID3D11ShaderResourceView> m_prevSRV;
+    ComPtr<ID3D11ShaderResourceView> m_billboardTreeSRV;
 
 
     // Depth buffer 관련
@@ -177,6 +182,7 @@ class AppBase {
     float cameraSpeed_min = 0.01f;
     float cameraSpeed_max = 2.0f;
 
+    double timeSeconds = 0.0;
     // 렌더링 -> PostEffects -> PostProcess
     PostEffectsConstants m_postEffectsConstsCPU;
     ComPtr<ID3D11Buffer> m_postEffectsConstsGPU;
@@ -191,7 +197,7 @@ class AppBase {
     ComPtr<ID3D11Buffer> m_reflectGlobalConstsGPU; 
     ComPtr<ID3D11Buffer> m_shadowGlobalConstsGPU[MAX_LIGHTS];
       
-    // 공통으로 사용하는 텍스춰들
+    // 공통으로 사용하는 텍스춰들 
     ComPtr<ID3D11ShaderResourceView> m_envSRV;
     ComPtr<ID3D11ShaderResourceView> m_irradianceSRV;  
     ComPtr<ID3D11ShaderResourceView> m_specularSRV; 
@@ -209,6 +215,7 @@ class AppBase {
     shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
     shared_ptr<Model> m_cursorSphere;
     shared_ptr<Model> m_mirror; // 거울은 별도로 그림
+
     DirectX::SimpleMath::Plane m_mirrorPlane;
     float m_mirrorAlpha = 1.0f; // Opacity
 
@@ -218,7 +225,7 @@ class AppBase {
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
     map<int, shared_ptr<Model>> m_objects;
     vector<shared_ptr<Model>> m_basicList;
-    vector<shared_ptr<Model>> m_pbrList;
+
     vector<shared_ptr<class Character>> m_characters;
 
     shared_ptr<class JsonManager> m_JsonManager;

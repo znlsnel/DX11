@@ -25,13 +25,13 @@ struct PixelShaderOutput
     float4  indexColor : SV_Target1;
 };
 
-float3 GetNormal(PixelShaderInput input)
+float3 GetNormal(PixelShaderInput input, float lod)
 {
     float3 normalWorld = normalize(input.normalWorld);
     
     if (useNormalMap) // NormalWorld를 교체
     {
-        float3 normal = normalTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).rgb;
+        float3 normal = normalTex.SampleLevel(linearWrapSampler, input.texcoord, lod).rgb;
         normal = 2.0 * normal - 1.0; // 범위 조절 [-1.0, 1.0]
 
         // OpenGL 용 노멀맵일 경우에는 y 방향을 뒤집어줍니다.
@@ -230,11 +230,11 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
         lightTexcoord *= 0.5;
         
         // 3. 쉐도우맵에서 값 가져오기
-        //float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
+        float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
         
         // 4. 가려져 있다면 그림자로 표시
-        //if (depth + 0.001 < lightScreen.z)
-          //  shadowFactor = 0.0;
+        if (depth + 0.001 < lightScreen.z)
+            shadowFactor = 0.0;
         
         uint width, height, numMips;
         shadowMap.GetDimensions(0, width, height, numMips);
@@ -254,11 +254,14 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
 PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
+    float lod = length(input.posWorld - eyeWorld);
+    lod -= 3;
+    lod = clamp(lod, 0.0, 10.0);
     
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
-    float3 normalWorld = GetNormal(input);
+    float3 normalWorld = GetNormal(input, lod);
     
-    float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias) * float4(albedoFactor, 1)
+    float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord, lod) * float4(albedoFactor, 1)
                                  : float4(albedoFactor, 1);
     
     if (isSelected)
@@ -270,12 +273,12 @@ PixelShaderOutput main(PixelShaderInput input)
     }
     clip(albedo.a - 0.5); // Tree leaves
     
-    float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).r : 1.0;
-    float metallic = useMetallicMap ? metallicRoughnessTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).b * metallicFactor
+    float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, input.texcoord, lod).r : 1.0;
+    float metallic = useMetallicMap ? metallicRoughnessTex.SampleLevel(linearWrapSampler, input.texcoord, lod).b * metallicFactor
                                     : metallicFactor;
     float roughness = useRoughnessMap ? metallicRoughnessTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).g * roughnessFactor
                                       : roughnessFactor;
-    float3 emission = useEmissiveMap ? emissiveTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).rgb
+    float3 emission = useEmissiveMap ? emissiveTex.SampleLevel(linearWrapSampler, input.texcoord, lod).rgb
                                      : emissionFactor;
 
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
@@ -289,6 +292,8 @@ PixelShaderOutput main(PixelShaderInput input)
         if (lights[i].type)
         {
             float3 L = lights[i].position - input.posWorld;
+            if (i == 0)
+                L = -lights[i].direction;
             float3 r = normalize(reflect(eyeWorld - input.posWorld, normalWorld));
             float3 centerToRay = dot(L, r) * r - L;
             float3 representativePoint = L + centerToRay * clamp(lights[i].radius / length(centerToRay), 0.0, 1.0);

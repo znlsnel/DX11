@@ -4,7 +4,7 @@
 #include "AppBase.h"
 
 #include "BillboardModel.h"
-
+#include "D3D11Utils.h"
 #include "Character.h"
 
 
@@ -52,11 +52,12 @@ void JsonManager::LoadObjectPathInFolder() {
         modelsPath = tempPath.string();
         SearchModelFiles(tempPath);
 
-        fs::path quikcellPath =
+        fs::path quicellPathTemp =
             fs::current_path().parent_path().parent_path();
-        quikcellPath = quikcellPath / "Assets" / "Quicells";
+        quicellPathTemp = quicellPathTemp / "Assets" / "Quicells";
+        quicellPath = quicellPathTemp.string();
 
-        SearchQuicellModels(quikcellPath);
+        SearchQuicellModels(quicellPathTemp);
       //  C:\Users\dudth\Documents\Megascans Library\Downloaded\UAssets
         int a = 5;
 }
@@ -330,66 +331,77 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     shared_ptr<Model> tempMesh = make_shared<Model>();
 
     switch ((meshID)temp.meshID) {
-    case meshID::ELoadToPath: {
-        tempMesh = CreateModel(temp);
-        tempMesh->objectInfo.meshName = temp.meshName;
-        tempMesh->objectInfo.meshPath = temp.meshPath;
-        tempMesh->objectInfo.previewPath = temp.previewPath;
-    } 
-                            break;
-    case meshID::ECharacter: {
-        tempMesh = CreateCharacter(temp);
-        tempMesh->objectInfo.meshName = "Character";
-    }
+            case meshID::ELoadToPath: {
+                tempMesh = CreateModel(temp);
+                tempMesh->objectInfo.meshName = temp.meshName;
+                tempMesh->objectInfo.meshPath = temp.meshPath;
+                tempMesh->objectInfo.previewPath = temp.previewPath;
+            } 
+                                    break;
+            case meshID::ECharacter: {
+                tempMesh = CreateCharacter(temp);
+                tempMesh->objectInfo.meshName = "Character";
+            }
 
-        break;
-    case meshID::EMountain: {
-        tempMesh = CreateMountain(temp);
-        tempMesh->objectInfo.meshName = "Mountain";
-    }
-        break;
-    case meshID::ECylinder: {
-        tempMesh = CreateCylinder(temp);
-        tempMesh->objectInfo.meshName = "Cylinder";
+                break;
+            case meshID::EMountain: {
+                tempMesh = CreateMountain(temp);
+                tempMesh->objectInfo.meshName = "Mountain";
+            }
+                break;
+            case meshID::ECylinder: {
+                tempMesh = CreateCylinder(temp);
+                tempMesh->objectInfo.meshName = "Cylinder";
 
-    }
-        break;
-    case meshID::EPlane: {
-        tempMesh = CreatePlane(temp);
-        tempMesh->objectInfo.meshName = "Ground";
-    }
-        break;
-    case meshID::ESphere: {
-        tempMesh = CreateSphere(temp);
-        tempMesh->objectInfo.meshName = "Sphere";
-    }
-        break;
-    case meshID::ESquare: {
-        tempMesh = CreateSquare(temp);
-        tempMesh->objectInfo.meshName = "Square";
-    }
-        break;
-    case meshID::EBox: 
-    {
-        tempMesh = CreateBox(temp);
-        tempMesh->objectInfo.meshName = "Box";
-    }
-        break;
-    case meshID::EQuicellPath: 
-    {
-        tempMesh = CreateQuicellModel(temp);
-        auto it = quicellPaths.find(temp.quicellPath);
-        if (it != quicellPaths.end()) {
-                tempMesh->objectInfo.meshName =   it->second.mesh;
-                tempMesh->objectInfo.quicellPath = it->first;
-        }
-    } 
-        break;
+            }
+                break;
+            case meshID::EPlane: {
+                tempMesh = CreatePlane(temp);
+                tempMesh->objectInfo.meshName = "Ground";
+            }
+                break;
+            case meshID::ESphere: {
+                tempMesh = CreateSphere(temp);
+                tempMesh->objectInfo.meshName = "Sphere";
+            }
+                break;
+            case meshID::ESquare: {
+                tempMesh = CreateSquare(temp);
+                tempMesh->objectInfo.meshName = "Square";
+            }
+                break;
+            case meshID::EBox: 
+            {
+                tempMesh = CreateBox(temp);
+                tempMesh->objectInfo.meshName = "Box";
+            }
+                break;
+            case meshID::EQuicellPath: 
+            {
+                tempMesh = CreateQuicellModel(temp);
+                auto it = quicellPaths.find(temp.quicellPath);
+                if (it != quicellPaths.end()) {
+                        tempMesh->objectInfo.meshName =   it->second.mesh;
+                        tempMesh->objectInfo.quicellPath = it->first;
+                }
+            } 
+                break;
+            case meshID::ETree:
+            {
+                tempMesh = CreateTree(temp);
+                tempMesh->objectInfo.meshName = "Tree";
+            }
+                break;
+            case meshID::EBillboardTree:
+            {
+                tempMesh = CreateBillboadTree(temp);
+                tempMesh->objectInfo.meshName = "billboardTree";
+            } 
+                break; 
     }
     
     // 256 = 1
-    // 512 = 2
-    static int objectID = 10000000;
+    // 512 = 2 
     if (tempMesh.get() != nullptr) {
         int id_R = 0, id_G =0, id_B =0, id_A=0;
         id_R = objectID % 256;
@@ -410,8 +422,8 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
 
     //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
 
-        //std::cout << "Set [" << tempMesh->objectInfo.meshName
-        //          << "] Object ID : " << id_R << " " << id_G << " " << id_B << endl; 
+        std::cout << "Set [" << tempMesh->objectInfo.meshName
+                  << "] Object ID : " << id_R << " " << id_G << " " << id_B << endl; 
 
         m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
         objectID++;
@@ -430,7 +442,7 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
     tempModel->m_castShadow = true;
 
     m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
-    m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
+
 
     return tempModel;
 }
@@ -451,11 +463,10 @@ shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     meshes[0].normalTextureFilename =
         temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
 
-    meshes[0].aoTextureFilename =
+    meshes[0].heightTextureFilename =
         temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
 
-    if (temp->Displacement == "")
-        meshes[0].aoTextureFilename =
+     meshes[0].aoTextureFilename =
             temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
 
     meshes[0].roughnessTextureFilename =
@@ -473,7 +484,7 @@ shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     tempModel->m_castShadow = true;
 
     m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
-    m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
+
 
     return tempModel;
 
@@ -504,7 +515,6 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
     m_appBase->m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
     m_appBase->m_characters.push_back(m_player);
     // m_pickedModel = m_player->GetMesh()->m_meshes;
-    m_appBase->m_pbrList.push_back(m_player->GetMesh()); // 리스트에 등록
 
     m_appBase->m_camera->SetTarget(m_player);
     return m_player->GetMesh();
@@ -535,7 +545,6 @@ shared_ptr<Model> JsonManager::CreateMountain(ObjectSaveInfo info) {
 
 
     m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
-    m_appBase->m_pbrList.push_back(tempModel);   // 리스트에 등록
 
     return tempModel;
 }
@@ -552,23 +561,47 @@ shared_ptr<Model> JsonManager::CreateCylinder(ObjectSaveInfo info) {
     tempModel->m_castShadow = true;
 
     m_appBase->m_basicList.push_back(tempModel);
-    m_appBase->m_pbrList.push_back(tempModel);
+
     return tempModel;
 }
 
 shared_ptr<Model> JsonManager::CreatePlane(ObjectSaveInfo info) {
 
+        // https://freepbr.com/materials/stringy-marble-pbr/
+        // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
+        auto mesh = GeometryGenerator::MakeSquareGrid(10, 10, 100.f,
+                                                      Vector2(100.0f, 100.0f));
+        string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
+        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+        mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
+        //mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
+        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
 
-    auto meshes = GeometryGenerator::MakeSquare();
-    shared_ptr<Model> tempModel = make_shared<Model>(
-        m_appBase->m_device, m_appBase->m_context, vector{meshes});
+        m_appBase->m_ground = make_shared<Model>(
+            m_appBase->m_device, m_appBase->m_context, vector{mesh});
+        m_appBase->m_ground->m_materialConsts.GetCpu().albedoFactor =
+            Vector3(0.2f);
+        m_appBase->m_ground->m_materialConsts.GetCpu().emissionFactor =
+            Vector3(0.0f);
+        m_appBase->m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
+        m_appBase->m_ground->m_materialConsts.GetCpu().roughnessFactor =  0.65f;
 
-    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
-    tempModel->m_castShadow = true;
+        Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+        // m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        //                        Matrix::CreateTranslation(position));
+        m_appBase->m_ground->UpdateTranseform(info.scale, info.rotation,
+                                              info.position);
+        // m_ground->useTessellation = true;
 
-    m_appBase->m_basicList.push_back(tempModel);
-    m_appBase->m_pbrList.push_back(tempModel);
-    return tempModel;
+         // m_appBase->m_mirrorPlane =
+         //   DirectX::SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
+        // m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
+          m_appBase->m_basicList.push_back(
+              m_appBase->m_ground); // 거울은 리스트에 등록 X
+
+
+          return m_appBase->m_ground;
 }
 
 shared_ptr< Model> JsonManager::CreateSphere(ObjectSaveInfo info) {
@@ -580,7 +613,6 @@ shared_ptr< Model> JsonManager::CreateSphere(ObjectSaveInfo info) {
     tempModel->m_castShadow = true;
 
     m_appBase->m_basicList.push_back(tempModel);
-    m_appBase->m_pbrList.push_back(tempModel);
     return tempModel;
 }
 
@@ -598,13 +630,56 @@ shared_ptr<Model> JsonManager::CreateBox(ObjectSaveInfo info) {
     tempModel->m_castShadow = true;
 
     m_appBase->m_basicList.push_back(tempModel);
-    m_appBase->m_pbrList.push_back(tempModel);
+
     return tempModel;
     //return make_shared<Model>();
 }
 
+shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
+    string path = "../Assets/Foliage/Gledista_Triacanthos_FBX/";
+    auto meshes = GeometryGenerator::ReadFromFile(
+        path, "Gledista_Triacanthos_3.fbx", false);
+
+    Vector3 center(0.0f, 0.0f, 2.0f);
+
+    shared_ptr<Model> m_leaves =
+        make_shared<Model>(m_appBase->m_device, m_appBase->m_context,
+                                             vector{meshes[2], meshes[3]});
+    m_leaves->m_meshConsts.GetCpu().windTrunk = 0.1f;
+    m_leaves->m_meshConsts.GetCpu().windLeaves = 0.01f;
+    m_leaves->m_materialConsts.GetCpu().albedoFactor = Vector3(0.3f);
+    m_leaves->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+    m_leaves->m_materialConsts.GetCpu().metallicFactor = 0.2f;
+     m_leaves->UpdateTranseform(info.scale, info.rotation, info.position      );
+
+   m_appBase->m_basicList.push_back(m_leaves); // 리스트에 등록
+
+    shared_ptr<Model>m_trunk = make_shared<Model>(m_appBase->m_device, m_appBase->m_context,
+        vector{meshes[0], meshes[1],
+               meshes[4]}); // Trunk and branches (4 is trunk)
+    m_trunk->m_meshConsts.GetCpu().windTrunk = 0.1f;
+    m_trunk->m_meshConsts.GetCpu().windLeaves = 0.0f;
+    m_trunk->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+    m_trunk->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+    m_trunk->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+    m_trunk->UpdateTranseform(info.scale, info.rotation, info.position);
+    m_trunk->SetChildModel(m_leaves);
+
+    m_appBase->m_basicList.push_back(m_trunk); // 리스트에 등록
+    return m_trunk;
+}
+ 
+shared_ptr<class Model> JsonManager::CreateBillboadTree(ObjectSaveInfo info) {
+    shared_ptr<BillboardModel> model = std::make_shared<BillboardModel>(m_appBase);
+
+    // m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
+    //                        1.0f, L"GameExplosionPS.hlsl");
+    model->m_castShadow = false;
+    model->Initialize(m_appBase->m_device, m_appBase->m_context, {{0.0f, 0.0f, 0.0f, 1.0f}}, 2.f, Graphics::billboardPS);
+    model->UpdateTranseform(info.scale, info.rotation, info.position);
 
 
-
-
+    m_appBase->m_basicList.push_back(model);
+    return model;
+}
 } // namespace hlab

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <directxtk/SimpleMath.h>
 #include "Character.h"
+#include "Model.h"
 
 #include "D3D11Utils.h"
 #include "GraphicsCommon.h"
@@ -50,7 +51,7 @@ AppBase::~AppBase() {
     m_objects.clear();
     
     // Cleanup
-    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplDX11_Shutdown(); 
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
@@ -233,6 +234,9 @@ void AppBase::ObjectDrag() {
 }
 
 void AppBase::DestroyObject(shared_ptr<class Model> object) {
+        if (object == nullptr || object->isObjectLock)
+                return;
+
     if (m_pickedModel == object)
         m_pickedModel = nullptr;
    
@@ -321,7 +325,7 @@ bool AppBase::Initialize() {
 bool AppBase::InitScene() {
 
     // 조명 설정
-    {
+    { 
         // 조명 0은 고정
         m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
         m_globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.1f);
@@ -336,8 +340,8 @@ bool AppBase::InitScene() {
         m_globalConstsCPU.lights[1].spotPower = 3.0f;
         m_globalConstsCPU.lights[1].fallOffEnd = 20.0f;
         m_globalConstsCPU.lights[1].radius = 0.02f;
-        m_globalConstsCPU.lights[1].type =
-            LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+        m_globalConstsCPU.lights[1].type = LIGHT_OFF;
+            //LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
         // 조명 2는 꺼놓음
         m_globalConstsCPU.lights[2].type = LIGHT_OFF;
@@ -424,7 +428,7 @@ void AppBase::Update(float dt) {
     if (m_mirror) 
         m_mirror->UpdateConstantBuffers(m_device, m_context);
 
-    // 조명의 위치 반영
+    // 조명의 위치 반영 
     for (int i = 0; i < MAX_LIGHTS; i++) {
 
         float scale = std::max(0.01f, m_globalConstsCPU.lights[i].radius);
@@ -450,29 +454,51 @@ void AppBase::UpdateLights(float dt) {
         lightDev = Vector3::Transform(
             lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
     }
+
     m_globalConstsCPU.lights[1].position = Vector3(0.0f, 1.1f, 2.0f) + lightDev;
     Vector3 focusPosition = Vector3(0.0f, -0.5f, 1.7f);
     m_globalConstsCPU.lights[1].direction =
         focusPosition - m_globalConstsCPU.lights[1].position;
     m_globalConstsCPU.lights[1].direction.Normalize();
-
+     
     // 그림자맵을 만들기 위한 시점
     for (int i = 0; i < MAX_LIGHTS; i++) {
-        const auto &light = m_globalConstsCPU.lights[i];
+        auto &light = m_globalConstsCPU.lights[i];
         if (light.type & LIGHT_SHADOW) {
 
             Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
             if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
                 up = Vector3(1.0f, 0.0f, 0.0f);
 
+            if (false) {
+                if (false && m_camera->m_objectTargetCameraMode == false)
+                                        light.position =
+                                            m_camera->GetPosision() +
+                                            -light.direction * 3.f;
+                else if (m_camera->GetTarget())
+                                        light.position = m_camera->GetTarget()
+                                                             ->GetMesh()
+                                                ->GetPosition() +
+                                            -light.direction * 3.f;
+            }
+
+             
             // 그림자맵을 만들 때 필요
             Matrix lightViewRow = XMMatrixLookAtLH(
-                light.position, light.position + light.direction, up);
+                light.position, light.position + light.direction, up);  
+
+            //Matrix lightViewRow = XMMatrixLookAtLH(
+            //     m_camera->GetPosision(),
+            //     m_camera->GetPosision() + -light.direction * 5.f,  up);
 
             Matrix lightProjRow = XMMatrixPerspectiveFovLH(
                 XMConvertToRadians(120.0f), 1.0f, 0.1f, 10.0f);
 
-            m_shadowGlobalConstsCPU[i].eyeWorld = light.position;
+      //      m_shadowGlobalConstsCPU[i].eyeWorld = light.position;
+            m_shadowGlobalConstsCPU[i].eyeWorld =
+                light.position +
+                -light.direction * 3.f;
+
             m_shadowGlobalConstsCPU[i].view = lightViewRow.Transpose();
             m_shadowGlobalConstsCPU[i].proj = lightProjRow.Transpose();
             m_shadowGlobalConstsCPU[i].invProj =
@@ -564,16 +590,16 @@ void AppBase::RenderShadowMaps() {
                 m_mirror->Render(m_context);
         }
     }
-}
+} 
 
-void AppBase::RenderOpaqueObjects() {
+void AppBase::RenderOpaqueObjects() { 
     // 다시 렌더링 해상도로 되돌리기
     AppBase::SetMainViewport(); 
 
     // 거울 1. 거울은 빼고 원래 대로 그리기
     const float clearColor[4] = {0.0f, 0.0f, 1.0f, 1.0f};
     m_context->ClearRenderTargetView(m_floatRTV.Get(), clearColor);
-    m_context->ClearRenderTargetView(m_indexRenderTargetView.Get(), clearColor);
+    m_context->ClearRenderTargetView(m_indexRenderTargetView.Get(), clearColor); 
 
     ID3D11RenderTargetView *targets[] = {
                                          
@@ -581,18 +607,19 @@ void AppBase::RenderOpaqueObjects() {
     };
 
     m_context->OMSetRenderTargets(2, targets,
-                                  m_defaultDSV.Get());
+                                  m_defaultDSV.Get()); 
      
     // 그림자맵들도 공용 텍스춰들 이후에 추가
     // 주의: 마지막 shadowDSV를 RenderTarget에서 해제한 후 설정
     vector<ID3D11ShaderResourceView *> shadowSRVs;
     for (int i = 0; i < MAX_LIGHTS; i++) {
         shadowSRVs.push_back(m_shadowSRVs[i].Get());
-    }
-
+    } 
 
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
+    m_context->PSSetShaderResources(20, 1, m_billboardTreeSRV.GetAddressOf());
+
     m_context->ClearDepthStencilView(
         m_defaultDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     AppBase::SetGlobalConsts(m_globalConstsGPU);
@@ -612,7 +639,7 @@ void AppBase::RenderOpaqueObjects() {
     if (m_selected)
         m_cursorSphere->Render(m_context);
     
-
+    
 
 
     // AppBase::SetPipelineState(m_ground->GetTerrainPSO(m_drawAsWire));
@@ -639,7 +666,7 @@ void AppBase::RenderOpaqueObjects() {
         }
     }
 
-    m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock;
+    m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock && m_camera->m_objectTargetCameraMode == false;
 
     if (AppBase::m_drawBS) {
         for (auto &model : m_basicList) {
@@ -849,6 +876,10 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (m_keyPressed['S']) {
                 m_JsonManager->SaveMesh();
                 m_keyPressed['S'] = false;
+            }
+            if (m_keyPressed['D']) {
+                replicateObject();
+                m_keyPressed['D'] = false;
             }
         }
 
@@ -1062,7 +1093,7 @@ void AppBase::CreateDepthBuffers() {
             m_device->CreateDepthStencilView(m_shadowBuffers[i].Get(), &dsvDesc,
                                              m_shadowDSVs[i].GetAddressOf()));
     }
-
+     
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
     ZeroMemory(&srvDesc, sizeof(srvDesc));
     srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -1078,10 +1109,10 @@ void AppBase::CreateDepthBuffers() {
             m_shadowSRVs[i].GetAddressOf()));
     }
 } 
-
+ 
 void AppBase::SetPipelineState(const GraphicsPSO &pso) {
 
-    m_context->VSSetShader(pso.m_vertexShader.Get(), 0, 0);
+    m_context->VSSetShader(pso.m_vertexShader.Get(), 0, 0); 
     m_context->PSSetShader(pso.m_pixelShader.Get(), 0, 0);
     m_context->HSSetShader(pso.m_hullShader.Get(), 0, 0);
     m_context->DSSetShader(pso.m_domainShader.Get(), 0, 0);
@@ -1428,17 +1459,29 @@ void AppBase::ComputeShaderBarrier() {
 
     // 참고: BreadcrumbsDirectX-Graphics-Samples (DX12)
     // void CommandContext::InsertUAVBarrier(GpuResource & Resource, bool
-    // FlushImmediate)
+    // FlushImmediate) 
 
     // 예제들에서 최대 사용하는 SRV, UAV 갯수가 6개
     ID3D11ShaderResourceView *nullSRV[6] = {
-        0,
-    };
+        0, 
+    }; 
     m_context->CSSetShaderResources(0, 6, nullSRV);
     ID3D11UnorderedAccessView *nullUAV[6] = {
         0,
     };
     m_context->CSSetUnorderedAccessViews(0, 6, nullUAV, NULL);
+}
+
+void AppBase::replicateObject()
+{ 
+        if (m_pickedModel == nullptr)
+                return;
+
+        ObjectSaveInfo temp = m_pickedModel->objectInfo;
+        temp.scale = m_pickedModel->GetScale();
+        temp.rotation = m_pickedModel->GetRotation();
+        temp.position = m_pickedModel->GetPosition();
+        m_JsonManager->CreateMesh(temp);
 }
 
     template <typename T>
@@ -1470,7 +1513,7 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
    // box.top = 0;
    // box.bottom = desc.Height;
    // box.front = 0;
-   // box.back = 1;
+   // box.back = 1; 
 
     //cout << "mouse XY : " << box.left << " " << box.top << endl;
     context->CopySubresourceRegion(m_indexStagingTexture.Get(), 0, 0, 0, 0, m_indexTempTexture.Get(), 0, &box);
@@ -1485,8 +1528,8 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     context->Unmap(m_indexStagingTexture.Get(), NULL);
      
    
-     //cout << "color : " << (int)pData[0] << " " << (int)pData[1] << " "
-     //    << (int)pData[2] << " " << (int)pData[3] << endl; 
+     cout << "color : " << (int)pData[0] << " " << (int)pData[1] << " "
+         << (int)pData[2] << " " << (int)pData[3] << endl; 
       int objID = (int)pData[0] + (int)pData[1] * 256 +
                  (int)pData[2] * 65536; //+ (int)pData[3];
     auto object = m_objects.find(objID);
@@ -1570,14 +1613,14 @@ void AppBase::CreateBuffers() {
     descTemp = desc;
     descTemp.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     // desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    // backBuffer->GetDesc(&desc);
+    // backBuffer->GetDesc(&desc); 
     ThrowIfFailed(m_device->CreateTexture2D(&descTemp, NULL,
                                             m_indexTexture.GetAddressOf()));
     ThrowIfFailed(m_device->CreateRenderTargetView(
         m_indexTexture.Get(), NULL, m_indexRenderTargetView.GetAddressOf()));
     //desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-
+      
     //D3D11_TEXTURE2D_DESC desc3;
     //backBuffer->GetDesc(&desc3);
     //cout << "cpuAccesccFlag" << desc3.CPUAccessFlags << endl; 
@@ -1644,6 +1687,19 @@ void AppBase::CreateBuffers() {
     m_postProcess.Initialize(m_device, m_context, {m_postEffectsSRV, m_prevSRV},
                              {m_backBufferRTV}, m_screenWidth, m_screenHeight,
                              4);
+
+        std::vector<std::string> filenames = {
+        "../../Assets/Textures/TreeBillboards/1.png",
+        "../../Assets/Textures/TreeBillboards/2.png",
+        "../../Assets/Textures/TreeBillboards/3.png",
+        "../../Assets/Textures/TreeBillboards/4.png",
+        "../../Assets/Textures/TreeBillboards/5.png",
+        //"../../Assets/Textures/TreeBillboards/6.png"
+        }; 
+
+    D3D11Utils::CreateTextureArray(m_device, m_context,
+                                   filenames, m_texArray,
+                                   m_billboardTreeSRV);
 }
 
 } // namespace hlab

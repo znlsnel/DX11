@@ -113,7 +113,7 @@ MeshData GeometryGenerator::MakeGrass() {
     grid.indices.erase(grid.indices.begin(), grid.indices.begin() + 3);
     for (auto &i : grid.indices) {
         i -= 1;
-    }
+    } 
     grid.vertices.erase(grid.vertices.begin());
     grid.vertices[0].position.x = 0.0f;
     grid.vertices[0].texcoord.x = 0.5f;

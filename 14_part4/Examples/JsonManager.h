@@ -45,6 +45,8 @@ class JsonManager {
    void SaveMesh();
     void CreateMesh(struct ObjectSaveInfo temp);
 
+    int objectID = 1;
+
     shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateQuicellModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
@@ -54,10 +56,15 @@ class JsonManager {
     shared_ptr<class Model> CreateSphere(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateSquare(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateBox(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateTree(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateBillboadTree(struct ObjectSaveInfo info);
 
     map<meshID, std::string> objectInfo = {
         {meshID::ESphere, "Sphere"},
         {meshID::EBox, "Box"},
+        {meshID::EPlane, "Plane"},
+        {meshID::ETree, "Tree"},
+        {meshID::EBillboardTree, "BillboardTree"},
     };
 
     map < string, pair<string, string>> meshPaths;
@@ -65,6 +72,7 @@ class JsonManager {
     
 
     string modelsPath;
+    string quicellPath;
 
    rapidjson::Document m_saveFile;
 };

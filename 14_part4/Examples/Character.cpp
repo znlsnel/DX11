@@ -54,14 +54,14 @@ void hlab::Character::UpdateTransform(float dt)
                 //m_mesh->UpdateWorldRow(
                 //    Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
                 //    m_mesh->m_worldRow);
-                m_mesh->AddYawOffset(-3.141592f * 120.f / 180.f * dt);
+                m_mesh->AddYawOffset(-3.141592f * 240.f / 180.f * dt);
                 
                  
         } else if (appBase->m_keyPressed['D']) {
                 //m_mesh->UpdateWorldRow(
                 //    Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
                 //    m_mesh->m_worldRow);
-                m_mesh->AddYawOffset(3.141592f * 120.f / 180.f * dt);
+                m_mesh->AddYawOffset(3.141592f * 240.f / 180.f * dt);
         }
 
 
@@ -74,7 +74,7 @@ void hlab::Character::UpdateTransform(float dt)
                   dir.Normalize();
 
                   Vector3 velocity = m_mesh->m_worldRow.Translation() +
-                                  (Vector3(dir.x, dir.y, dir.z)) * dt * 5.0f;
+                                  (Vector3(dir.x, dir.y, dir.z)) * dt * 0.3f;
                   
 
                   m_mesh->UpdatePosition(velocity);

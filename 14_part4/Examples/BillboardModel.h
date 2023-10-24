@@ -3,6 +3,7 @@
 #include <directxtk/SimpleMath.h>
 #include <vector>
 
+#include "AppBase.h"
 #include "Model.h"
 
 namespace hlab {
@@ -15,13 +16,26 @@ using std::vector;
 struct BillboardConsts {
     float widthWorld;
     Vector3 directionWorld;
+    int index = 0;
+    Vector3 dummy;
 };
 
 static_assert((sizeof(BillboardConsts) % 16) == 0,
               "Constant Buffer size must be 16-byte aligned");
 
 class BillboardModel : public Model {
+
   public:
+    BillboardModel(AppBase* appBase, float lifespan = -1.0f) {
+        m_appBase = appBase;
+        m_lifespan = lifespan;
+        if (lifespan > 0) {
+            m_hasLifespan = true;
+                m_GenerationTime = m_appBase->timeSeconds;
+        
+        }
+    };
+
     void Initialize(ComPtr<ID3D11Device> &device,
                     ComPtr<ID3D11DeviceContext> &context,
                     const std::vector<Vector4> &points, const float width,
@@ -40,6 +54,11 @@ class BillboardModel : public Model {
 
   public:
     ConstantBuffer<BillboardConsts> m_billboardConsts;
+    AppBase* m_appBase;
+
+    bool m_hasLifespan = false;
+    float m_lifespan = 3.0f;
+    float m_GenerationTime = 0.0f;
 
   protected:
     ComPtr<ID3D11Buffer> m_vertexBuffer;

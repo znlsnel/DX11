@@ -10,6 +10,8 @@ cbuffer BillboardContsts : register(b3)
 {
     float widthWorld;
     float3 dirWorld;
+    int index;
+    float3 dummy;
 };
 
 struct GeometryShaderInput

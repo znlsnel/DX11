@@ -52,6 +52,8 @@ ComPtr<ID3D11HullShader> terrainHS;
 ComPtr<ID3D11DomainShader> terrainDS;
 
 ComPtr<ID3D11PixelShader> basicPS;
+ComPtr<ID3D11PixelShader> billboardPS;
+
 ComPtr<ID3D11PixelShader> skyboxPS;
 ComPtr<ID3D11PixelShader> combinePS;
 ComPtr<ID3D11PixelShader> bloomDownPS;
@@ -485,6 +487,7 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreatePixelShader(device, L"tessellatedQuadPS.hlsl", terrainPS);
 
     D3D11Utils::CreatePixelShader(device, L"BasicPS.hlsl", basicPS);
+    D3D11Utils::CreatePixelShader(device, L"BillboardPS.hlsl", billboardPS);
     D3D11Utils::CreatePixelShader(device, L"NormalPS.hlsl", normalPS);
     D3D11Utils::CreatePixelShader(device, L"SkyboxPS.hlsl", skyboxPS);
     D3D11Utils::CreatePixelShader(device, L"CombinePS.hlsl", combinePS);

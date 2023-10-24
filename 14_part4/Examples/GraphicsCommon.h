@@ -55,6 +55,7 @@ extern ComPtr<ID3D11HullShader> terrainHS;
 extern ComPtr<ID3D11DomainShader> terrainDS;
 
 extern ComPtr<ID3D11PixelShader> basicPS;
+extern ComPtr<ID3D11PixelShader> billboardPS;
 extern ComPtr<ID3D11PixelShader> skyboxPS;
 extern ComPtr<ID3D11PixelShader> combinePS;
 extern ComPtr<ID3D11PixelShader> bloomDownPS;

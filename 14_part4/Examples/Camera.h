@@ -34,7 +34,7 @@ class Camera {
     void SetLocation(Vector3 pos);
     void PrintView();
     void SetTarget(std::shared_ptr<class Character> target) { m_target = target; };
-
+    std::shared_ptr<class Character> GetTarget() { return m_target; };
     Vector3 GetForwardVector();
     Vector3 GetPosision();
     float GetYaw() { return m_yaw; };

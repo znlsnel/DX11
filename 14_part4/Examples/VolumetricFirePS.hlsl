@@ -256,6 +256,9 @@ PixelShaderOutput main(BillboardPixelShaderInput input)
     PixelShaderOutput output;
     output.pixelColor = float4(col, dot(float3(1, 1, 1), col) * 1.3);
     //output.pixelColor.a = 1.0; // 테스트용
-
-    return output;
+    if (length(output.pixelColor.xyz) < 0.1)
+        clip(-1);
+    
+    
+        return output;
 }

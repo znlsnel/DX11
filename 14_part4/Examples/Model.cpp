@@ -29,7 +29,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 void Model::InitMeshBuffers(ComPtr<ID3D11Device> &device,
                             const MeshData &meshData,
                             shared_ptr<Mesh> &newMesh) {
-
+         
     D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
                                    newMesh->vertexBuffer);
     newMesh->indexCount = UINT(meshData.indices.size());
@@ -65,7 +65,7 @@ BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices) {
 
     return BoundingBox(center, extents);
 }
-
+ 
 void ExtendBoundingBox(const BoundingBox &inBox, BoundingBox &outBox) {
 
     Vector3 minCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
@@ -248,10 +248,10 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
     }
 }
-
+ 
 void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                   ComPtr<ID3D11DeviceContext> &context) {
-    if (m_isVisible) {
+    if (m_isVisible) { 
         m_meshConsts.Upload(context);
         m_materialConsts.Upload(context);
     }
@@ -270,16 +270,17 @@ GraphicsPSO &Model::GetDepthOnlyPSO() { return Graphics::depthOnlyPSO; }
 GraphicsPSO &Model::GetReflectPSO(const bool wired) {
     return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
 } 
-
-
+ 
+ 
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
-    if (m_isVisible) {
+          
+    if (m_isVisible) { 
         for (const auto &mesh : m_meshes) {
 
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
             context->VSSetConstantBuffers(1, 2, constBuffers);
-
+             
             context->VSSetShaderResources(0, 1, mesh->heightSRV.GetAddressOf());
 
             // 물체 렌더링할 때 여러가지 텍스춰 사용 (t0 부터시작)
@@ -287,12 +288,12 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
                 mesh->albedoSRV.Get(), mesh->normalSRV.Get(), mesh->aoSRV.Get(),
                 mesh->metallicRoughnessSRV.Get(), mesh->emissiveSRV.Get()};
             context->PSSetShaderResources(0, // register(t0)
-                                          UINT(resViews.size()),
+                                          UINT(resViews.size()), 
                                           resViews.data());
             context->PSSetConstantBuffers(1, 2, constBuffers);
-
+               
             // Volume Rendering
-            if (mesh->densityTex.GetSRV())
+            if (mesh->densityTex.GetSRV())  
                 context->PSSetShaderResources(
                     5, 1, mesh->densityTex.GetAddressOfSRV());
             if (mesh->lightingTex.GetSRV())
@@ -376,53 +377,50 @@ void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
 
 
 void Model::UpdateScale(Vector3 scale) { 
-        m_scale = scale;
-    UpdateWorldRow();
+     //   m_scale = scale;
+    UpdateWorldRow(scale, m_rotation, m_position);
 }
 
 void Model::UpdatePosition(Vector3 position) { 
-        m_position = position;
-    UpdateWorldRow();
+  //      m_position = position;
+    UpdateWorldRow(m_scale, m_rotation, position);
 }
 
 void Model::UpdateRotation(Vector3 rotation) { 
-        m_rotation = rotation; 
-        UpdateWorldRow();
+     //   m_rotation = rotation; 
+        UpdateWorldRow(m_scale, rotation, m_position);
 }
 
 void Model::UpdateTranseform(Vector3 scale, Vector3 rotation,
                              Vector3 position) {
-    m_scale = scale;
-    m_position = position;
-    m_rotation = rotation;
 
-    UpdateWorldRow();
+
+    UpdateWorldRow(scale, rotation, position);
 }
-
+  
 void Model::AddYawOffset(float addYawOffset) 
 { 
-        m_rotation.y += addYawOffset;
-    UpdateWorldRow();
+        Vector3 tempRotation = m_rotation;
+    tempRotation.y += addYawOffset;
+    UpdateWorldRow(m_scale, tempRotation, m_position); 
 }
 
-void Model::UpdateWorldRow(Matrix &mat) {
-    m_worldRow = mat;
-
-    m_worldITRow = m_worldRow;
-    m_worldITRow.Translation(Vector3(0.0f));
-    m_worldITRow = m_worldITRow.Invert().Transpose();
-
-    // 바운딩스피어 위치 업데이트
-    // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
-    // 구(sphere)라서 회전은 고려할 필요 없음
-    m_boundingSphere.Center = this->m_worldRow.Translation();
-
-    m_meshConsts.GetCpu().world = m_worldRow.Transpose();
-    m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
-    m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
+void Model::SetChildModel(shared_ptr<Model> model) {
+    if (model->isChildModel == false) {
+        model->isChildModel;
+    }
+    childModels.push_back(model);
 }
 
-void Model::UpdateWorldRow() {
+void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
+                           Vector3 &position) {
+
+     if (isObjectLock)
+        return;
+
+     m_scale = scale;
+     m_rotation = rotation;
+     m_position = position;
 
     m_worldRow = Matrix::CreateScale(m_scale.x, m_scale.y, m_scale.z) *
                  Matrix::CreateRotationX(m_rotation.x) *
@@ -444,6 +442,10 @@ void Model::UpdateWorldRow() {
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
+
+    for (auto model : childModels) {
+        model->UpdateTranseform(m_scale, m_rotation, m_position);
+    }
 }
 
 } // namespace hlab
