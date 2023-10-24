@@ -149,6 +149,7 @@ class AppBase {
     // Shadow maps
     int m_shadowWidth = 1280;
     int m_shadowHeight = 1280;
+
     ComPtr<ID3D11Texture2D> m_shadowBuffers[MAX_LIGHTS]; // No MSAA
     ComPtr<ID3D11DepthStencilView> m_shadowDSVs[MAX_LIGHTS];
     ComPtr<ID3D11ShaderResourceView> m_shadowSRVs[MAX_LIGHTS];

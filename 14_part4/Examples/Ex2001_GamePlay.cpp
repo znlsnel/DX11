@@ -264,6 +264,32 @@ void Ex2001_GamePlay::UpdateGUI() {
  //   ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("Basic")) {
     
+        //            m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
+        //m_globalConstsCPU.lights[0].position = Vector3(0.0f, 4.5f, -3.0f);
+        //m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.0f);
+        //m_globalConstsCPU.lights[0].spotPower = 3.0f;
+        //m_globalConstsCPU.lights[0].radius = 0.04f;
+            //float
+
+        float* temp[3] = {
+            &m_globalConstsCPU.lights[0].radiance.x,
+            &m_globalConstsCPU.lights[0].radiance.y,
+            &m_globalConstsCPU.lights[0].radiance.z,
+        };
+        float *tempPos[3] = {
+            &m_globalConstsCPU.lights[0].position.x,
+            &m_globalConstsCPU.lights[0].position.y,
+            &m_globalConstsCPU.lights[0].position.z,
+        };
+
+        ImGui::SliderFloat3("light Radiance", *temp, -5.0f, 5.0f);
+        ImGui::SliderFloat3("position", *tempPos, -10.f, 10.f);
+        ImGui::SliderFloat("spotPower", &m_globalConstsCPU.lights[0].spotPower,
+                           0.0f, 10.f);
+        ImGui::SliderFloat("radius", &m_globalConstsCPU.lights[0].radius,
+                           0.0f, 10.f);
+
+
             ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
 
                 static float oceanHeight = -0.2f;

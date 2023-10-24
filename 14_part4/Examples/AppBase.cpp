@@ -71,7 +71,6 @@ void AppBase::MousePicking() {
     if (m_pickingButton == false || m_keyPressed['Q'] || m_keyPressed['W'])
         return;
 
-    m_pickingButton = false;
     
 
     ImVec2 imPos = ImGui::GetWindowPos();
@@ -83,6 +82,7 @@ void AppBase::MousePicking() {
     if (inX && inY) {
         return;
     }
+        m_pickingButton = false;
 
     ComPtr<ID3D11Texture2D> backBuffer;
     m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
@@ -328,10 +328,10 @@ bool AppBase::InitScene() {
     { 
         // 조명 0은 고정
         m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
-        m_globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.1f);
+        m_globalConstsCPU.lights[0].position = Vector3(0.0f, 2.698f, -0.159f);
         m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.0f);
         m_globalConstsCPU.lights[0].spotPower = 3.0f;
-        m_globalConstsCPU.lights[0].radius = 0.04f;
+        m_globalConstsCPU.lights[0].radius = 0.131f;
         m_globalConstsCPU.lights[0].type =
             LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
