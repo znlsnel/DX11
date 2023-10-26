@@ -357,7 +357,7 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
                 break;
             case meshID::EPlane: {
                 tempMesh = CreatePlane(temp);
-                tempMesh->objectInfo.meshName = "Ground";
+                tempMesh->objectInfo.meshName = "Plane";
             }
                 break;
             case meshID::ESphere: {
@@ -403,23 +403,25 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     // 256 = 1
     // 512 = 2 
     if (tempMesh.get() != nullptr) {
+                tempMesh->SetObjectID(objectID);
+
         int id_R = 0, id_G =0, id_B =0, id_A=0;
-        id_R = objectID % 256;
+        //id_R = objectID % 256;
 
-        if (objectID > 255)
-                id_G = (objectID / 256) % 256;
+        //if (objectID > 255)
+        //        id_G = (objectID / 256) % 256;
 
-        if (objectID > 65536)
-                id_B = (objectID / 65536) % 256;
-        
+        //if (objectID > 65536)
+        //        id_B = (objectID / 65536) % 256;
+        //
 
-        tempMesh->objectInfo.objectID = objectID;
+        //tempMesh->objectInfo.objectID = objectID;
+        //tempMesh->m_meshConsts.GetCpu().indexColor[0] = 
+        //(float)id_R / 255;
+        //tempMesh->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
+        //tempMesh->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
+
         tempMesh->objectInfo.meshID = temp.meshID;
-        tempMesh->m_meshConsts.GetCpu().indexColor[0] = 
-        (float)id_R / 255;
-        tempMesh->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
-        tempMesh->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
-
     //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
 
         std::cout << "Set [" << tempMesh->objectInfo.meshName
@@ -567,41 +569,39 @@ shared_ptr<Model> JsonManager::CreateCylinder(ObjectSaveInfo info) {
 
 shared_ptr<Model> JsonManager::CreatePlane(ObjectSaveInfo info) {
 
-        // https://freepbr.com/materials/stringy-marble-pbr/
-        // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
-        auto mesh = GeometryGenerator::MakeSquareGrid(10, 10, 100.f,
-                                                      Vector2(100.0f, 100.0f));
-        string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
-        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
-        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
-        mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
-        //mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+        //auto mesh = GeometryGenerator::MakeSquareGrid(10, 10, 100.f,
+        //                                              Vector2(100.0f, 100.0f));
+        //string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
+        //mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+        //mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+        //mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
+        ////mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
+        //mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
 
-        m_appBase->m_ground = make_shared<Model>(
-            m_appBase->m_device, m_appBase->m_context, vector{mesh});
-        m_appBase->m_ground->m_materialConsts.GetCpu().albedoFactor =
-            Vector3(0.2f);
-        m_appBase->m_ground->m_materialConsts.GetCpu().emissionFactor =
-            Vector3(0.0f);
-        m_appBase->m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
-        m_appBase->m_ground->m_materialConsts.GetCpu().roughnessFactor =  0.65f;
+        //m_appBase->m_ground = make_shared<Model>(
+        //    m_appBase->m_device, m_appBase->m_context, vector{mesh});
+        //m_appBase->m_ground->m_materialConsts.GetCpu().albedoFactor =
+        //    Vector3(0.2f);
+        //m_appBase->m_ground->m_materialConsts.GetCpu().emissionFactor =
+        //    Vector3(0.0f);
+        //m_appBase->m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
+        //m_appBase->m_ground->m_materialConsts.GetCpu().roughnessFactor =  0.65f;
 
-        Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
-        // m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-        //                        Matrix::CreateTranslation(position));
-        m_appBase->m_ground->UpdateTranseform(info.scale, info.rotation,
-                                              info.position);
-        // m_ground->useTessellation = true;
+        //Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+        //// m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+        ////                        Matrix::CreateTranslation(position));
+        //m_appBase->m_ground->UpdateTranseform(info.scale, info.rotation,
+        //                                      info.position);
+        //// m_ground->useTessellation = true;
 
-         // m_appBase->m_mirrorPlane =
-         //   DirectX::SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
-        // m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
-          m_appBase->m_basicList.push_back(
-              m_appBase->m_ground); // 거울은 리스트에 등록 X
+        // // m_appBase->m_mirrorPlane =
+        // //   DirectX::SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
+        //// m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
+        //  m_appBase->m_basicList.push_back(
+        //      m_appBase->m_ground); // 거울은 리스트에 등록 X
 
 
-          return m_appBase->m_ground;
+          return make_shared<Model>();
 }
 
 shared_ptr< Model> JsonManager::CreateSphere(ObjectSaveInfo info) {
@@ -640,6 +640,15 @@ shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
     auto meshes = GeometryGenerator::ReadFromFile(
         path, "Gledista_Triacanthos_3.fbx", false);
 
+    int id = 0;
+    for (auto mesh : meshes) {
+        for (auto i : mesh.indices) {
+                id++;
+                if (id > 100)
+                        break;
+                cout << i << " ";
+        }
+    }
     Vector3 center(0.0f, 0.0f, 2.0f);
 
     shared_ptr<Model> m_leaves =

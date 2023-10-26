@@ -5,8 +5,10 @@
 #include <directxtk/SimpleMath.h>
 #include "Character.h"
 #include "Model.h"
+#include "queue"
 
 #include "D3D11Utils.h"
+#include "InputManager.h"
 #include "GraphicsCommon.h"
 
 // imgui_impl_win32.cpp에 정의된 메시지 처리 함수에 대한 전방 선언
@@ -38,6 +40,7 @@ AppBase::AppBase()
     g_appBase = this;
     m_camera = make_shared<Camera>(g_appBase);
     m_JsonManager = make_shared<JsonManager>(this);
+    m_inputManager = make_shared<InputManager>(this);
     //m_JsonManager->TestJson_Parse();
     //m_JsonManager->TestJson_AddMember();
     m_camera->SetAspectRatio(this->GetAspectRatio());
@@ -66,23 +69,13 @@ float AppBase::GetAspectRatio() const {
     return ratio;
 
 }
-void AppBase::MousePicking() {
+bool AppBase::MouseObjectPicking() {
 
-    if (m_pickingButton == false || m_keyPressed['Q'] || m_keyPressed['W'])
-        return;
-
-    
-
-    ImVec2 imPos = ImGui::GetWindowPos();
-    ImVec2 imSize = ImGui::GetWindowSize();
-    
-    bool inX = m_mouseX > imPos.x && m_mouseX < imPos.x + imSize.x;
-    bool inY = m_mouseY > imPos.y && m_mouseY < imPos.y + imSize.y;
-
-    if (inX && inY) {
-        return;
+    if ( m_keyPressed['Q'] || m_keyPressed['W']) {
+        return false;
     }
-        m_pickingButton = false;
+
+
 
     ComPtr<ID3D11Texture2D> backBuffer;
     m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
@@ -94,8 +87,80 @@ void AppBase::MousePicking() {
     //D3D11Utils::WriteToPngFile(m_device, m_context, m_indexTempTexture,
       //                         "captured.png");
 
-    ReadPixelOfMousePos<UINT8>(m_device, m_context);
+    return ReadPixelOfMousePos<UINT8>(m_device, m_context);
 }
+
+void AppBase::RayTracing() 
+{ 
+        if (m_mouseMode != EMouseMode::HeightMapEditMode)
+        return;
+
+       if (MouseObjectPicking() == false)
+        return;
+
+
+        Matrix viewRow = m_camera->GetViewRow();
+        Matrix projRow = m_camera->GetProjRow();
+        Vector3 eyeWorld = m_camera->GetEyePos();
+
+        cout << "eyeWorld : " << eyeWorld.x << ", " << eyeWorld.y << ", "
+             << eyeWorld.z << ", " << endl;
+
+        Vector3 cursorNdcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
+        Vector3 cursorNdcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
+        Matrix inverseProjView = (viewRow * projRow).Invert();
+
+        Vector3 cursorWorldNear =
+            Vector3::Transform(cursorNdcNear, inverseProjView);
+        Vector3 cursorWorldFar =
+            Vector3::Transform(cursorNdcFar, inverseProjView);
+
+        Vector3 dir = cursorWorldFar - cursorWorldNear;
+        dir.Normalize();
+
+       float leastDist = FLT_MAX;
+       for (auto& BVH : m_pickedModel->m_BVHs) {
+        
+               std::queue<int> queue;
+                queue.push(0);
+
+               while(queue.empty() == false) {
+                    int index = queue.front();
+                   queue.pop();
+
+                    SimpleMath::Ray ray = SimpleMath::Ray(cursorWorldNear, dir);
+                    float dist = 0.0f;
+                    bool m_selected = ray.Intersects(BVH[index], dist);
+
+                    if (m_selected && dist < leastDist) {
+                        leastDist = dist;
+
+                            int left = index * 2 + 1;
+                            int right = left + 1;                    
+
+                            bool hasLeftChild = left < BVH.size();
+                            bool hasRightChild = right < BVH.size();
+
+                            if (hasLeftChild)
+                                queue.push(left);
+                            if (hasRightChild)
+                                queue.push(right);
+
+
+                    }
+               }
+
+       }
+
+       if (leastDist < FLT_MAX) {
+               Vector3 pos = cursorWorldNear + dir * leastDist;
+               cout << "RayTracing ---- World Location : " << pos.x << ", "
+                    << pos.y << ", " << pos.z << "\n";
+       
+       }
+
+}
+
 void AppBase::ObjectDrag() {
     if (m_pickedModel == nullptr || m_leftButton == false)
         return;
@@ -131,6 +196,7 @@ void AppBase::ObjectDrag() {
                 SimpleMath::Ray ray = SimpleMath::Ray(cursorWorldNear, dir);
                 float dist = 0.0f;
                 m_selected = ray.Intersects(m_pickedModel->m_boundingSphere, dist);
+
                 if (m_selected == false)
                     cout << "No Touch" << endl;
                 if (m_selected) 
@@ -242,6 +308,10 @@ void AppBase::DestroyObject(shared_ptr<class Model> object) {
    
     object->isDestory = true;
     object->m_isVisible = false;
+
+    for (auto temp : object->childModels) {
+        DestroyObject(temp);
+    }
 }
 int AppBase::Run() {
 
@@ -257,21 +327,22 @@ int AppBase::Run() {
 
             ImGui::NewFrame();
             ImGui::Begin("Scene Control");
-
             // ImGui가 측정해주는 Framerate 출력
             ImGui::Text("Average %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate,
                         ImGui::GetIO().Framerate);
 
             UpdateGUI(); // 추가적으로 사용할 GUI
-           MousePicking();
-
-            ImGui::End();
-            ImGui::Render();
 
             Update(ImGui::GetIO().DeltaTime);
 
             Render(); // <- 중요: 우리가 구현한 렌더링
+
+            ImGui::End();
+            ImGui::Render();
+
+
+
 
             // Example의 Render()에서 RT 설정을 해주지 않았을 경우에도
             // 백 버퍼에 GUI를 그리기위해 RT 설정
@@ -389,7 +460,10 @@ bool AppBase::InitScene() {
 }
 
 void AppBase::UpdateGUI() {
-
+    ImVec2 pos = ImGui::GetWindowPos();
+    ImVec2 size = ImGui::GetWindowSize();
+    ImPos = Vector2(pos.x, pos.y);
+    ImSize = Vector2(size.x, size.y);
    //     float tempWidth = ImGui::GetWindowSize().x;
    // float posX = ImGui::GetWindowPos().x;
 
@@ -654,7 +728,7 @@ void AppBase::RenderOpaqueObjects() {
     // 노멀 벡터 그리기
     AppBase::SetPipelineState(Graphics::normalsPSO);
     for (auto &model : m_basicList) {
-        if (model->m_drawNormals)
+        if (model->m_drawNormals) 
             model->RenderNormals(m_context);
     }
 
@@ -665,6 +739,11 @@ void AppBase::RenderOpaqueObjects() {
             model->RenderWireBoundingBox(m_context);
         }
     }
+    if (m_pickedModel && m_pickedModel->bRenderingBVH) {
+        m_pickedModel->RenderBVH(m_context);
+    }
+
+
 
     m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock && m_camera->m_objectTargetCameraMode == false;
 
@@ -693,9 +772,6 @@ void AppBase::RenderMirror() {
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
             model->Render(m_context);
         }
-        AppBase::SetPipelineState(m_ground->GetReflectPSO(m_drawAsWire));
-        m_ground->Render(m_context);
-
         AppBase::SetPipelineState(m_drawAsWire
                                       ? Graphics::reflectSkyboxWirePSO
                                       : Graphics::reflectSkyboxSolidPSO);
@@ -774,23 +850,6 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
     m_mouseNdcY = -mouseY * 2.0f / m_screenHeight + 1.0f;
 }
 
-void AppBase::OnMouseWheel(float wheelDt) {
-    //std::cout << "wheelDt : " << wheelDt << std::endl; 
-        int sign = wheelDt > 0.0f ? 1 : -1;
-        if (m_camera->m_objectTargetCameraMode) {
-        m_camera->cameraDistance +=
-            (cameraDistance_max - cameraDistance_min) * 0.05f  *sign;
-            m_camera->cameraDistance = std::clamp(
-                m_camera->cameraDistance, cameraDistance_min, cameraDistance_max);    
-        } else {
-
-            m_camera->cameraSpeed += (cameraSpeed_max - cameraSpeed_min) * 0.05f * sign;
-
-            m_camera->cameraSpeed =
-                std::clamp(m_camera->cameraSpeed, 
-                        cameraSpeed_min, cameraSpeed_max);
-        }
-}
 
 LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
@@ -833,77 +892,36 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     
     }
         break;
-    case WM_LBUTTONDOWN:
-        if (!m_leftButton) {
-            m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
-            
-        }
-        m_leftButton = true;
-        m_pickingButton = true;
-        OnMouseClick(LOWORD(lParam), HIWORD(lParam));
+    case WM_LBUTTONDOWN: {
+
+        m_inputManager->InputLeftMouse(true, LOWORD(lParam), HIWORD(lParam));
+    }
         break;
     case WM_LBUTTONUP:
-        m_leftButton = false;
+        m_inputManager->InputLeftMouse(false);
         break;
     case WM_RBUTTONDOWN:
-        m_preMouse[0] = LOWORD(lParam);
-        m_preMouse[1] = HIWORD(lParam);
-        m_camera->m_isCameraLock = false;
-
-        if (!m_rightButton) {
-            m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
-        }
-        m_rightButton = true;
-
+        m_inputManager->InputRightMouse(true, LOWORD(lParam), HIWORD(lParam));
         break;
     case WM_RBUTTONUP:
-        m_camera->m_isCameraLock = true;
-
-        m_rightButton = false;
+        m_inputManager->InputRightMouse(false);
         break;
     case WM_KEYDOWN:
-        m_keyPressed[wParam] = true;
-        m_keyToggle[wParam] = !m_keyToggle[wParam];
+        m_inputManager->InputKey(true, wParam);
 
         if (wParam == VK_ESCAPE) { // ESC키 종료
             DestroyWindow(hwnd);
         }
 
-        if (m_keyPressed[17]) { // ctrl
-            if (m_keyPressed['F']) {
-                m_camera->m_objectTargetCameraMode = !m_camera->m_objectTargetCameraMode;
-            }
-            if (m_keyPressed['S']) {
-                m_JsonManager->SaveMesh();
-                m_keyPressed['S'] = false;
-            }
-            if (m_keyPressed['D']) {
-                replicateObject();
-                m_keyPressed['D'] = false;
-            }
-        }
-
-
         break;
     case WM_KEYUP:
-        if (wParam == 'F') { // f키 일인칭 시점
-            //if (m_keyPressed[17] == false) {
-            //    m_camera->m_isCameraLock = !m_camera->m_isCameraLock;
-            //}
-        }
-        if (wParam == 'C') { 
-        }
-        if (wParam == 'P') { // 애니메이션 일시중지할 때 사용
-            m_pauseAnimation = !m_pauseAnimation;
-        }
-        if (wParam == 'Z') { // 카메라 설정 화면에 출력
-            m_camera->PrintView();
-        }
-        m_keyPressed[wParam] = false;
+        m_inputManager->InputKey(false, wParam);
+
+
         break;
     case WM_MOUSEWHEEL: {
-        m_wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-        OnMouseWheel(m_wheelDelta);
+        float m_wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+        m_inputManager->InputMouseWheel(m_wheelDelta);
     }
         break;
     case WM_DESTROY:
@@ -1484,8 +1502,22 @@ void AppBase::replicateObject()
         m_JsonManager->CreateMesh(temp);
 }
 
+bool AppBase::IsMouseHoveringImGui() { 
+        
+
+        bool inX = m_mouseX > ImPos.x &&
+                   m_mouseX < ImPos.x + ImSize.x;
+        bool inY = m_mouseY > ImPos.y &&
+                   m_mouseY < ImPos.y + ImSize.y;
+
+        if (inX && inY) {
+                return true;
+        }
+        return false;
+}
+
     template <typename T>
-void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
+bool AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                                   ComPtr<ID3D11DeviceContext> &context) {
     D3D11_TEXTURE2D_DESC desc;
     m_indexTempTexture->GetDesc(&desc);
@@ -1535,30 +1567,41 @@ void AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     auto object = m_objects.find(objID);
     //  cout << "object ID : " << objID << endl; 
     
-    if (object!= m_objects.end()) {
+    if (object!= m_objects.end()) 
+    {
         shared_ptr<Model> tempObj = object->second;
         float tempID = tempObj->objectInfo.objectID;
         string tempName = tempObj->objectInfo.meshName;
         //std::cout << "Selected [" << tempName << "] Object ID : " << tempID << std::endl;
 
-        if (m_pickedModel == tempObj && m_keyPressed['Q'] == false) {
+        if (m_pickedModel == tempObj && m_keyPressed['Q'] == false) 
+        {
             m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
             m_pickedModel = nullptr;
-            return;
+            return false;
         }
 
-        if (m_pickedModel != nullptr) {
+        if (m_pickedModel != nullptr) 
+        {
                 m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
         }
-                m_pickedModel = tempObj;
-                m_pickedModel->m_materialConsts.GetCpu().isSelected = 1;
-    } else {
+        m_pickedModel = tempObj;
+        m_pickedModel->m_materialConsts.GetCpu().isSelected = 1;
+
+        return true;
+                
+    } 
+    else 
+    {
         if (m_pickedModel != nullptr) {
                 m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
                 m_pickedModel = nullptr;
         }
+        return false;
     }
-    }
+
+}
+
 
 void AppBase::CreateBuffers() {
 

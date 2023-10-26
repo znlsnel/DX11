@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "GeometryGenerator.h"
 #include <filesystem>
+#include <queue>
 
 namespace hlab {
 
@@ -47,15 +48,18 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
     Initialize(device, context, meshes);
 }
 
-BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices) {
+
+
+BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, int min, int max) {
 
     if (vertices.size() == 0)
         return BoundingBox();
 
-    Vector3 minCorner = vertices[0].position;
-    Vector3 maxCorner = vertices[0].position;
+    Vector3 minCorner = vertices[min].position;
+    Vector3 maxCorner = vertices[min].position;
 
-    for (size_t i = 1; i < vertices.size(); i++) {
+
+    for (size_t i = min + 1; i < max; i++) {
         minCorner = Vector3::Min(minCorner, vertices[i].position);
         maxCorner = Vector3::Max(maxCorner, vertices[i].position);
     }
@@ -65,6 +69,27 @@ BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices) {
 
     return BoundingBox(center, extents);
 }
+BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, const vector<uint32_t>& indices, int min, int max) {
+
+    if (vertices.size() == 0)
+        return BoundingBox();
+
+    Vector3 minCorner = vertices[indices[min]].position;
+    Vector3 maxCorner = vertices[indices[min]].position;
+
+    for (size_t i = min + 1; i < max; i++) {
+        minCorner = Vector3::Min(minCorner, vertices[indices[i]].position);
+        maxCorner = Vector3::Max(maxCorner, vertices[indices[i]].position);
+    }
+
+    Vector3 center = (minCorner + maxCorner) * 0.5f;
+    Vector3 extents = maxCorner - center;
+
+    return BoundingBox(center, extents);
+}
+
+
+
  
 void ExtendBoundingBox(const BoundingBox &inBox, BoundingBox &outBox) {
 
@@ -198,13 +223,22 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         this->m_meshes.push_back(newMesh);
     }
 
-    // Initialize Bounding Box
+    // 
+    m_BVHs.resize(meshes.size());
+    m_BVHMesh.resize(meshes.size());
+    // Initialize Main Bounding Box
+
     {
-        m_boundingBox = GetBoundingBox(meshes[0].vertices);
+        m_boundingBox = 
+            GetBoundingBox(meshes[0].vertices, 0, meshes[0].vertices.size());
         for (size_t i = 1; i < meshes.size(); i++) {
-            auto bb = GetBoundingBox(meshes[i].vertices);
+
+            auto bb =
+                GetBoundingBox(meshes[i].vertices, 0, meshes[i].vertices.size());
             ExtendBoundingBox(bb, m_boundingBox);
+
         }
+
         auto meshData = GeometryGenerator::MakeWireBox(
             m_boundingBox.Center,
             Vector3(m_boundingBox.Extents) + Vector3(1e-3f));
@@ -219,6 +253,12 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
         m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
     }
+
+    for (int i = 0; i < meshes.size(); i++) {
+        SetBVH(device, m_BVHs[i], m_BVHMesh[i], meshes[i], 0,
+               meshes[i].indices.size(), 0);
+    }
+
 
     // Initialize Bounding Sphere
     {
@@ -274,6 +314,7 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
  
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
           
+
     if (m_isVisible) { 
         for (const auto &mesh : m_meshes) {
 
@@ -349,21 +390,60 @@ void Model::RenderNormals(ComPtr<ID3D11DeviceContext> &context) {
 }
 
 void Model::RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context) {
-    ID3D11Buffer *constBuffers[2] = {
-        m_boundingBoxMesh->meshConstsGPU.Get(),
+
+
+    ID3D11Buffer *constBuffers[2] = {m_boundingBoxMesh->meshConstsGPU.Get(),
         m_boundingBoxMesh->materialConstsGPU.Get()};
     context->VSSetConstantBuffers(1, 2, constBuffers);
-    context->IASetVertexBuffers(
-        0, 1, m_boundingBoxMesh->vertexBuffer.GetAddressOf(),
+    context->IASetVertexBuffers(0, 1,
+                                m_boundingBoxMesh->vertexBuffer.GetAddressOf(),
         &m_boundingBoxMesh->stride, &m_boundingBoxMesh->offset);
     context->IASetIndexBuffer(m_boundingBoxMesh->indexBuffer.Get(),
                               DXGI_FORMAT_R32_UINT, 0);
     context->DrawIndexed(m_boundingBoxMesh->indexCount, 0, 0);
 }
 
+void Model::RenderBVH(ComPtr<ID3D11DeviceContext> &context) 
+{
+    int startIndex = 0;
+    int maxIndex = 0;
+    for (int i = 0; i < maxRenderingBVHLevel - 1; i++) {
+        maxIndex = maxIndex * 2 + 2;
+        //if (i == maxRenderingBVHLevel - 3)
+        //    startIndex = maxIndex;
+    }
+    cout << "maxIndex : " << maxIndex << endl;
+
+    for (auto mesh : m_BVHMesh) {
+        for (int i = startIndex; i <= maxIndex; i++) {
+
+                    if (i >= mesh.size() )
+                        continue;
+
+               // cout << "rendering BVH level : " << i << "\n";
+                ID3D11Buffer *constBuffers[2] = {
+                mesh[i]->meshConstsGPU.Get(),
+                mesh[i]->materialConstsGPU.Get()};
+
+                context->VSSetConstantBuffers(1, 2, constBuffers);
+
+                context->IASetVertexBuffers(
+                    0, 1, mesh[i]->vertexBuffer.GetAddressOf(),
+                    &mesh[i]->stride, &mesh[i]->offset);
+                context->IASetIndexBuffer(mesh[i]->indexBuffer.Get(),
+                                          DXGI_FORMAT_R32_UINT, 0);
+                context->DrawIndexed(mesh[i]->indexCount, 0, 0);
+            }
+    }
+
+}
+
 void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
-    ID3D11Buffer *constBuffers[2] = {
-        m_boundingBoxMesh->meshConstsGPU.Get(),
+    if (m_boundingBoxMesh == nullptr || m_boundingSphereMesh == nullptr)
+            return;
+
+
+    ID3D11Buffer *constBuffers[2] = {m_boundingBoxMesh->meshConstsGPU.Get(),
         m_boundingBoxMesh->materialConstsGPU.Get()};
     context->VSSetConstantBuffers(1, 2, constBuffers);
     context->IASetVertexBuffers(
@@ -375,6 +455,22 @@ void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
 }
 
 
+
+void Model::SetObjectID(int index) {
+    int id_R = 0, id_G = 0, id_B = 0, id_A = 0;
+    id_R = index % 256;
+
+    if (index > 255)
+            id_G = (index / 256) % 256;
+
+    if (index > 65536)
+            id_B = (index / 65536) % 256;
+
+    objectInfo.objectID = index;
+    m_meshConsts.GetCpu().indexColor[0] = (float)id_R / 255;
+    m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
+    m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
+}
 
 void Model::UpdateScale(Vector3 scale) { 
      //   m_scale = scale;
@@ -410,6 +506,73 @@ void Model::SetChildModel(shared_ptr<Model> model) {
         model->isChildModel;
     }
     childModels.push_back(model);
+}
+
+void Model::SetBVH(ComPtr<ID3D11Device> device,
+                   vector<DirectX::BoundingBox> &BVHBoxs,
+                   vector<shared_ptr<Mesh>> &BVBMeshs, 
+                   const MeshData &mesh,
+                   int minIndex, int maxIndex, int level) {
+
+        std::queue < std::tuple<int, int, int >> queue;
+    queue.push(std::make_tuple(minIndex, maxIndex, level));
+
+    while (!queue.empty()) {
+        auto curr = queue.front();
+        queue.pop();
+
+        int minID = std::get<0>(curr);
+        int maxID = std::get<1>(curr);
+        int currLevel = std::get<2>(curr);
+
+        BVHBoxs.push_back(GetBoundingBox(mesh.vertices, mesh.indices, minID, maxID));
+        auto meshData = GeometryGenerator::MakeWireBox(
+            BVHBoxs.back().Center,
+            Vector3(BVHBoxs.back().Extents) + Vector3(1e-3f));
+
+        BVBMeshs.push_back(std::make_shared<Mesh>());
+
+        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+                                       BVBMeshs.back()->vertexBuffer);
+        BVBMeshs.back()->indexCount = UINT(meshData.indices.size());
+        BVBMeshs.back()->vertexCount = UINT(meshData.vertices.size());
+        BVBMeshs.back()->stride = UINT(sizeof(Vertex));
+
+        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                                      BVBMeshs.back()->indexBuffer);
+
+        BVBMeshs.back()->meshConstsGPU = m_meshConsts.Get();
+        BVBMeshs.back()->materialConstsGPU = m_materialConsts.Get();
+
+        if (currLevel > 15)
+            break;
+
+        DirectX::BoundingBox& currBox = BVHBoxs.back();
+        float width = currBox.Extents.x * 2.0f;
+        float height = currBox.Extents.y * 2.0f;
+        bool splitHorizontal = (width >= height);
+
+        int InterID = (maxID + minID) / 2;
+
+        int nextMinID = minID;
+        int nextMaxID = InterID;
+
+        if (nextMinID < nextMaxID - 1)
+            queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
+
+
+        nextMinID = nextMaxID;
+        nextMaxID = maxID;
+
+        if (nextMinID < nextMaxID - 1)
+                queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
+
+    }
+    
+
+
+    
+
 }
 
 void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,

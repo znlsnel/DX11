@@ -64,8 +64,10 @@ class Model {
 
     virtual void RenderNormals(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
+    virtual void RenderBVH(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);
     
+    void SetObjectID(int index);
     void UpdateScale(Vector3 scale);
     void UpdatePosition(Vector3 position);
     void UpdateRotation(Vector3 ratation);
@@ -105,7 +107,11 @@ class Model {
     };
 
     void SetChildModel(shared_ptr<Model> model);
-
+    void SetBVH(ComPtr<ID3D11Device> device,
+                vector<DirectX::BoundingBox>& bvhBoxs,
+                vector<shared_ptr<Mesh>>& bvhMeshs,
+            const MeshData &mesh, int minIndex,
+                int maxIndex, int level);
   private:
     void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
 
@@ -123,20 +129,35 @@ public:
     bool isDestory = false;
     bool isChildModel = false;
     bool isObjectLock = false;
+    bool bRenderingBVH = false;
+    int maxRenderingBVHLevel = 0;
+
 
     vector<shared_ptr<Mesh>> m_meshes;
 
     ConstantBuffer<MeshConstants> m_meshConsts;
     ConstantBuffer<MaterialConstants> m_materialConsts;
-
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;
+
+    vector<vector<DirectX::BoundingBox>> m_BVHs;
+
+    //                        [0]
+    //          [1]                        [2]
+    //    [3]       [4]           [5]           [6]
+    // [7] [8] [9] [10] [11] [12] [13] [14] 
+    // 왼쪽 자식 :  *2 + 1
+    // 오른쪽 자식 :  *2 + 2
+
+
 
     string m_name = "NoName";
     ObjectSaveInfo objectInfo;
     vector<shared_ptr<Model>> childModels;
 
   protected:
+    vector<vector<shared_ptr<Mesh>>> m_BVHMesh;
+
     shared_ptr<Mesh> m_boundingBoxMesh;
     shared_ptr<Mesh> m_boundingSphereMesh;
 

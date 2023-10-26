@@ -263,14 +263,8 @@ PixelShaderOutput main(PixelShaderInput input)
     
     float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord, lod) * float4(albedoFactor, 1)
                                  : float4(albedoFactor, 1);
+
     
-    if (isSelected)
-    {
-        output.pixelColor = albedo;
-        output.pixelColor *= 2.0;
-        output.indexColor = indexColor;
-        return output;
-    }
     clip(albedo.a - 0.5); // Tree leaves
     
     float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, input.texcoord, lod).r : 1.0;
@@ -343,7 +337,13 @@ PixelShaderOutput main(PixelShaderInput input)
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
     
-
+        
+    //if (isSelected)
+    //{
+    //    output.pixelColor = albedo;
+    //    output.indexColor = indexColor;
+    //    return output;
+    //}
     
     output.indexColor = indexColor;
     //output.indexColor = float4(0.1, 0.0, 200.0, 1.0);

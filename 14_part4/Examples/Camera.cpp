@@ -18,6 +18,8 @@ Matrix Camera::GetViewRow() {
     return Matrix::CreateTranslation(-m_position) *
            Matrix::CreateRotationY(-m_yaw) *
            Matrix::CreateRotationX(-m_pitch); 
+
+
     // m_pitch가 양수이면 고개를 드는 방향
 }
 

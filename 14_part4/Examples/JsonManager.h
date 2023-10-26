@@ -62,7 +62,6 @@ class JsonManager {
     map<meshID, std::string> objectInfo = {
         {meshID::ESphere, "Sphere"},
         {meshID::EBox, "Box"},
-        {meshID::EPlane, "Plane"},
         {meshID::ETree, "Tree"},
         {meshID::EBillboardTree, "BillboardTree"},
     };

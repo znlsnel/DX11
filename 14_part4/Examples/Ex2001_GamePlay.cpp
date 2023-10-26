@@ -37,7 +37,35 @@ bool Ex2001_GamePlay::InitScene() {
     InitPhysics(true);
 
     InitAudio();
+      
+            // https://freepbr.com/materials/stringy-marble-pbr/
+    // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
+    auto mesh = GeometryGenerator::MakeSquareGrid(100, 100, 50.f,
+                                                  Vector2(50.0f, 50.0f));
+    string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
+    mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+    mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+    mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
+    // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
+    mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+                 
+    shared_ptr<Model> m_ground = make_shared<Model>(
+        m_device, m_context, vector{mesh});
+    m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+    m_ground->m_materialConsts.GetCpu().emissionFactor =
+        Vector3(0.0f);
+    m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
+    m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.65f;
 
+    Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+    m_ground->UpdateRotation(Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
+
+    m_ground->SetObjectID(m_JsonManager->objectID);
+
+    m_basicList.push_back(
+        m_ground); // 거울은 리스트에 등록 X
+    m_objects.insert(make_pair(m_JsonManager->objectID, m_ground));
+    ++m_JsonManager->objectID;
     // ocean
         {
         auto mesh = GeometryGenerator::MakeSquare(200.0, {10.0f, 10.0f});
@@ -406,8 +434,20 @@ void Ex2001_GamePlay::UpdateGUI() {
 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
+    int tempMouseMode = (int)m_mouseMode;
+    if (ImGui::SliderInt(
+        "MouseMode", &tempMouseMode, 0, 2,
+            "0 : None \n 1 : ObjectPickingMode \n 2: HeightMapEditMode")) {
+            m_mouseMode = (EMouseMode)tempMouseMode;
+    }
+
     if (m_pickedModel) {
             ImGui::Checkbox("ObjectLock", &m_pickedModel->isObjectLock);
+
+           if (ImGui::Checkbox("Render BVH", &m_pickedModel->bRenderingBVH)){
+               //m_pickedModel->maxRenderingBVHLevel = 0;
+           }
+           ImGui::SliderInt("BVH Level", &m_pickedModel->maxRenderingBVHLevel, 0, 16);
 
             if (m_keyPressed['Q']) {
                     if (ImGui::ColorButton("Pos", ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 0,

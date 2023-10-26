@@ -29,6 +29,11 @@ using std::vector;
 using std::wstring;
 using std::map;
 
+enum EMouseMode : int {
+        None = 0,
+        ObjectPickingMode = 1,
+        HeightMapEditMode = 2,
+};
 
 class AppBase {
   public:
@@ -51,7 +56,6 @@ class AppBase {
 
     virtual void OnMouseMove(int mouseX, int mouseY);
     virtual void OnMouseClick(int mouseX, int mouseY);
-    virtual void OnMouseWheel(float wheelDt);
 
     virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     void ResizeSwapChain(int width, int height);
@@ -71,6 +75,11 @@ class AppBase {
     shared_ptr<Model> PickClosest(const Ray &pickingRay, float &minDist);
     void ProcessMouseControl();
     void DestroyObject(shared_ptr<class Model> object);
+    bool MouseObjectPicking();
+    void RayTracing();
+    void replicateObject();
+
+    bool IsMouseHoveringImGui();
 
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();
@@ -80,12 +89,10 @@ class AppBase {
     void SetMainViewport();
     void SetShadowViewport();
     void ComputeShaderBarrier();
-    void replicateObject();
 
-    virtual void MousePicking();
     virtual void ObjectDrag();
     template <typename T>
-    void ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
+    bool ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                              ComPtr<ID3D11DeviceContext> &context);
 
     
@@ -94,7 +101,8 @@ class AppBase {
     // 변수 이름을 줄이기 위해 d3d는 생략했습니다.
     // 예: m_d3dDevice -> m_device
            
-
+        Vector2 ImPos;
+        Vector2 ImSize;
         
     int m_imGuiWidth = 0;
     int m_screenWidth = 1920;
@@ -166,14 +174,12 @@ class AppBase {
     };
 
     bool m_leftButton = false;
-    bool m_pickingButton = false;
     bool m_rightButton = false;
     bool m_dragStartFlag = false;
 
     // 마우스 커서 위치 저장 (Picking에 사용)
     float m_mouseNdcX = 0.0f;
     float m_mouseNdcY = 0.0f;
-    float m_wheelDelta = 0.0f;
     int m_mouseX = -1;
     int m_mouseY = -1;
     int m_preMouse[2] = {0, 0};
@@ -211,16 +217,16 @@ class AppBase {
     shared_ptr<Model> m_screenSquare; // PostEffect에 사용   
     shared_ptr<Model> m_skybox;
     shared_ptr<Model> m_pickedModel; 
-    shared_ptr<Model> m_ground;
     shared_ptr<Model> m_terrain;
     shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
     shared_ptr<Model> m_cursorSphere;
     shared_ptr<Model> m_mirror; // 거울은 별도로 그림
+    shared_ptr<class InputManager> m_inputManager;
 
     DirectX::SimpleMath::Plane m_mirrorPlane;
     float m_mirrorAlpha = 1.0f; // Opacity
 
-
+    EMouseMode m_mouseMode = EMouseMode::ObjectPickingMode;
 
 
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)

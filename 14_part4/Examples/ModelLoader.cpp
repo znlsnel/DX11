@@ -115,6 +115,9 @@ void ModelLoader::Load(std::string basePath, std::string filename,
     const aiScene *pScene = importer.ReadFile(
         m_basePath + filename,
         aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+
+
+
     // ReadFile()에서 경우에 따라서 여러가지 옵션들 설정 가능
     // aiProcess_JoinIdenticalVertices | aiProcess_PopulateArmatureData |
     // aiProcess_SplitByBoneCount |
