@@ -170,6 +170,7 @@
     <ClCompile Include="SkinnedMeshModel.cpp" />
     <ClCompile Include="JsonManager.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="TessellationModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h" />
@@ -316,6 +317,7 @@
     <ClInclude Include="Character.h" />
     <ClInclude Include="JsonManager.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="TessellationModel.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

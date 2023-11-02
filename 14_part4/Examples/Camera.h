@@ -34,8 +34,10 @@ class Camera {
     void SetLocation(Vector3 pos);
     void PrintView();
     void SetTarget(std::shared_ptr<class Character> target) { m_target = target; };
+    
     std::shared_ptr<class Character> GetTarget() { return m_target; };
     Vector3 GetForwardVector();
+    Vector3 GetRightVector() { return m_rightDir; };
     Vector3 GetPosision();
     float GetYaw() { return m_yaw; };
   public:
@@ -60,7 +62,7 @@ class Camera {
     // 프로젝션 옵션도 카메라 클래스로 이동
     float m_projFovAngleY = 90.0f * 0.5f; // Luna 교재 기본 설정
     float m_nearZ = 0.01f;
-    float m_farZ = 100.0f;
+    float m_farZ = 300.0f;
     float m_aspect = 16.0f / 9.0f;
 
     bool m_usePerspectiveProjection = true;

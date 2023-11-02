@@ -6,6 +6,7 @@ namespace Graphics {
 
 // Sampler States
 ComPtr<ID3D11SamplerState> linearWrapSS;
+ComPtr<ID3D11SamplerState> tessellationSS;
 ComPtr<ID3D11SamplerState> linearClampSS;
 ComPtr<ID3D11SamplerState> pointClampSS;
 ComPtr<ID3D11SamplerState> shadowPointSS;
@@ -192,6 +193,7 @@ void Graphics::InitSamplers(ComPtr<ID3D11Device> &device) {
 
 void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
 
+
     // Rasterizer States
     D3D11_RASTERIZER_DESC rasterDesc;
     ZeroMemory(&rasterDesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -202,6 +204,9 @@ void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
     rasterDesc.MultisampleEnable = true;
     ThrowIfFailed(
         device->CreateRasterizerState(&rasterDesc, solidRS.GetAddressOf()));
+
+
+
 
     // 거울에 반사되면 삼각형의 Winding이 바뀌기 때문에 CCW로 그려야함
     rasterDesc.FrontCounterClockwise = true;
@@ -244,6 +249,9 @@ void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
     rasterDesc.DepthClipEnable = false;
     ThrowIfFailed(device->CreateRasterizerState(
         &rasterDesc, postProcessingRS.GetAddressOf()));
+
+
+
 }
 
 void Graphics::InitBlendStates(ComPtr<ID3D11Device> &device) {
@@ -472,20 +480,15 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreateVertexShaderAndInputLayout(
         device, L"BillboardVS.hlsl", billboardIEs, billboardVS, billboardIL);
 
-        vector<D3D11_INPUT_ELEMENT_DESC> inputElements = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, // Vector4
-         D3D11_INPUT_PER_VERTEX_DATA, 0}};
     D3D11Utils::CreateVertexShaderAndInputLayout(
-        device, L"tessellatedQuadVS.hlsl", inputElements, terrainVS,
-        terrainIL);
+        device, L"tessellatedQuadVS.hlsl", basicIEs, terrainVS,
+            basicIL);
 
     D3D11Utils::CreateHullShader(device, L"tessellatedQuadHS.hlsl", terrainHS);
-
     D3D11Utils::CreateDomainShader(device, L"tessellatedQuadDS.hlsl",
                                    terrainDS);
 
     D3D11Utils::CreatePixelShader(device, L"tessellatedQuadPS.hlsl", terrainPS);
-
     D3D11Utils::CreatePixelShader(device, L"BasicPS.hlsl", basicPS);
     D3D11Utils::CreatePixelShader(device, L"BillboardPS.hlsl", billboardPS);
     D3D11Utils::CreatePixelShader(device, L"NormalPS.hlsl", normalPS);
@@ -505,24 +508,28 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
 
     D3D11Utils::CreateGeometryShader(device, L"NormalGS.hlsl", normalGS);
     D3D11Utils::CreateGeometryShader(device, L"BillboardGS.hlsl", billboardGS);
-} 
-
+}   
+ 
 void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     // defaultSolidPSO;
     defaultSolidPSO.m_vertexShader = basicVS;
     defaultSolidPSO.m_inputLayout = basicIL;
-    defaultSolidPSO.m_pixelShader = basicPS;
+    defaultSolidPSO.m_pixelShader = basicPS;  
     defaultSolidPSO.m_rasterizerState = solidRS;
-    defaultSolidPSO.m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
+    defaultSolidPSO.m_primitiveTopology =  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+      
+     
     terrainSolidPSO = defaultSolidPSO;
+    terrainSolidPSO.m_vertexShader = terrainVS;
     terrainSolidPSO.m_hullShader = terrainHS;
     terrainSolidPSO.m_domainShader = terrainDS;
+  //  terrainSolidPSO.m_pixelShader = terrainPS;
     terrainSolidPSO.m_primitiveTopology =
          D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST; 
+  //  D3D_PRIMITIVE_TOPO
 
-    terrainWirePSO = terrainSolidPSO;
-    terrainWirePSO.m_rasterizerState = wireRS;
+    terrainWirePSO = terrainSolidPSO; 
+    terrainWirePSO.m_rasterizerState = wireRS; 
      
     // Skinned mesh solid
     skinnedSolidPSO = defaultSolidPSO;

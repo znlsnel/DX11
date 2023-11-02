@@ -530,6 +530,20 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                         texture, srv);
 }
 
+void D3D11Utils::CreateTexture(
+    ComPtr<ID3D11Device> &device, 
+        ComPtr<ID3D11DeviceContext> &context,
+    ComPtr<ID3D11Texture2D> &texture,
+    ComPtr<ID3D11ShaderResourceView> &textureResourceView, 
+        bool usSRGB, int width, int height) {
+
+        std::vector<uint8_t> image(width * height * 4, 0);
+    DXGI_FORMAT pixelFormat =
+        usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    CreateTextureHelper(device, context, width, height, image, pixelFormat, texture, textureResourceView);
+}
+
 void D3D11Utils::CreateUATexture(ComPtr<ID3D11Device> &device, const int width,
                                  const int height,
                                  const DXGI_FORMAT pixelFormat,

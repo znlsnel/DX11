@@ -252,7 +252,7 @@ void hlab::JsonManager::SaveMesh() {
     //m_saveFile.SetArray();
 
     for (auto object : m_appBase->m_objects) {
-            if (object.second->isDestory)
+            if (object.second->isDestory || object.second->m_saveable == false)
                 continue;
             // TODO ObjectSaveInfo 정보를 새롭게 갱신해서 넣어주기
             ObjectSaveInfo meshInfo;
@@ -402,33 +402,39 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     
     // 256 = 1
     // 512 = 2 
-    if (tempMesh.get() != nullptr) {
-                tempMesh->SetObjectID(objectID);
+    if (tempMesh != nullptr) {
 
-        int id_R = 0, id_G =0, id_B =0, id_A=0;
-        //id_R = objectID % 256;
-
-        //if (objectID > 255)
-        //        id_G = (objectID / 256) % 256;
-
-        //if (objectID > 65536)
-        //        id_B = (objectID / 65536) % 256;
-        //
-
-        //tempMesh->objectInfo.objectID = objectID;
-        //tempMesh->m_meshConsts.GetCpu().indexColor[0] = 
-        //(float)id_R / 255;
-        //tempMesh->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
-        //tempMesh->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
-
+        m_appBase->AddBasicList(tempMesh, true, true);
         tempMesh->objectInfo.meshID = temp.meshID;
-    //        Vector4(objectID, 0.0f, 0.0f, 1.0f);
 
-        std::cout << "Set [" << tempMesh->objectInfo.meshName
-                  << "] Object ID : " << id_R << " " << id_G << " " << id_B << endl; 
+        //                tempMesh->SetObjectID(objectID);
 
-        m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
-        objectID++;
+        //int id_R = 0, id_G = 0, id_B = 0, id_A = 0;
+        //// id_R = objectID % 256;
+
+        //// if (objectID > 255)
+        ////         id_G = (objectID / 256) % 256;
+
+        //// if (objectID > 65536)
+        ////         id_B = (objectID / 65536) % 256;
+        ////
+
+        //// tempMesh->objectInfo.objectID = objectID;
+        //// tempMesh->m_meshConsts.GetCpu().indexColor[0] =
+        ////(float)id_R / 255;
+        //// tempMesh->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
+        //// tempMesh->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
+
+        //tempMesh->objectInfo.meshID = temp.meshID;
+        ////        Vector4(objectID, 0.0f, 0.0f, 1.0f);
+
+        //std::cout << "Set [" << tempMesh->objectInfo.meshName
+        //          << "] Object ID : " << id_R << " " << id_G << " " << id_B
+        //          << endl;
+
+        //m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
+        //objectID++;
+
     }
 }
 
@@ -443,7 +449,6 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
 
-    m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
 
 
     return tempModel;
@@ -485,7 +490,6 @@ shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
 
-    m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
 
 
     return tempModel;
@@ -503,7 +507,7 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
 
     shared_ptr<Character> m_player = make_shared<Character>(m_appBase, m_appBase->m_device, m_appBase->m_context, path,
                                       "Character_Kachujin.fbx", clipNames);
-
+    m_appBase->m_characters.push_back(m_player);
     //m_player->GetMesh()->UpdateWorldRow(
     //    Matrix::CreateScale(info.scale.x) *
     //    Matrix::CreateRotationX(info.rotation.x) *
@@ -514,8 +518,6 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
     m_player->GetMesh()->UpdateTranseform(info.scale, info.rotation,
                                           info.position);
    
-    m_appBase->m_basicList.push_back(m_player->GetMesh()); // 리스트에 등록
-    m_appBase->m_characters.push_back(m_player);
     // m_pickedModel = m_player->GetMesh()->m_meshes;
 
     m_appBase->m_camera->SetTarget(m_player);
@@ -546,7 +548,6 @@ shared_ptr<Model> JsonManager::CreateMountain(ObjectSaveInfo info) {
     tempModel->m_castShadow = true;
 
 
-    m_appBase->m_basicList.push_back(tempModel); // 리스트에 등록
 
     return tempModel;
 }
@@ -562,7 +563,6 @@ shared_ptr<Model> JsonManager::CreateCylinder(ObjectSaveInfo info) {
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
 
-    m_appBase->m_basicList.push_back(tempModel);
 
     return tempModel;
 }
@@ -612,7 +612,6 @@ shared_ptr< Model> JsonManager::CreateSphere(ObjectSaveInfo info) {
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
 
-    m_appBase->m_basicList.push_back(tempModel);
     return tempModel;
 }
 
@@ -629,7 +628,6 @@ shared_ptr<Model> JsonManager::CreateBox(ObjectSaveInfo info) {
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
 
-    m_appBase->m_basicList.push_back(tempModel);
 
     return tempModel;
     //return make_shared<Model>();
@@ -674,7 +672,6 @@ shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
     m_trunk->UpdateTranseform(info.scale, info.rotation, info.position);
     m_trunk->SetChildModel(m_leaves);
 
-    m_appBase->m_basicList.push_back(m_trunk); // 리스트에 등록
     return m_trunk;
 }
  
@@ -688,7 +685,6 @@ shared_ptr<class Model> JsonManager::CreateBillboadTree(ObjectSaveInfo info) {
     model->UpdateTranseform(info.scale, info.rotation, info.position);
 
 
-    m_appBase->m_basicList.push_back(model);
     return model;
 }
 } // namespace hlab

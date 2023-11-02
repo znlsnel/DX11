@@ -61,4 +61,4 @@ class TessellatedQuad {
     ComPtr<ID3D11Texture2D> m_texArray;
     ComPtr<ID3D11ShaderResourceView> m_texArraySRV;
 };
-} // namespace hlab
+} // namespace hlab 

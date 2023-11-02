@@ -13,12 +13,12 @@ Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
              const std::string &basePath, const std::string &filename) {
     Initialize(device, context, basePath, filename);
 }
-
+ 
 Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
              const std::vector<MeshData> &meshes) {
-    Initialize(device, context, meshes);
+    Initialize(device, context, meshes); 
 }
-
+   
 void Model::Initialize(ComPtr<ID3D11Device> &device,
                        ComPtr<ID3D11DeviceContext> &context) {
     std::cout << "Model::Initialize(ComPtr<ID3D11Device> &device, "
@@ -242,6 +242,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         auto meshData = GeometryGenerator::MakeWireBox(
             m_boundingBox.Center,
             Vector3(m_boundingBox.Extents) + Vector3(1e-3f));
+
         m_boundingBoxMesh = std::make_shared<Mesh>();
         D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
                                        m_boundingBoxMesh->vertexBuffer);
@@ -292,6 +293,9 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                   ComPtr<ID3D11DeviceContext> &context) {
     if (m_isVisible) { 
+            objectInfo.meshID = objectInfo.meshID;
+      
+
         m_meshConsts.Upload(context);
         m_materialConsts.Upload(context);
     }
@@ -299,16 +303,19 @@ void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
 
 GraphicsPSO &Model::GetPSO(const bool wired) {
 
-       if (useTessellation) {
-        return wired ? Graphics::terrainWirePSO : Graphics::terrainSolidPSO;
-    }
-    return wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
+    currPSO =  wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
+    return currPSO;
 }
 
-GraphicsPSO &Model::GetDepthOnlyPSO() { return Graphics::depthOnlyPSO; }
+GraphicsPSO &Model::GetDepthOnlyPSO() { 
+        currPSO =  Graphics::depthOnlyPSO; 
+        return currPSO;
+}
 
 GraphicsPSO &Model::GetReflectPSO(const bool wired) {
-    return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
+        
+    currPSO =  wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
+        return currPSO;
 } 
  
  
@@ -412,7 +419,7 @@ void Model::RenderBVH(ComPtr<ID3D11DeviceContext> &context)
         //if (i == maxRenderingBVHLevel - 3)
         //    startIndex = maxIndex;
     }
-    cout << "maxIndex : " << maxIndex << endl;
+//    cout << "maxIndex : " << maxIndex << endl;
 
     for (auto mesh : m_BVHMesh) {
         for (int i = startIndex; i <= maxIndex; i++) {
@@ -456,21 +463,6 @@ void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
 
 
 
-void Model::SetObjectID(int index) {
-    int id_R = 0, id_G = 0, id_B = 0, id_A = 0;
-    id_R = index % 256;
-
-    if (index > 255)
-            id_G = (index / 256) % 256;
-
-    if (index > 65536)
-            id_B = (index / 65536) % 256;
-
-    objectInfo.objectID = index;
-    m_meshConsts.GetCpu().indexColor[0] = (float)id_R / 255;
-    m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
-    m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
-}
 
 void Model::UpdateScale(Vector3 scale) { 
      //   m_scale = scale;
@@ -601,6 +593,8 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     m_boundingSphere.Center = this->m_worldRow.Translation();
     m_boundingSphere.Radius =
         m_boundingSphereRadius * max(m_scale.x, max(m_scale.y, m_scale.z));
+    
+
     /*m_boundingSphereMesh*/
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();

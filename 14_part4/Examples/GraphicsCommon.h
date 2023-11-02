@@ -13,6 +13,7 @@ namespace Graphics {
 
 // Samplers
 extern ComPtr<ID3D11SamplerState> linearWrapSS;
+extern ComPtr<ID3D11SamplerState> tessellationSS;
 extern ComPtr<ID3D11SamplerState> linearClampSS;
 extern ComPtr<ID3D11SamplerState> pointClampSS;
 extern ComPtr<ID3D11SamplerState> shadowPointSS;

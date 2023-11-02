@@ -6,7 +6,7 @@ class InputManager {
   public:
     InputManager(class AppBase *appBase){ m_appBase = appBase;
     };
-
+     
     void InputLeftMouse(bool isPress, int mouseX = -1 , int mouseY = -1);
     void InputRightMouse(bool isPress, int mouseX = -1, int mouseY = -1);
     void InputKey(bool isPress, char key);

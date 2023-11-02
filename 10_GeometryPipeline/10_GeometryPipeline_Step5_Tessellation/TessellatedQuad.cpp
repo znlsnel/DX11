@@ -17,15 +17,15 @@ void TessellatedQuad::Initialize(ComPtr<ID3D11Device> &device) {
     device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // Vetex Buffer 만들기
-    std::vector<Vector4> controlPoints = {{-2.0f, 1.0f, 0.0, 1.0f},
+    std::vector<Vector4> controlPoints = {{-1.0f, 1.0f, 0.0, 1.0f},
                                           {1.0f, 1.0f, 0.0, 1.0f},
                                           {-1.0f, -1.0f, 0.0, 1.0f},
                                           {1.0f, -1.0f, 0.0, 1.0f}};
-    for (auto &cp : controlPoints) {
-        cp.x *= 0.5f;
-        cp.y = cp.y * 0.5f + 0.5f;
-        cp.z = 1.5f; // 초기 위치 변경
-    }
+    //for (auto &cp : controlPoints) {
+    //    cp.x *= 0.5f;
+    //    cp.y = cp.y * 0.5f + 0.5f;
+    //    cp.z = 1.5f; // 초기 위치 변경
+    //}
     D3D11Utils::CreateVertexBuffer(device, controlPoints, m_vertexBuffer);
 
     m_indexCount = uint32_t(controlPoints.size());
@@ -60,6 +60,7 @@ void TessellatedQuad::Render(ComPtr<ID3D11DeviceContext> &context) {
     context->IASetInputLayout(m_inputLayout.Get());
     UINT stride = sizeof(Vector4); // sizeof(Vertex);
     UINT offset = 0;
+
     context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride,
                                 &offset);
     context->VSSetShader(m_vertexShader.Get(), 0, 0);

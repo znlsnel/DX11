@@ -1,25 +1,12 @@
+#include "Common.hlsli"
 
-const float4 edges = { 64.0, 64.0, 64.0, 64.0 };
-const float2 inside = { 64.0, 64.0 };
 
-struct VertexOut
+struct VertexOutput
 {
-    float4 posProj : SV_POSITION; // Screen position
-    float3 posWorld : POSITION0; // World position (조명 계산에 사용)
-    float3 normalWorld : NORMAL0;
-    float2 texcoord : TEXCOORD0;
-    float3 tangentWorld : TANGENT0;
-    float3 posModel : POSITION1; // Volume casting 시작점
-};
-
-struct HullOut
-{
-    float4 posProj : SV_POSITION; // Screen position
-    float3 posWorld : POSITION0; // World position (조명 계산에 사용)
-    float3 normalWorld : NORMAL0;
-    float2 texcoord : TEXCOORD0;
-    float3 tangentWorld : TANGENT0;
-    float3 posModel : POSITION1; // Volume casting 시작점
+    float3 posModel : POSITION; //모델 좌표계의 위치 position
+    float3 normalModel : NORMAL; // 모델 좌표계의 normal    
+    float2 texcoord : TEXCOORD;
+    float3 tangentModel : TANGENT;
 };
 
 struct PatchConstOutput
@@ -30,26 +17,43 @@ struct PatchConstOutput
 
 
 
-PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOut, 4> patch,
+PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
                                      uint patchID : SV_PrimitiveID)
 {
     PatchConstOutput pt;
     
-    //float len = length(patch[patchID] - patch[0].posWorld);
+    float3 posWorld1 = mul(float4(patch[0].posModel, 1.0), world).xyz;
+    float3 posWorld2 = mul(float4(patch[1].posModel, 1.0), world).xyz;
+    float3 posWorld3 = mul(float4(patch[2].posModel, 1.0), world).xyz;
+    float3 posWorld4 = mul(float4(patch[3].posModel, 1.0), world).xyz;
     
-    //len = clamp(len, 0.0, 2.5);
-    //len /= 2.5;
-    //len = 1.0 - len;
     
-    float len = 0.0;
+    float3 posCenter = (posWorld1 + posWorld2 + posWorld3 + posWorld4) / 4.0;
     
-    pt.edges[0] = lerp(1.0, edges[0], len);
-    pt.edges[1] = lerp(1.0, edges[1], len);
-    pt.edges[2] = lerp(1.0, edges[2], len);
-    pt.edges[3] = lerp(1.0, edges[3], len);
-    pt.inside[0] = lerp(1.0, inside[0], len);
-    pt.inside[1] = lerp(1.0, inside[1], len);
-	
+    float len1 = 0.5 * (length(eyeWorld - posWorld1) + length(eyeWorld - posWorld2));
+    float len2 = 0.5 * (length(eyeWorld - posWorld2) + length(eyeWorld - posWorld3));
+    float len3 = 0.5 * (length(eyeWorld - posWorld3) + length(eyeWorld - posWorld4));
+    float len4 = 0.5 * (length(eyeWorld - posWorld4) + length(eyeWorld - posWorld1));
+    float len5 = length(eyeWorld - posCenter);
+  //  len5 = 1.0;
+    float distMin = 0.3;
+    float distMax = 1.0;
+    
+
+    len1 = saturate((distMax - len1) / (distMax - distMin));
+    len2= saturate((distMax - len2) / (distMax - distMin));
+    len3 = saturate((distMax - len3) / (distMax - distMin));
+    len4 = saturate((distMax - len4) / (distMax - distMin));
+    len5 = saturate((distMax - len5) / (distMax - distMin));
+
+    float maxSize = 100.0;
+    pt.edges[0] = lerp(1.0, maxSize, len2);
+    pt.edges[1] = lerp(1.0, maxSize, len1);
+    pt.edges[2] = lerp(1.0, maxSize, len4);
+    pt.edges[3] = lerp(1.0, maxSize, len3);
+    pt.inside[0] = lerp(1.0, maxSize, len5);
+    pt.inside[1] = lerp(1.0, maxSize, len5);
+   
     return pt;
 }
 
@@ -59,18 +63,9 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOut, 4> patch,
 [outputcontrolpoints(4)]
 [patchconstantfunc("MyPatchConstantFunc")]
 [maxtessfactor(64.0f)]
-HullOut main(InputPatch<VertexOut, 4> p,
+VertexOutput main(InputPatch<VertexOutput, 4> p,
            uint i : SV_OutputControlPointID,
            uint patchId : SV_PrimitiveID)
 {
-    HullOut hout;
-	
-    hout.normalWorld = p[i].normalWorld;
-    hout.posModel = p[i].posModel;
-    hout.posProj = p[i].posProj;
-    hout.posWorld = p[i].posWorld;
-    hout.tangentWorld = p[i].tangentWorld;
-    hout.texcoord = p[i].texcoord;
-
-    return hout;
+    return p[i];
 }

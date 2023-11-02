@@ -188,6 +188,14 @@ class D3D11Utils {
         const bool usSRGB, ComPtr<ID3D11Texture2D> &texture,
         ComPtr<ID3D11ShaderResourceView> &textureResourceView);
 
+
+    static void
+    CreateTexture(ComPtr<ID3D11Device> &device,
+                  ComPtr<ID3D11DeviceContext> &context, 
+            ComPtr<ID3D11Texture2D> &texture,
+                  ComPtr<ID3D11ShaderResourceView> &textureResourceView,
+            bool usSRGB, int width, int height);
+
     static void CreateUATexture(ComPtr<ID3D11Device> &device, const int width,
                                 const int height, const DXGI_FORMAT pixelFormat,
                                 ComPtr<ID3D11Texture2D> &texture,

@@ -83,7 +83,7 @@ PixelShaderInput main(VertexShaderInput input)
         
         input.posModel.xyz += coeff;
     }
-    
+     
     output.posModel = input.posModel;
     output.normalWorld = mul(float4(input.normalModel, 0.0f), worldIT).xyz;
     output.normalWorld = normalize(output.normalWorld);
@@ -102,3 +102,4 @@ PixelShaderInput main(VertexShaderInput input)
 
     return output;
 }
+ 

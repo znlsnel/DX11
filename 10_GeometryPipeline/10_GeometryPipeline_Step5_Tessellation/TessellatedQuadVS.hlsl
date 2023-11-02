@@ -8,11 +8,11 @@ struct VertexOut
     float4 pos : POSITION;
 };
 
-VertexOut main(VertexIn vin)
+VertexIn main(VertexIn vin)
 {
     VertexOut vout;
 	
     vout.pos = vin.pos;
 
-    return vout;
+    return vin;
 }

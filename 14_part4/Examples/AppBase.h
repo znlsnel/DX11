@@ -46,7 +46,7 @@ class AppBase {
     virtual bool Initialize();
     virtual bool InitScene();
     virtual void UpdateGUI();
-    virtual void Update(float dt);
+    virtual void Update(float dt); 
     virtual void UpdateLights(float dt);
     virtual void RenderDepthOnly();
     virtual void RenderShadowMaps();
@@ -76,9 +76,9 @@ class AppBase {
     void ProcessMouseControl();
     void DestroyObject(shared_ptr<class Model> object);
     bool MouseObjectPicking();
-    void RayTracing();
+    virtual void RayTracing();
     void replicateObject();
-
+    void AddBasicList(shared_ptr<Model>& object, bool editable = true, bool saveable = false);
     bool IsMouseHoveringImGui();
 
   protected: // 상속 받은 클래스에서도 접근 가능
@@ -130,7 +130,7 @@ class AppBase {
     ComPtr<ID3D11Texture2D> m_postEffectsBuffer;
     ComPtr<ID3D11Texture2D> m_prevBuffer; // 간단한 모션 블러 효과
     ComPtr<ID3D11Texture2D> m_texArray;
-    ComPtr<ID3D11Texture2D> m_tempTexture; // 간단한 모션 블러 효과
+    ComPtr<ID3D11Texture2D> m_tempTexture; 
 
     ComPtr<ID3D11Texture2D> m_indexTexture;
     ComPtr<ID3D11Texture2D> m_indexTempTexture;
@@ -146,6 +146,7 @@ class AppBase {
     ComPtr<ID3D11ShaderResourceView> m_postEffectsSRV;
     ComPtr<ID3D11ShaderResourceView> m_prevSRV;
     ComPtr<ID3D11ShaderResourceView> m_billboardTreeSRV;
+
 
 
     // Depth buffer 관련
@@ -217,6 +218,7 @@ class AppBase {
     shared_ptr<Model> m_screenSquare; // PostEffect에 사용   
     shared_ptr<Model> m_skybox;
     shared_ptr<Model> m_pickedModel; 
+    shared_ptr<class TessellationModel> m_groundPlane; 
     shared_ptr<Model> m_terrain;
     shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
     shared_ptr<Model> m_cursorSphere;

@@ -7,6 +7,7 @@
 #include "Character.h"
 #include "AppBase.h"
 #include "JsonManager.h"
+#include "TessellationModel.h"
 
 namespace hlab {
 
@@ -33,39 +34,44 @@ bool Ex2001_GamePlay::InitScene() {
      
     // 바닥(거울)
 
-
+     
     InitPhysics(true);
-
-    InitAudio();
-      
-            // https://freepbr.com/materials/stringy-marble-pbr/
-    // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
-    auto mesh = GeometryGenerator::MakeSquareGrid(100, 100, 50.f,
-                                                  Vector2(50.0f, 50.0f));
-    string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
-    mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
-    mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
-    mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
-    // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-    mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+     
+    InitAudio(); 
+           
+    // Plane 
+    if (true)
+    {   
+                    // https://freepbr.com/materials/stringy-marble-pbr/
+            // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
+            //auto mesh = GeometryGenerator::MakeSquareGrid(2, 2, 1.f ,
+            //                                              Vector2(1.0f, 1.0f));  
+             //auto mesh = GeometryGenerator::MakeTestTessellation();
+                    auto mesh = GeometryGenerator::MakeTessellationPlane(
+                        10, 10, 1.0f, Vector2(1.0f, 1.0f)); 
+            string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
+            mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+            mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+            mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
+            // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
+            mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
                  
-    shared_ptr<Model> m_ground = make_shared<Model>(
-        m_device, m_context, vector{mesh});
-    m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
-    m_ground->m_materialConsts.GetCpu().emissionFactor =
-        Vector3(0.0f);
-    m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
-    m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.65f;
+            shared_ptr<Model> m_ground =
+                make_shared<TessellationModel>(
+                m_device, m_context, vector{mesh});
+            m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+            m_ground->m_materialConsts.GetCpu().emissionFactor =
+                Vector3(0.0f);
+            m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
+            m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.65f;
 
-    Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
-    m_ground->UpdateRotation(Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
+            Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+            m_ground->UpdateRotation(Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
+            m_ground->isPlane = true;
+           // m_groundPlane = m_ground;
+            AddBasicList(m_ground);
+    }
 
-    m_ground->SetObjectID(m_JsonManager->objectID);
-
-    m_basicList.push_back(
-        m_ground); // 거울은 리스트에 등록 X
-    m_objects.insert(make_pair(m_JsonManager->objectID, m_ground));
-    ++m_JsonManager->objectID;
     // ocean
         {
         auto mesh = GeometryGenerator::MakeSquare(200.0, {10.0f, 10.0f});
@@ -81,7 +87,7 @@ bool Ex2001_GamePlay::InitScene() {
                                           m_ocean->GetRotation().y,
                                           m_ocean->GetRotation().z),
                                   position);
-        m_basicList.push_back(m_ocean);
+        AddBasicList(m_ocean);
     }
 
 
@@ -110,7 +116,8 @@ void Ex2001_GamePlay::CreateStack(const PxTransform &t, int numStacks,
             auto m_newObj = std::make_shared<Model>(
                 m_device, m_context, box); // <- 우리 렌더러에 추가
             m_newObj->m_materialConsts.GetCpu().albedoFactor = Vector3(0.8f);
-            AppBase::m_basicList.push_back(m_newObj);
+            //AppBase::m_basicList.push_back(m_newObj);
+            AddBasicList(m_newObj);
             this->m_PhysicalObjects.push_back(m_newObj);
         }
     }
@@ -290,6 +297,11 @@ void Ex2001_GamePlay::InitAudio() {
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
  //   ImGui::SetNextItemOpen(false, ImGuiCond_Once);
+
+    Vector3 tempPos = m_camera->GetEyePos();
+    float camera[3] = {tempPos.x, tempPos.y, tempPos.z};
+    ImGui::DragFloat3("Camera Pos", camera, 1.0f, -1000.f, 1000.f);
+
     if (ImGui::TreeNode("Basic")) {
     
         //            m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
@@ -441,7 +453,7 @@ void Ex2001_GamePlay::UpdateGUI() {
             m_mouseMode = (EMouseMode)tempMouseMode;
     }
 
-    if (m_pickedModel) {
+    if (m_pickedModel && m_pickedModel->m_editable) {
             ImGui::Checkbox("ObjectLock", &m_pickedModel->isObjectLock);
 
            if (ImGui::Checkbox("Render BVH", &m_pickedModel->bRenderingBVH)){

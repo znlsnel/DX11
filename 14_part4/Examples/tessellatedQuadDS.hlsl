@@ -1,23 +1,17 @@
 
-struct HullOut
+#include "Common.hlsli"
+
+Texture2D g_meshHeightTexture : register(t0);
+Texture2D g_heightMapTexture : register(t1);
+
+struct HullShaderOutput
 {
-    float4 posProj : SV_POSITION; // Screen position
-    float3 posWorld : POSITION0; // World position (조명 계산에 사용)
-    float3 normalWorld : NORMAL0;
-    float2 texcoord : TEXCOORD0;
-    float3 tangentWorld : TANGENT0;
-    float3 posModel : POSITION1; // Volume casting 시작점
+    float3 posModel : POSITION; //모델 좌표계의 위치 position
+    float3 normalModel : NORMAL; // 모델 좌표계의 normal    
+    float2 texcoord : TEXCOORD;
+    float3 tangentModel : TANGENT;
 };
 
-struct PixelShaderInput
-{
-    float4 posProj : SV_POSITION; // Screen position
-    float3 posWorld : POSITION0; // World position (조명 계산에 사용)
-    float3 normalWorld : NORMAL0;
-    float2 texcoord : TEXCOORD0;
-    float3 tangentWorld : TANGENT0;
-    float3 posModel : POSITION1; // Volume casting 시작점
-};
 struct PatchConstOutput
 {
     float edges[4] : SV_TessFactor;
@@ -28,52 +22,60 @@ struct PatchConstOutput
 [domain("quad")]
 PixelShaderInput main(PatchConstOutput patchConst,
              float2 uv : SV_DomainLocation,
-             const OutputPatch<HullOut, 4> quad)
+             const OutputPatch<HullShaderOutput, 4> quad)
 {
-    PixelShaderInput result;
- 
-    result.normalWorld = quad[0].normalWorld;
-    result.posModel = quad[0].posModel;
-    result.posProj = quad[0].posProj;
-    result.posWorld = quad[0].posWorld;
-    result.tangentWorld = quad[0].tangentWorld;
-    result.texcoord = quad[0].texcoord;
+    PixelShaderInput output;
     
-    return result;
+    float3 v1 = quad[0].posModel * (1 - uv.x) + quad[1].posModel * (uv.x);
+    float3 v2 = quad[2].posModel * (1 - uv.x) + quad[3].posModel * (uv.x);
+    output.posModel = v1 * (1 - uv.y) + v2 * (uv.y);
     
+    output.posWorld = mul(float4(output.posModel, 1.0), world).xyz;
+    output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
+     
+    // TangentWorld
+    { 
+        float4 temp1 = mul(float4(quad[0].tangentModel, 0.0), world);
+        float4 temp2 = mul(float4(quad[1].tangentModel, 0.0), world);
+        float4 temp3 = mul(float4(quad[2].tangentModel, 0.0), world);
+        float4 temp4 = mul(float4(quad[3].tangentModel, 0.0), world);
+        
+        
+        temp1 = temp1 * (1 - uv.x) + temp2 * (uv.x);
+        temp3 = temp3 * (1 - uv.x) + temp4 * (uv.x);
+        output.tangentWorld = (temp1 * (1 - uv.y) + temp3 * (uv.y)).xyz;
+    }
     
-	//// Bilinear interpolation.
- //   float3 v1 = lerp(quad[0].posWorld, quad[1].posWorld, uv.x);
- //   float3 v2 = lerp(quad[2].posWorld, quad[3].posWorld, uv.x);
- //   float3 p = lerp(v1, v2, uv.y);
- //   result.posWorld = float4(p, 1.0);
+    // NormalWorld
+    {
+        float4 temp1 = mul(float4(quad[0].normalModel, 0.0), worldIT);
+        float4 temp2 = mul(float4(quad[1].normalModel, 0.0), worldIT);
+        float4 temp3 = mul(float4(quad[2].normalModel, 0.0), worldIT);
+        float4 temp4 = mul(float4(quad[3].normalModel, 0.0), worldIT);
     
- //  v1 = lerp(quad[0].normalWorld, quad[1].normalWorld, uv.x);
- //   v2 = lerp(quad[2].normalWorld, quad[3].normalWorld, uv.x);
- //   p = lerp(v1, v2, uv.y);
- //   result.normalWorld = p;
+        temp1 = temp1 * (1 - uv.x) + temp2 * (uv.x);
+        temp3 = temp3 * (1 - uv.x) + temp4 * (uv.x);
+        output.normalWorld = (temp1 * (1 - uv.y) + temp3 * (uv.y)).xyz;
+        output.normalWorld = normalize(output.normalWorld);
+    }
     
- //    v1 = lerp(quad[0].posModel, quad[1].posModel, uv.x);
- //    v2 = lerp(quad[2].posModel, quad[3].posModel, uv.x);
- //    p = lerp(v1, v2, uv.y);
- //   result.posModel = p;
+        // texcoord
+    {
+        float2 temp1 = quad[0].texcoord * (1 - uv.x) + quad[1].texcoord * (uv.x);
+        float2 temp2 = quad[2].texcoord * (1 - uv.x) + quad[3].texcoord * (uv.x);
+        output.texcoord = (temp1 * (1 - uv.y) + temp2 * (uv.y));
+    }
     
- //    v1 = lerp(quad[0].posProj.xyz, quad[1].posProj.xyz, uv.x);
- //   v2 = lerp(quad[2].posProj.xyz, quad[3].posProj.xyz, uv.x);
- //   p = lerp(v1, v2, uv.y);
- //   result.posProj = float4(p, 1.0);
-    
- //   v1 = lerp(quad[0].tangentWorld, quad[1].tangentWorld, uv.x);
- //   v2 = lerp(quad[2].tangentWorld, quad[3].tangentWorld, uv.x);
- //    p = lerp(v1, v2, uv.y);
- //   result.tangentWorld = p;
-    
- //   float2 v3 = lerp(quad[0].texcoord, quad[1].texcoord, uv.x);
- //   float2 v4 = lerp(quad[2].texcoord, quad[3].texcoord, uv.x);
- //   float2 p2 = lerp(v1, v2, uv.y);
- //   result.texcoord = p2;
-    
+    if (useHeightMap)
+    {
+        float height = g_meshHeightTexture.SampleLevel(linearClampSampler, output.texcoord, 0).r;
+        height = height * 2.0 - 1.0;
+        output.posWorld += output.normalWorld * height * heightScale;
+        output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
+    }
 
     
- //   return result;
+    
+    return output;
+    
 }

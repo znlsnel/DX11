@@ -33,6 +33,7 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOut, 4> patch,
 {
     PatchConstOutput pt;
     
+    float3 worldPos = mul(patch[0].pos, model).xyz;
     float len = length(eyeWorld - patch[0].pos.xyz);
     len = clamp(len, 0.0, 2.5);
     len /= 2.5;

@@ -67,7 +67,6 @@ class Model {
     virtual void RenderBVH(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);
     
-    void SetObjectID(int index);
     void UpdateScale(Vector3 scale);
     void UpdatePosition(Vector3 position);
     void UpdateRotation(Vector3 ratation);
@@ -116,7 +115,7 @@ class Model {
     void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
 
 public:
-
+         
 
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
     Matrix m_worldITRow = Matrix(); // InverseTranspose
@@ -125,11 +124,14 @@ public:
     bool m_isVisible = true;
     bool m_castShadow = true;
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
-    bool useTessellation = false;
     bool isDestory = false;
     bool isChildModel = false;
     bool isObjectLock = false;
     bool bRenderingBVH = false;
+    bool m_saveable = false;
+    bool m_editable = false;
+    bool isPlane = false;
+
     int maxRenderingBVHLevel = 0;
 
 
@@ -139,9 +141,8 @@ public:
     ConstantBuffer<MaterialConstants> m_materialConsts;
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;
-
     vector<vector<DirectX::BoundingBox>> m_BVHs;
-
+    GraphicsPSO currPSO;
     //                        [0]
     //          [1]                        [2]
     //    [3]       [4]           [5]           [6]

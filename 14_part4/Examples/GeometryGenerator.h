@@ -32,6 +32,11 @@ class GeometryGenerator {
     static MeshData MakeSquareGrid(const int numSlices, const int numStacks,
                                    const float scale = 1.0f,
                                    const Vector2 texScale = Vector2(1.0f));
+    static MeshData MakeTestTessellation();
+    static MeshData MakeTessellationPlane(const int numSlices,
+                                          const int numStacks,
+                                          const float scale,
+                                          const Vector2 texScale);
     static MeshData MakeGrass();
     static MeshData MakeBox(float scale = 1.0f);
     static MeshData MakeWireBox(const Vector3 center, const Vector3 extents);
@@ -45,5 +50,6 @@ class GeometryGenerator {
     static MeshData MakeTetrahedron();
     static MeshData MakeIcosahedron();
     static MeshData SubdivideToSphere(const float radius, MeshData meshData);
+    static MeshData MakeLine();
 };
 } // namespace hlab

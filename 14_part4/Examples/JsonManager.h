@@ -45,8 +45,6 @@ class JsonManager {
    void SaveMesh();
     void CreateMesh(struct ObjectSaveInfo temp);
 
-    int objectID = 1;
-
     shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateQuicellModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 

@@ -1,15 +1,19 @@
-﻿#include "AppBase.h"
-#include "JsonManager.h"
+﻿#include "queue"
 
-#include <algorithm>
-#include <directxtk/SimpleMath.h>
-#include "Character.h"
 #include "Model.h"
-#include "queue"
-
+#include "AppBase.h"
+#include "Character.h"
 #include "D3D11Utils.h"
+#include "JsonManager.h"
 #include "InputManager.h"
 #include "GraphicsCommon.h"
+#include "TessellationModel.h"
+
+#include <algorithm>
+#include <filesystem>
+#include <directxtk/SimpleMath.h>
+
+
 
 // imgui_impl_win32.cpp에 정의된 메시지 처리 함수에 대한 전방 선언
 // Vcpkg를 통해 IMGUI를 사용할 경우 빨간줄로 경고가 뜰 수 있음
@@ -95,16 +99,14 @@ void AppBase::RayTracing()
         if (m_mouseMode != EMouseMode::HeightMapEditMode)
         return;
 
-       if (MouseObjectPicking() == false)
-        return;
-
+       if (MouseObjectPicking() == false || m_pickedModel == nullptr)
+                return;
+        
 
         Matrix viewRow = m_camera->GetViewRow();
         Matrix projRow = m_camera->GetProjRow();
         Vector3 eyeWorld = m_camera->GetEyePos();
 
-        cout << "eyeWorld : " << eyeWorld.x << ", " << eyeWorld.y << ", "
-             << eyeWorld.z << ", " << endl;
 
         Vector3 cursorNdcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
         Vector3 cursorNdcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
@@ -112,31 +114,85 @@ void AppBase::RayTracing()
 
         Vector3 cursorWorldNear =
             Vector3::Transform(cursorNdcNear, inverseProjView);
+
         Vector3 cursorWorldFar =
             Vector3::Transform(cursorNdcFar, inverseProjView);
+
+        cout << "cursorWorldNear : " << cursorWorldNear.x << ", "
+             << cursorWorldNear.y
+             << ", " << cursorWorldNear.z << ", " << endl;
 
         Vector3 dir = cursorWorldFar - cursorWorldNear;
         dir.Normalize();
 
-       float leastDist = FLT_MAX;
-       for (auto& BVH : m_pickedModel->m_BVHs) {
-        
-               std::queue<int> queue;
-                queue.push(0);
+       float fDist = FLT_MAX;
+        if (m_pickedModel->isPlane && false) {
+                SimpleMath::Ray ray = SimpleMath::Ray(cursorWorldNear, dir);
+                float dist = 0.0f;
+                Vector3 normalizedUpVector = Vector3(0.0f, 1.0f, 0.0f);
+                //{
+                //    Vector3 modelRot = m_pickedModel->GetRotation();
+                //    DirectX::XMFLOAT4X4 rotationMatrix;
+                //    DirectX::XMStoreFloat4x4(
+                //        &rotationMatrix, DirectX::XMMatrixRotationRollPitchYaw(
+                //                             modelRot.x, modelRot.y, modelRot.z));
 
-               while(queue.empty() == false) {
-                    int index = queue.front();
-                   queue.pop();
+                //    // 업 벡터 추출
+                //    DirectX::XMVECTOR upVector = DirectX::XMVectorSet(
+                //        rotationMatrix._21, rotationMatrix._22,
+                //        rotationMatrix._23, 0.0f);
+                //    normalizedUpVector =
+                //        DirectX::XMVector3Normalize(upVector);
+                //}
 
-                    SimpleMath::Ray ray = SimpleMath::Ray(cursorWorldNear, dir);
-                    float dist = 0.0f;
-                    bool m_selected = ray.Intersects(BVH[index], dist);
+                SimpleMath::Plane tempPlane(m_pickedModel->GetPosition(),
+                                            normalizedUpVector);
+                bool selected = ray.Intersects(tempPlane, dist);
 
-                    if (m_selected && dist < leastDist) {
-                        leastDist = dist;
+                if (selected) {
+                    fDist = dist;
+                }
+        }
+        // 0
+        //  1    2
+        // 3 4 5 6
+        else {
 
-                            int left = index * 2 + 1;
-                            int right = left + 1;                    
+                for (auto &BVH : m_pickedModel->m_BVHs) {
+
+                   
+                    std::queue<int> queue;
+                    queue.push(0);
+
+                    while (queue.empty() == false) {
+                        int index = queue.front();
+                        queue.pop();
+
+                        SimpleMath::Ray ray =
+                            SimpleMath::Ray(cursorWorldNear, dir);
+                        float dist = 0.0f;
+
+                        Vector3 tempCenter = BVH[index].Center;
+                        Vector3 tempExtents = BVH[index].Extents;
+
+                        Matrix temp = m_pickedModel->m_worldRow;
+
+                        BVH[index].Center =
+                            Vector3::Transform(tempCenter, temp);
+                        temp.Translation(Vector3(0.0f));
+                        BVH[index].Extents =
+                            Vector3::Transform(tempExtents, temp);
+
+
+                        bool m_selected =
+                            BVH[index].Intersects(cursorWorldNear, dir, dist);
+                        
+                        // bool m_selected = ray.Intersects(BVH[index], dist);
+
+                        if (m_selected) {
+
+                            int left = (index * 2) + 1;
+                            int right = left + 1;
 
                             bool hasLeftChild = left < BVH.size();
                             bool hasRightChild = right < BVH.size();
@@ -146,19 +202,22 @@ void AppBase::RayTracing()
                             if (hasRightChild)
                                 queue.push(right);
 
+                             if (!hasLeftChild && !hasRightChild) {
+                                fDist = min(dist, fDist);
+                             }
 
+                        }
+                        BVH[index].Center = tempCenter;
+                        BVH[index].Extents = tempExtents;
                     }
-               }
-
-       }
-
-       if (leastDist < FLT_MAX) {
-               Vector3 pos = cursorWorldNear + dir * leastDist;
+                }
+        }
+       if (fDist < FLT_MAX) {
+               Vector3 pos = cursorWorldNear + dir * fDist;
+               m_cursorSphere->UpdatePosition(pos);
                cout << "RayTracing ---- World Location : " << pos.x << ", "
                     << pos.y << ", " << pos.z << "\n";
-       
        }
-
 }
 
 void AppBase::ObjectDrag() {
@@ -438,7 +497,8 @@ bool AppBase::InitScene() {
             m_lightSphere[i]->m_name = "LightSphere" + std::to_string(i);
             m_lightSphere[i]->m_isPickable = false;
 
-            m_basicList.push_back(m_lightSphere[i]); // 리스트에 등록
+            AddBasicList(m_lightSphere[i]);
+
         }
     }
 
@@ -447,13 +507,13 @@ bool AppBase::InitScene() {
         MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
         m_cursorSphere =
             make_shared<Model>(m_device, m_context, vector{sphere});
-        m_cursorSphere->m_isVisible = false; // 마우스가 눌렸을 때만 보임
+        m_cursorSphere->m_isVisible = true; // 마우스가 눌렸을 때만 보임
         m_cursorSphere->m_castShadow = false; // 그림자 X
         m_cursorSphere->m_materialConsts.GetCpu().albedoFactor = Vector3(0.0f);
         m_cursorSphere->m_materialConsts.GetCpu().emissionFactor =
-            Vector3(0.0f, 1.0f, 0.0f);
-
-        m_basicList.push_back(m_cursorSphere); // 리스트에 등록
+            Vector3(1.0f, 0.0f, 0.0f);
+       // m_basicList.push_back(m_cursorSphere); // 리스트에 등록
+        AddBasicList(m_cursorSphere);
     }
 
     return true;
@@ -479,6 +539,10 @@ void AppBase::UpdateGUI() {
     }
 
 void AppBase::Update(float dt) {
+
+        float length =  (m_cursorSphere->GetPosition() - m_camera->GetPosision()).Length() * 5;
+    length = max(length, 5.0f);
+        m_cursorSphere->UpdateScale(Vector3(length));
 
         for (const auto &model : m_characters) {
                 model->Update(dt);
@@ -628,7 +692,7 @@ void AppBase::RenderDepthOnly(){
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
-
+    //m_groundPlane->RenderTessellation(m_context);
 
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
@@ -659,6 +723,8 @@ void AppBase::RenderShadowMaps() {
                     model->Render(m_context);
                 }
             }
+            //m_groundPlane->RenderTessellation(m_context);
+
 
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);
@@ -709,9 +775,11 @@ void AppBase::RenderOpaqueObjects() {
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
+    //AppBase::SetPipelineState(m_groundPlane->GetPSO(m_drawAsWire));
+    //m_groundPlane->RenderTessellation(m_context);
 
-    if (m_selected)
-        m_cursorSphere->Render(m_context);
+    //if (m_selected)
+    //    m_cursorSphere->Render(m_context);
     
     
 
@@ -1047,14 +1115,16 @@ void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
     D3D11Utils::UpdateBuffer(m_context, m_reflectGlobalConstsCPU,
                              m_reflectGlobalConstsGPU);
 }
-
+  
 void AppBase::SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU) {
     // 쉐이더와 일관성 유지 cbuffer GlobalConstants : register(b0)
     m_context->VSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
     m_context->PSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
+    m_context->HSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
+    m_context->DSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
     m_context->GSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
 }
-
+   
 void AppBase::CreateDepthBuffers() {
 
     // DepthStencilView 만들기
@@ -1502,6 +1572,36 @@ void AppBase::replicateObject()
         m_JsonManager->CreateMesh(temp);
 }
 
+void AppBase::AddBasicList(shared_ptr<Model>& object, bool editable, bool saveable) {
+
+        if (object == nullptr)
+                return;
+        object->m_editable = editable;
+        object->m_saveable = saveable;
+
+        static int indexID = 1;
+        int id_R = 0, id_G = 0, id_B = 0, id_A = 0;
+        id_R = indexID % 256;
+
+        if (indexID > 255)
+                id_G = (indexID / 256) % 256;
+
+        if (indexID > 65536)
+                id_B = (indexID / 65536) % 256;
+
+        object->objectInfo.objectID = indexID;
+        object->m_meshConsts.GetCpu().indexColor[0] = (float)id_R / 255;
+        object->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
+        object->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
+
+        m_basicList.push_back(object);
+        m_objects.insert(make_pair(indexID, object));
+
+        indexID++;
+}
+
+
+
 bool AppBase::IsMouseHoveringImGui() { 
         
 
@@ -1574,12 +1674,12 @@ bool AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
         string tempName = tempObj->objectInfo.meshName;
         //std::cout << "Selected [" << tempName << "] Object ID : " << tempID << std::endl;
 
-        if (m_pickedModel == tempObj && m_keyPressed['Q'] == false) 
-        {
-            m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
-            m_pickedModel = nullptr;
-            return false;
-        }
+        //if (m_pickedModel == tempObj && m_keyPressed['Q'] == false) 
+        //{
+        //    m_pickedModel->m_materialConsts.GetCpu().isSelected = 0;
+        //    m_pickedModel = nullptr;
+        //    return false;
+        //}
 
         if (m_pickedModel != nullptr) 
         {
@@ -1743,6 +1843,8 @@ void AppBase::CreateBuffers() {
     D3D11Utils::CreateTextureArray(m_device, m_context,
                                    filenames, m_texArray,
                                    m_billboardTreeSRV);
+
+
 }
 
 } // namespace hlab
