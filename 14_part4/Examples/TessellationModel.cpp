@@ -47,16 +47,19 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
             vector<ID3D11ShaderResourceView *> resViews = {
                 mesh->albedoSRV.Get(), mesh->normalSRV.Get(), mesh->aoSRV.Get(),
                 mesh->metallicRoughnessSRV.Get(), mesh->emissiveSRV.Get()};
-
+              
             context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(),
                                         &mesh->stride, &mesh->offset);
             context->VSSetConstantBuffers(1, 2, constBuffers);
-
+            context->VSSetShaderResources(0, 1, m_heightMapSRV.GetAddressOf());
             context->HSSetConstantBuffers(1, 2, constBuffers);
-
-
-            ID3D11ShaderResourceView *temp[2] = {mesh->heightSRV.Get(),
-                                                 m_heightMapSRV.Get()};
+               
+               
+            ID3D11ShaderResourceView *temp[2] = {
+                mesh->heightSRV.Get(),
+                m_heightMapSRV.Get(), 
+            };
+               
             context->DSSetShaderResources(0, 2, temp);
             context->DSSetConstantBuffers(1, 2, constBuffers);
 

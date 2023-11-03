@@ -422,10 +422,10 @@ void Model::RenderBVH(ComPtr<ID3D11DeviceContext> &context)
 //    cout << "maxIndex : " << maxIndex << endl;
 
     for (auto mesh : m_BVHMesh) {
-        for (int i = startIndex; i <= maxIndex; i++) {
-
-                    if (i >= mesh.size() )
-                        continue;
+        for (int i = startIndex; i < mesh.size(); i++) {
+            
+                    if (i >= maxIndex)
+                        break;
 
                // cout << "rendering BVH level : " << i << "\n";
                 ID3D11Buffer *constBuffers[2] = {
@@ -536,27 +536,23 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
         BVBMeshs.back()->meshConstsGPU = m_meshConsts.Get();
         BVBMeshs.back()->materialConstsGPU = m_materialConsts.Get();
 
-        if (currLevel > 15)
+        if (currLevel > 17)
             break;
 
         DirectX::BoundingBox& currBox = BVHBoxs.back();
-        float width = currBox.Extents.x * 2.0f;
-        float height = currBox.Extents.y * 2.0f;
-        bool splitHorizontal = (width >= height);
-
         int InterID = (maxID + minID) / 2;
 
         int nextMinID = minID;
         int nextMaxID = InterID;
 
-        if (nextMinID < nextMaxID - 1)
+        if (nextMinID < nextMaxID - 4)
             queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
 
 
         nextMinID = nextMaxID;
         nextMaxID = maxID;
 
-        if (nextMinID < nextMaxID - 1)
+        if (nextMinID < nextMaxID - 4)
                 queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
 
     }

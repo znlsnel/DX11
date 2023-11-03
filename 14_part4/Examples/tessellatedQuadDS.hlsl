@@ -4,6 +4,7 @@
 Texture2D g_meshHeightTexture : register(t0);
 Texture2D g_heightMapTexture : register(t1);
 
+
 struct HullShaderOutput
 {
     float3 posModel : POSITION; //¸ðµ¨ ÁÂÇ¥°èÀÇ À§Ä¡ position
@@ -66,16 +67,20 @@ PixelShaderInput main(PatchConstOutput patchConst,
         output.texcoord = (temp1 * (1 - uv.y) + temp2 * (uv.y));
     }
     
-    if (useHeightMap)
+    if (useHeightMap) 
     {
-        float height = g_meshHeightTexture.SampleLevel(linearClampSampler, output.texcoord, 0).r;
+        float height = g_meshHeightTexture.SampleLevel(linearWrapSampler, output.texcoord, 0).r;
         height = height * 2.0 - 1.0;
         output.posWorld += output.normalWorld * height * heightScale;
         output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
     }
 
-    
-    
+    float2 temp = output.texcoord / 30.0;
+    float height = g_heightMapTexture.SampleLevel(linearWrapSampler, temp, 0).r;
+    height = height * 2.0 - 1.0;
+    output.posWorld += output.normalWorld * height * 5;
+    output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
+
     return output;
     
 }

@@ -32,14 +32,14 @@ bool Ex2001_GamePlay::InitScene() {
 
     AppBase::InitScene(); 
      
-    // ¹Ù´Ú(°Å¿ï)
-
+    // ¹Ù´Ú(°Å¿ï) 
      
-    InitPhysics(true);
      
-    InitAudio(); 
+    InitPhysics(true); 
+     
+    InitAudio();  
            
-    // Plane 
+    // Plane   
     if (true)
     {   
                     // https://freepbr.com/materials/stringy-marble-pbr/
@@ -48,15 +48,15 @@ bool Ex2001_GamePlay::InitScene() {
             //                                              Vector2(1.0f, 1.0f));  
              //auto mesh = GeometryGenerator::MakeTestTessellation();
                     auto mesh = GeometryGenerator::MakeTessellationPlane(
-                        10, 10, 1.0f, Vector2(1.0f, 1.0f)); 
+                        100, 100, 30.0f, Vector2(30.0f, 30.0f)); 
             string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
             mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
             mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
-            mesh.normalTextureFilename = path + "Ground037_4K-PNG_NormalDX.png";
+            mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
             // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
             mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
                  
-            shared_ptr<Model> m_ground =
+            shared_ptr<Model> m_ground = 
                 make_shared<TessellationModel>(
                 m_device, m_context, vector{mesh});
             m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
@@ -459,7 +459,7 @@ void Ex2001_GamePlay::UpdateGUI() {
            if (ImGui::Checkbox("Render BVH", &m_pickedModel->bRenderingBVH)){
                //m_pickedModel->maxRenderingBVHLevel = 0;
            }
-           ImGui::SliderInt("BVH Level", &m_pickedModel->maxRenderingBVHLevel, 0, 16);
+           ImGui::SliderInt("BVH Level", &m_pickedModel->maxRenderingBVHLevel, 0, 20);
 
             if (m_keyPressed['Q']) {
                     if (ImGui::ColorButton("Pos", ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 0,

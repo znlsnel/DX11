@@ -81,7 +81,7 @@ MeshData GeometryGenerator::MakeSquareGrid(const int numSlices,
         }
         y -= dy;
     }
-
+     
 
 
     for (int j = 0; j < numStacks; j++) {
@@ -131,7 +131,7 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                                            const int numStacks,
                                            const float scale,
                                            const Vector2 texScale ) 
-{  
+{   
         MeshData meshData;
         float dx = 2.0f / numSlices;
         float dy = 2.0f / numStacks;
@@ -150,6 +150,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
 
         meshData.vertices.push_back(v);
+
+        v = Vertex();
         x += dx;
         v.position = Vector3(x, y, 0.0f) * scale;
         v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
@@ -157,6 +159,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
 
         meshData.vertices.push_back(v); 
+
+                v = Vertex();
 
         y -= dy;
         x -= dx;
@@ -166,6 +170,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
 
         meshData.vertices.push_back(v);
+
+               v = Vertex();
 
         x += dx;
         v.position = Vector3(x, y, 0.0f) * scale;
@@ -181,17 +187,35 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         } else {
                 y += dy;
         }
+
     }
 
-    for (int j = 0; j < numStacks; j++) {
-        for (int i = 0; i < numSlices; i++) {
-            meshData.indices.push_back((numSlices + 1) * j + i);
-            meshData.indices.push_back((numSlices + 1) * j + i + 1);
-            meshData.indices.push_back((numSlices + 1) * (j + 1) + i);
-            meshData.indices.push_back((numSlices + 1) * (j + 1) + i);
-            meshData.indices.push_back((numSlices + 1) * j + i + 1);
-            meshData.indices.push_back((numSlices + 1) * (j + 1) + i + 1);
-        }
+    // 0 1 2 2 1 3
+    //for (int j = 0; j < numStacks; j++) {
+    //    for (int i = 0; i < numSlices; i++) {
+    //        meshData.indices.push_back((numSlices + 1) * j + i); 
+    //        meshData.indices.push_back((numSlices + 1) * j + i + 1); 
+    //        meshData.indices.push_back((numSlices + 1) * (j + 1) + i);
+    //        meshData.indices.push_back((numSlices + 1) * (j + 1) + i);
+    //        meshData.indices.push_back((numSlices + 1) * j + i + 1);
+    //        meshData.indices.push_back((numSlices + 1) * (j + 1) + i + 1);
+    //    }
+    //}
+    for (int j = 0; j < numStacks * numSlices; j++) {
+        // ...
+
+        // 현재 정점의 인덱스를 계산합니다.
+        uint32_t currentIndex = j * 4;
+
+        // 첫 번째 삼각형을 형성하는 인덱스를 추가합니다.
+        meshData.indices.push_back(currentIndex);
+        meshData.indices.push_back(currentIndex + 1);
+        meshData.indices.push_back(currentIndex + 2);
+
+        // 두 번째 삼각형을 형성하는 인덱스를 추가합니다.
+        meshData.indices.push_back(currentIndex + 2);
+        meshData.indices.push_back(currentIndex + 1);
+        meshData.indices.push_back(currentIndex + 3);
     }
 
     return meshData;
