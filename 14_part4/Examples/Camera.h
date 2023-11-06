@@ -7,13 +7,14 @@ namespace hlab {
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
+using DirectX::SimpleMath::Vector2;
 
 class Camera {
   public:
     Camera(class AppBase *appBase);
 
     Matrix GetViewRow();
-    Matrix GetProjRow();
+    Matrix GetProjRow(bool isPerspectivePojecion = true);
     Vector3 GetEyePos();
     
     void Reset(Vector3 pos, float yaw, float pitch) {
@@ -34,7 +35,7 @@ class Camera {
     void SetLocation(Vector3 pos);
     void PrintView();
     void SetTarget(std::shared_ptr<class Character> target) { m_target = target; };
-    
+     
     std::shared_ptr<class Character> GetTarget() { return m_target; };
     Vector3 GetForwardVector();
     Vector3 GetRightVector() { return m_rightDir; };
@@ -45,6 +46,8 @@ class Camera {
     bool m_isCameraLock = true;
     float cameraDistance = 1.0f;
     float cameraSpeed = 1.0f;
+    float m_cameraFarZ = 1.0f;
+    Vector2 m_cameraAspect;
 
   private:
     Vector3 m_position = Vector3(0.312183f, 0.957463f, -1.88458f);

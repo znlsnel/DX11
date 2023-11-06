@@ -487,6 +487,25 @@ void D3D11Utils::CreateMetallicRoughnessTexture(
     }
 }
 
+
+void D3D11Utils::ReadImageFile(const std::string filename,
+                               std::vector<uint8_t> & image) {
+
+    int width = 0, height = 0;
+    DXGI_FORMAT pixelFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    string ext(filename.end() - 3, filename.end());
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    if (ext == "exr") {
+        ReadEXRImage(filename, image, width, height, pixelFormat);
+    } else {
+        ReadImage(filename, image, width, height);
+    }
+    return;
+
+}
+
 void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context,
                                const std::string filename, const bool usSRGB,

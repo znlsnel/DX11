@@ -303,19 +303,20 @@ void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
 
 GraphicsPSO &Model::GetPSO(const bool wired) {
 
-    currPSO =  wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
-    return currPSO;
+       renderState = ERenderState::basic;
+    return wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
 }
 
 GraphicsPSO &Model::GetDepthOnlyPSO() { 
-        currPSO =  Graphics::depthOnlyPSO; 
-        return currPSO;
+  
+       renderState = ERenderState::depth;
+    return Graphics::depthOnlyPSO;
 }
 
 GraphicsPSO &Model::GetReflectPSO(const bool wired) {
         
-    currPSO =  wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
-        return currPSO;
+       renderState = ERenderState::reflect;
+    return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
 } 
  
  

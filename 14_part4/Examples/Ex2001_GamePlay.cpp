@@ -39,16 +39,16 @@ bool Ex2001_GamePlay::InitScene() {
      
     InitAudio();  
            
-    // Plane   
+    // Plane    
     if (true)
-    {   
+    {    
                     // https://freepbr.com/materials/stringy-marble-pbr/
             // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
             //auto mesh = GeometryGenerator::MakeSquareGrid(2, 2, 1.f ,
             //                                              Vector2(1.0f, 1.0f));  
              //auto mesh = GeometryGenerator::MakeTestTessellation();
                     auto mesh = GeometryGenerator::MakeTessellationPlane(
-                        100, 100, 30.0f, Vector2(30.0f, 30.0f)); 
+                        200, 200, 30.0f, Vector2(30.0f, 30.0f)); 
             string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
             mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
             mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
@@ -301,6 +301,13 @@ void Ex2001_GamePlay::UpdateGUI() {
     Vector3 tempPos = m_camera->GetEyePos();
     float camera[3] = {tempPos.x, tempPos.y, tempPos.z};
     ImGui::DragFloat3("Camera Pos", camera, 1.0f, -1000.f, 1000.f);
+    ImGui::DragFloat("Camera farZ", &m_camera->m_cameraFarZ, 1.0f, -1000.f, 1000.f);
+    float tempAspect[2] = {m_camera->m_cameraAspect.x,
+                           m_camera->m_cameraAspect.y};
+    if (ImGui::DragFloat2("Camera Aspect", tempAspect, 0.1f, -10.0f, 10.f)) {
+        m_camera->m_cameraAspect.x = tempAspect[0];
+        m_camera->m_cameraAspect.y = tempAspect[1];
+    }
 
     if (ImGui::TreeNode("Basic")) {
     
@@ -327,7 +334,7 @@ void Ex2001_GamePlay::UpdateGUI() {
         ImGui::SliderFloat("spotPower", &m_globalConstsCPU.lights[0].spotPower,
                            0.0f, 10.f);
         ImGui::SliderFloat("radius", &m_globalConstsCPU.lights[0].radius,
-                           0.0f, 10.f);
+                           0.0f, 0.3f);
 
 
             ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
@@ -459,7 +466,7 @@ void Ex2001_GamePlay::UpdateGUI() {
            if (ImGui::Checkbox("Render BVH", &m_pickedModel->bRenderingBVH)){
                //m_pickedModel->maxRenderingBVHLevel = 0;
            }
-           ImGui::SliderInt("BVH Level", &m_pickedModel->maxRenderingBVHLevel, 0, 20);
+           ImGui::SliderInt("BVH Level", &m_pickedModel->maxRenderingBVHLevel, 0, 30);
 
             if (m_keyPressed['Q']) {
                     if (ImGui::ColorButton("Pos", ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 0,

@@ -1,6 +1,7 @@
 ﻿#include "GeometryGenerator.h"
-
+#include "AppBase.h"
 #include "ModelLoader.h"
+#include <filesystem>
 
 namespace hlab {
 
@@ -132,6 +133,24 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                                            const float scale,
                                            const Vector2 texScale ) 
 {   
+        std::vector<uint8_t> heightMapImage;
+            int mapWidth = 1024;
+            int mapHeight = 1024;
+        string heightMapPath;
+        bool hasHeightMap = false;
+
+        auto filePath = std::filesystem::current_path();
+        for (const auto file : std::filesystem::directory_iterator(filePath)) {
+                if (file.path().stem() == "heightMap") {
+                        hasHeightMap = true;
+                        heightMapPath = file.path().string();
+                        break;
+                }
+        }
+        if (hasHeightMap) {
+                D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
+        } 
+
         MeshData meshData;
         float dx = 2.0f / numSlices;
         float dy = 2.0f / numStacks;
@@ -144,12 +163,18 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
 
             x -= dx;
         Vertex v;
-        v.position = Vector3(x, y, 0.0f) * scale;
-        v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
-        v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
-        v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
+        {
+                v.position = Vector3(x, y, 0.0f) * scale;
+                v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
+                v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
+                v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
 
-        meshData.vertices.push_back(v);
+                SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                                       heightMapImage);
+
+                meshData.vertices.push_back(v);
+
+        }
 
         v = Vertex();
         x += dx;
@@ -157,7 +182,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
         v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
         v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-
+        SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                               heightMapImage);
         meshData.vertices.push_back(v); 
 
                 v = Vertex();
@@ -168,7 +194,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
         v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
         v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-
+        SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                               heightMapImage);
         meshData.vertices.push_back(v);
 
                v = Vertex();
@@ -178,7 +205,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
         v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
         v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
         v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-
+        SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                               heightMapImage);
         meshData.vertices.push_back(v);
 
         x += dx;
@@ -829,6 +857,82 @@ MeshData GeometryGenerator::MakeLine() {
         mesh.indices.push_back(1);
 
         return mesh;
+}
+
+void GeometryGenerator::SetVertexFromHeightMap(
+    int mapWidth, int mapHeight, float scale, float dx, float dy, Vertex &v,
+    std::vector<uint8_t> &heightMapImage) {
+
+        float d = 1.0f / 1024.f;
+
+        Vector3 pos = v.position / scale;
+        Vector2 height = Vector2(pos.x + 1.0f, pos.y + 1.0f) * 0.5f;
+        Vector2 upHeight = height + Vector2(0.0f, -dy);
+        Vector2 downHeight = height + Vector2(0.0f, dy);
+        Vector2 rightHeight = height + Vector2(dx, 0.0f);
+        Vector2 leftHeight = height + Vector2(-dx, 0.0f);
+
+        int heightID[2] = {(int)(height.x * mapWidth),
+                           (int)(height.y * mapHeight)};
+        int upHeightID[2] = {(int)(upHeight.x * mapWidth),
+                             (int)(upHeight.y * mapHeight)};
+        int downHeightID[2] = {(int)(downHeight.x * mapWidth),
+                               (int)(downHeight.y * mapHeight)};
+        int rightHeightID[2] = {(int)(rightHeight.x * mapWidth),
+                                (int)(rightHeight.y * mapHeight)};
+        int leftHeightID[2] = {(int)(leftHeight.x * mapWidth),
+                               (int)(leftHeight.y * mapHeight)};
+
+        int id = (heightID[0] * 4) + (heightID[1] * mapWidth * 4);
+        id = clamp(id, 0, (int)heightMapImage.size() - 1);
+        float h = (float)heightMapImage[id] / 255.0f;
+
+        id = (upHeightID[0] * 4) + (upHeightID[1] * mapWidth * 4);
+        id = clamp(id, 0, (int)heightMapImage.size() - 1);
+        float upH = (float)heightMapImage[id] / 255.0f;
+
+        id = (downHeightID[0] * 4) + (downHeightID[1] * mapWidth * 4);
+        id = clamp(id, 0, (int)heightMapImage.size() - 1);
+        float downH = (float)heightMapImage[id] / 255.0f;
+
+        id = (rightHeightID[0] * 4) + (rightHeightID[1] * mapWidth * 4);
+        id = clamp(id, 0, (int)heightMapImage.size() - 1);
+        float rightH = (float)heightMapImage[id] / 255.0f;
+
+        id = (leftHeightID[0] * 4) + (leftHeightID[1] * mapWidth * 4);
+        id = clamp(id, 0, (int)heightMapImage.size() - 1);
+        float leftH = (float)heightMapImage[id] / 255.0f;
+          
+        float heightScale = 8.0f;
+        v.position.z = -h * heightScale;
+
+        Vector3 upPosition =  Vector3(v.position.x, v.position.y + dy * scale, -upH * heightScale);
+        Vector3 downPosition = Vector3(v.position.x, v.position.y - dy * scale,
+                                       -downH * heightScale);
+        Vector3 rightPosition = Vector3(v.position.x + dy * scale, v.position.y,
+                                        -rightH * heightScale);
+        Vector3 leftPosition = Vector3(v.position.x - dy * scale, v.position.y,
+                                       -leftH * heightScale);
+
+        Vector3 upNormal = upPosition - v.position;
+        upNormal.Normalize();
+        Vector3 downNormal = downPosition - v.position;
+        downNormal.Normalize();
+        Vector3 rightNormal = rightPosition - v.position;
+        rightNormal.Normalize();
+        Vector3 leftNormal = leftPosition - v.position;
+        leftNormal.Normalize();
+
+        Vector3 temp1 = upNormal.Cross(rightNormal);
+        Vector3 temp2 = rightNormal.Cross(downNormal);
+        Vector3 temp3 = downNormal.Cross(leftNormal);
+        Vector3 temp4 = leftNormal.Cross(upNormal);
+
+        v.normalModel = temp1 + temp2 + temp3 + temp4;
+        v.normalModel *= 0.25f;
+        //v.normalModel = temp4;
+         
+        v.tangentModel = v.normalModel.Cross(upNormal);
 }
 
 void GeometryGenerator::Normalize(const Vector3 center,

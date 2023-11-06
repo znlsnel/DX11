@@ -18,6 +18,7 @@ vector<ID3D11SamplerState *> sampleStates;
 // Rasterizer States
 ComPtr<ID3D11RasterizerState> solidRS; // front only
 ComPtr<ID3D11RasterizerState> solidCcwRS;
+ComPtr<ID3D11RasterizerState> depthRS;
 ComPtr<ID3D11RasterizerState> wireRS;
 ComPtr<ID3D11RasterizerState> wireCcwRS;
 ComPtr<ID3D11RasterizerState> postProcessingRS;
@@ -205,8 +206,13 @@ void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
     ThrowIfFailed(
         device->CreateRasterizerState(&rasterDesc, solidRS.GetAddressOf()));
 
+    //depthRS
+    //  Rasterizer States
 
-
+    rasterDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
+    ThrowIfFailed(
+        device->CreateRasterizerState(&rasterDesc, depthRS.GetAddressOf()));
+    rasterDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
 
     // 거울에 반사되면 삼각형의 Winding이 바뀌기 때문에 CCW로 그려야함
     rasterDesc.FrontCounterClockwise = true;
@@ -525,7 +531,8 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     terrainSolidPSO.m_domainShader = terrainDS;
   //  terrainSolidPSO.m_pixelShader = terrainPS;
     terrainSolidPSO.m_primitiveTopology =
-         D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST; 
+        D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST; 
+    
   //  D3D_PRIMITIVE_TOPO
 
     terrainWirePSO = terrainSolidPSO; 
@@ -616,6 +623,8 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     depthOnlyPSO = defaultSolidPSO;
     depthOnlyPSO.m_vertexShader = depthOnlyVS;
     depthOnlyPSO.m_pixelShader = depthOnlyPS;
+    depthOnlyPSO.m_rasterizerState = depthRS;
+
 
     depthOnlySkinnedPSO = depthOnlyPSO;
     depthOnlySkinnedPSO.m_vertexShader = depthOnlySkinnedVS;

@@ -175,6 +175,8 @@ class D3D11Utils {
         context->Unmap(buffer.Get(), NULL);
     }
 
+        static void ReadImageFile(const std::string filename, std::vector<uint8_t>& image);
+    
     static void
     CreateTexture(ComPtr<ID3D11Device> &device,
                   ComPtr<ID3D11DeviceContext> &context,

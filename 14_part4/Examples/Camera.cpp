@@ -154,14 +154,16 @@ Vector3 Camera::GetForwardVector() { return m_forwardDir; }
 
 Vector3 Camera::GetPosision() { return m_position; }
 
-Matrix Camera::GetProjRow() {
+Matrix Camera::GetProjRow(bool isPerspectivePojecion) {
 
       //  std::cout << "aspect :" << m_aspect << std::endl;
+    m_usePerspectiveProjection = isPerspectivePojecion;
     return m_usePerspectiveProjection
                ? XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
                                           m_aspect, m_nearZ, m_farZ)
-               : XMMatrixOrthographicOffCenterLH(-m_aspect, m_aspect, -1.0f,
-                                                 1.0f, m_nearZ, m_farZ);
+               : XMMatrixOrthographicOffCenterLH(m_cameraAspect.x, m_cameraAspect.y, m_cameraAspect.x,
+                     m_cameraAspect.y, m_nearZ, m_cameraFarZ);
 }
+
 
 } // namespace hlab

@@ -75,11 +75,11 @@ PixelShaderInput main(PatchConstOutput patchConst,
         output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
     }
 
-    float2 temp = output.texcoord / 30.0;
-    float height = g_heightMapTexture.SampleLevel(linearWrapSampler, temp, 0).r;
-    height = height * 2.0 - 1.0;
-    output.posWorld += output.normalWorld * height * 5;
-    output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
+    //float2 temp = output.texcoord / 30.0;
+    //float height = g_heightMapTexture.SampleLevel(linearWrapSampler, temp, 0).r;
+    //height = height * 2.0 - 1.0;
+    //output.posWorld += output.normalWorld * height * 5;
+    //output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
 
     return output;
     

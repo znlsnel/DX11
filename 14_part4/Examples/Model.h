@@ -19,7 +19,11 @@ using std::endl;
 using std::string;
 using std::vector;
 
-
+enum ERenderState : int {
+        basic = 1,
+        depth = 2,
+        reflect = 3,
+};
 
 
 class Model {
@@ -142,7 +146,7 @@ public:
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;
     vector<vector<DirectX::BoundingBox>> m_BVHs;
-    GraphicsPSO currPSO;
+    ERenderState renderState = ERenderState::basic;
     //                        [0]
     //          [1]                        [2]
     //    [3]       [4]           [5]           [6]

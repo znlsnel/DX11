@@ -33,7 +33,8 @@ class GeometryGenerator {
                                    const float scale = 1.0f,
                                    const Vector2 texScale = Vector2(1.0f));
     static MeshData MakeTestTessellation();
-    static MeshData MakeTessellationPlane(const int numSlices,
+    static MeshData
+    MakeTessellationPlane(const int numSlices,
                                           const int numStacks,
                                           const float scale,
                                           const Vector2 texScale);
@@ -51,5 +52,7 @@ class GeometryGenerator {
     static MeshData MakeIcosahedron();
     static MeshData SubdivideToSphere(const float radius, MeshData meshData);
     static MeshData MakeLine();
+
+    static void SetVertexFromHeightMap(int mapWidth, int mapHeight, float scale, float dx, float dy, Vertex &v, std::vector<uint8_t>& heightMapImage);
 };
 } // namespace hlab

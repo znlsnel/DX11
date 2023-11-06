@@ -21,10 +21,10 @@ VertexOutput main(VertexShaderInput vin)
     output.texcoord = vin.texcoord;
 
      
-    float2 temp = vin.texcoord / 30.0;
-    float height = g_heightMapTexture.SampleLevel(linearWrapSampler, temp, 0).r;
-    height = height * 2.0 - 1.0;
-    output.posModelHeightMap = vin.posModel + vin.normalModel * height * 5;
+    //float2 temp = vin.texcoord / 30.0;
+    //float height = g_heightMapTexture.SampleLevel(linearWrapSampler, temp, 0).r;
+    //height = height * 2.0 - 1.0;
+    //output.posModelHeightMap = vin.posModel + vin.normalModel * height * 5;
 
     return output;
 }

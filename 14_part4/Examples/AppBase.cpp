@@ -459,7 +459,8 @@ bool AppBase::InitScene() {
         // 조명 0은 고정
         m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
         m_globalConstsCPU.lights[0].position = Vector3(0.0f, 2.698f, -0.159f);
-        m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.0f);
+        m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.2f);
+        m_globalConstsCPU.lights[0].direction.Normalize();
         m_globalConstsCPU.lights[0].spotPower = 3.0f;
         m_globalConstsCPU.lights[0].radius = 0.131f;
         m_globalConstsCPU.lights[0].type =
@@ -631,11 +632,11 @@ void AppBase::UpdateLights(float dt) {
 
             Matrix lightProjRow = XMMatrixPerspectiveFovLH(
                 XMConvertToRadians(120.0f), 1.0f, 0.1f, 10.0f);
-
-      //      m_shadowGlobalConstsCPU[i].eyeWorld = light.position;
-            m_shadowGlobalConstsCPU[i].eyeWorld =
-                light.position +
-                -light.direction * 3.f;
+            lightProjRow = m_camera->GetProjRow(false);
+            m_shadowGlobalConstsCPU[i].eyeWorld = light.position;
+            //m_shadowGlobalConstsCPU[i].eyeWorld =
+            //    light.position +
+            //    -light.direction * 3.f;
 
             m_shadowGlobalConstsCPU[i].view = lightViewRow.Transpose();
             m_shadowGlobalConstsCPU[i].proj = lightProjRow.Transpose();
@@ -723,8 +724,6 @@ void AppBase::RenderShadowMaps() {
                     model->Render(m_context);
                 }
             }
-            //m_groundPlane->RenderTessellation(m_context);
-
 
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);

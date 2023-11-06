@@ -26,6 +26,8 @@ extern vector<ID3D11SamplerState *> sampleStates;
 // CCW: Counter-Clockwise (반시계 방향을 의미합니다.)
 extern ComPtr<ID3D11RasterizerState> solidRS; // front only
 extern ComPtr<ID3D11RasterizerState> solidCcwRS;
+extern ComPtr<ID3D11RasterizerState> depthRS;
+
 extern ComPtr<ID3D11RasterizerState> wireRS;
 extern ComPtr<ID3D11RasterizerState> wireCcwRS;
 extern ComPtr<ID3D11RasterizerState> postProcessingRS;

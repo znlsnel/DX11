@@ -38,6 +38,11 @@ void hlab::TessellationModel::RenderTessellation(
 
 void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
          
+        if (renderState != ERenderState::basic) {
+    
+                Model::Render(context);
+                return;
+        }
     if (m_isVisible) {
         for (const auto &mesh : m_meshes) {
 
@@ -87,9 +92,9 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
 }
 
 GraphicsPSO &hlab::TessellationModel::GetPSO(const bool wired) {
+    renderState = ERenderState::basic;
 
-        currPSO =  wired ? Graphics::terrainWirePSO : Graphics::terrainSolidPSO;
-    return currPSO;
+    return wired ? Graphics::terrainWirePSO : Graphics::terrainSolidPSO;
     // TODO: 여기에 return 문을 삽입합니다.
 }
 
