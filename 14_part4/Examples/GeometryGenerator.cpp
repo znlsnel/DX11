@@ -867,8 +867,8 @@ void GeometryGenerator::SetVertexFromHeightMap(
 
         Vector3 pos = v.position / scale;
         Vector2 height = Vector2(pos.x + 1.0f, pos.y + 1.0f) * 0.5f;
-        Vector2 upHeight = height + Vector2(0.0f, -dy);
-        Vector2 downHeight = height + Vector2(0.0f, dy);
+        Vector2 upHeight = height + Vector2(0.0f, dy);
+        Vector2 downHeight = height + Vector2(0.0f, -dy);
         Vector2 rightHeight = height + Vector2(dx, 0.0f);
         Vector2 leftHeight = height + Vector2(-dx, 0.0f);
 
@@ -902,16 +902,16 @@ void GeometryGenerator::SetVertexFromHeightMap(
         id = (leftHeightID[0] * 4) + (leftHeightID[1] * mapWidth * 4);
         id = clamp(id, 0, (int)heightMapImage.size() - 1);
         float leftH = (float)heightMapImage[id] / 255.0f;
-          
+           
         float heightScale = 8.0f;
         v.position.z = -h * heightScale;
 
         Vector3 upPosition =  Vector3(v.position.x, v.position.y + dy * scale, -upH * heightScale);
         Vector3 downPosition = Vector3(v.position.x, v.position.y - dy * scale,
                                        -downH * heightScale);
-        Vector3 rightPosition = Vector3(v.position.x + dy * scale, v.position.y,
+        Vector3 rightPosition = Vector3(v.position.x + dx * scale, v.position.y,
                                         -rightH * heightScale);
-        Vector3 leftPosition = Vector3(v.position.x - dy * scale, v.position.y,
+        Vector3 leftPosition = Vector3(v.position.x - dx * scale, v.position.y,
                                        -leftH * heightScale);
 
         Vector3 upNormal = upPosition - v.position;
@@ -923,18 +923,27 @@ void GeometryGenerator::SetVertexFromHeightMap(
         Vector3 leftNormal = leftPosition - v.position;
         leftNormal.Normalize();
 
-        Vector3 temp1 = upNormal.Cross(rightNormal);
-        Vector3 temp2 = rightNormal.Cross(downNormal);
-        Vector3 temp3 = downNormal.Cross(leftNormal);
-        Vector3 temp4 = leftNormal.Cross(upNormal);
+        float heights[4] = {upH, rightH, downH, leftH};
+        Vector3 vertexs[4] = {upNormal, rightNormal, downNormal, leftNormal};
 
-        v.normalModel = temp1 + temp2 + temp3 + temp4;
-        v.normalModel *= 0.25f;
-        //v.normalModel = temp4;
-         
+        int max = 0;
+        for (int i = 0; i < 4; i++) {
+                max = std::abs(heights[i]) > std::abs(heights[max]) ? i : max;
+        }  
+
+        //Vector3 nm = vertexs[max].Cross(vertexs[(max + 1) % 4]);
+       //Vector3 nm = vertexs[(max - 1) % 4].Cross(vertexs[max]);
+        Vector3 nm = upNormal.Cross(rightNormal) +
+                     rightNormal.Cross(downNormal) +
+                     downNormal.Cross(leftNormal) + 
+                leftNormal.Cross(upNormal);     
+        nm.Normalize();
+
+        v.normalModel = nm;
+          
         v.tangentModel = v.normalModel.Cross(upNormal);
 }
-
+ 
 void GeometryGenerator::Normalize(const Vector3 center,
                                   const float longestLength,
                                   vector<MeshData> &meshes,

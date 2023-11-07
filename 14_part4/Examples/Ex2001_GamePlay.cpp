@@ -65,7 +65,7 @@ bool Ex2001_GamePlay::InitScene() {
             m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
             m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.65f;
 
-            Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+            Vector3 position = Vector3(-4.80f, -0.115f, -0.229f);
             m_ground->UpdateRotation(Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
             m_ground->isPlane = true;
            // m_groundPlane = m_ground;
@@ -301,13 +301,23 @@ void Ex2001_GamePlay::UpdateGUI() {
     Vector3 tempPos = m_camera->GetEyePos();
     float camera[3] = {tempPos.x, tempPos.y, tempPos.z};
     ImGui::DragFloat3("Camera Pos", camera, 1.0f, -1000.f, 1000.f);
-    ImGui::DragFloat("Camera farZ", &m_camera->m_cameraFarZ, 1.0f, -1000.f, 1000.f);
-    float tempAspect[2] = {m_camera->m_cameraAspect.x,
-                           m_camera->m_cameraAspect.y};
-    if (ImGui::DragFloat2("Camera Aspect", tempAspect, 0.1f, -10.0f, 10.f)) {
-        m_camera->m_cameraAspect.x = tempAspect[0];
-        m_camera->m_cameraAspect.y = tempAspect[1];
+    ImGui::DragFloat("shadow farZ", &m_camera->m_shadowFarZ, 1.0f, -1000.f, 1000.f);
+    float tempAspect[2] = {m_camera->m_shadowAspect.x,
+                           m_camera->m_shadowAspect.y};
+    if (ImGui::DragFloat2("shadow Aspect", tempAspect, 0.1f, -30.0f, 30.f)) {
+        m_camera->m_shadowAspect.x = tempAspect[0];
+        m_camera->m_shadowAspect.y = tempAspect[1];
     }
+    ImGui::DragFloat("overallShadow farZ", &m_camera->m_overallShadowFarZ, 1.0f, -1000.f,
+                     1000.f);
+    float overallShadowAspect[2] = {m_camera->m_overallShadowAspect.x,
+                                    m_camera->m_overallShadowAspect.y};
+    if (ImGui::DragFloat2("overallShadow Aspect", overallShadowAspect, 0.1f,
+                          -30.0f, 30.f)) {
+        m_camera->m_overallShadowAspect.x = overallShadowAspect[0];
+        m_camera->m_overallShadowAspect.y = overallShadowAspect[1];
+    }
+
 
     if (ImGui::TreeNode("Basic")) {
     
@@ -328,9 +338,15 @@ void Ex2001_GamePlay::UpdateGUI() {
             &m_globalConstsCPU.lights[0].position.y,
             &m_globalConstsCPU.lights[0].position.z,
         };
+        float *tempDir[3] = {
+            &m_globalConstsCPU.lights[0].direction.x,
+            &m_globalConstsCPU.lights[0].direction.y,
+            &m_globalConstsCPU.lights[0].direction.z,
+        };
 
         ImGui::SliderFloat3("light Radiance", *temp, -5.0f, 5.0f);
         ImGui::SliderFloat3("position", *tempPos, -10.f, 10.f);
+        ImGui::SliderFloat3("direction", *tempDir, -1.f, 1.f);
         ImGui::SliderFloat("spotPower", &m_globalConstsCPU.lights[0].spotPower,
                            0.0f, 10.f);
         ImGui::SliderFloat("radius", &m_globalConstsCPU.lights[0].radius,
@@ -339,7 +355,7 @@ void Ex2001_GamePlay::UpdateGUI() {
 
             ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
 
-                static float oceanHeight = -0.2f;
+                static float oceanHeight = 0.626f;
             if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
                 Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
                 //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *

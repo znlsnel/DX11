@@ -23,6 +23,7 @@ struct PatchConstOutput
 {
     float edges[4] : SV_TessFactor;
     float inside[2] : SV_InsideTessFactor;
+    //float outside[2] : SV_TessFactor;
 };
 
 
@@ -50,20 +51,26 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     float distMax = 10.0;
     
 
-    len1 = saturate((distMax - len1) / (distMax - distMin));
-    len2= saturate((distMax - len2) / (distMax - distMin));
-    len3 = saturate((distMax - len3) / (distMax - distMin));
-    len4 = saturate((distMax - len4) / (distMax - distMin));
-    len5 = saturate((distMax - len5) / (distMax - distMin));
+    len1 = 1.0 -  saturate((distMax - len1) / (distMax - distMin));
+    len2= 1.0 - saturate((distMax - len2) / (distMax - distMin));
+    len3 = 1.0 - saturate((distMax - len3) / (distMax - distMin));
+    len4 = 1.0 - saturate((distMax - len4) / (distMax - distMin));
+    len5 = 1.0 - saturate((distMax - len5) / (distMax - distMin));
 
     float maxSize = 30.0;
-    pt.edges[0] = lerp(1.0, maxSize, len2);
-    pt.edges[1] = lerp(1.0, maxSize, len1);
-    pt.edges[2] = lerp(1.0, maxSize, len4);
-    pt.edges[3] = lerp(1.0, maxSize, len3);
-    pt.inside[0] = lerp(1.0, maxSize, len5);
-    pt.inside[1] = lerp(1.0, maxSize, len5);
-   
+    //pt.edges[0] = lerp(1.0, maxSize, len2);
+    //pt.edges[1] = lerp(1.0, maxSize, len1);
+    //pt.edges[2] = lerp(1.0, maxSize, len4);
+    //pt.edges[3] = lerp(1.0, maxSize, len3);
+    //pt.inside[0] = lerp(1.0, maxSize, len5);
+    //pt.inside[1] = lerp(1.0, maxSize, len5);
+    pt.edges[0] = lerp(maxSize,1.0, len2);
+    pt.edges[1] = lerp(maxSize, 1.0, len1);
+    pt.edges[2] = lerp(maxSize, 1.0, len4);
+    pt.edges[3] = lerp(maxSize, 1.0, len3);
+    pt.inside[0] = lerp(maxSize, 1.0, len5);
+    pt.inside[1] = lerp(maxSize, 1.0, len5);
+
     return pt;
 }
 

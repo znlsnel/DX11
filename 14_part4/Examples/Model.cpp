@@ -537,7 +537,7 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
         BVBMeshs.back()->meshConstsGPU = m_meshConsts.Get();
         BVBMeshs.back()->materialConstsGPU = m_materialConsts.Get();
 
-        if (currLevel > 17)
+        if (currLevel > 21)
             break;
 
         DirectX::BoundingBox& currBox = BVHBoxs.back();

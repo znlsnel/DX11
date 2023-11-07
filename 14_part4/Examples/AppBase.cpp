@@ -190,7 +190,7 @@ void AppBase::RayTracing()
                         // bool m_selected = ray.Intersects(BVH[index], dist);
 
                         if (m_selected) {
-
+                            fDist = dist;
                             int left = (index * 2) + 1;
                             int right = left + 1;
 
@@ -202,9 +202,9 @@ void AppBase::RayTracing()
                             if (hasRightChild)
                                 queue.push(right);
 
-                             if (!hasLeftChild && !hasRightChild) {
-                                fDist = min(dist, fDist);
-                             }
+                             //if (!hasLeftChild && !hasRightChild) {
+                             //   fDist = min(dist, fDist);
+                             //}
 
                         }
                         BVH[index].Center = tempCenter;
@@ -446,37 +446,41 @@ bool AppBase::Initialize() {
     m_skybox->m_name = "SkyBox";
 
     // 콘솔창이 렌더링 창을 덮는 것을 방지
-    SetForegroundWindow(m_mainWindow);
+    SetForegroundWindow(m_mainWindow); 
     m_JsonManager->LoadMesh();
     return true;
 }
 
 // 여러 예제들이 공통적으로 사용하기 좋은 장면 설정
 bool AppBase::InitScene() {
-
-    // 조명 설정
+         
+    // 조명 설정 
     { 
         // 조명 0은 고정
         m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
         m_globalConstsCPU.lights[0].position = Vector3(0.0f, 2.698f, -0.159f);
-        m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.2f);
+        m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.8f);
         m_globalConstsCPU.lights[0].direction.Normalize();
         m_globalConstsCPU.lights[0].spotPower = 3.0f;
         m_globalConstsCPU.lights[0].radius = 0.131f;
-        m_globalConstsCPU.lights[0].type =
-            LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+        m_globalConstsCPU.lights[0].type = LIGHT_DIRECTIONAL |
+             LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
         // 조명 1의 위치와 방향은 Update()에서 설정
-        m_globalConstsCPU.lights[1].radiance = Vector3(5.0f);
+        m_globalConstsCPU.lights[1].radiance = Vector3(5.0f); 
         m_globalConstsCPU.lights[1].spotPower = 3.0f;
         m_globalConstsCPU.lights[1].fallOffEnd = 20.0f;
         m_globalConstsCPU.lights[1].radius = 0.02f;
         m_globalConstsCPU.lights[1].type = LIGHT_OFF;
             //LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
-
-        // 조명 2는 꺼놓음
+         
+        // 조명 2는 꺼놓음   
         m_globalConstsCPU.lights[2].type = LIGHT_OFF;
-    }
+        
+        m_globalConstsCPU.lights[MAX_LIGHTS - 1] = m_globalConstsCPU.lights[0];
+        m_globalConstsCPU.lights[MAX_LIGHTS - 1].position -=
+            Vector3(0.0f, 0.0f, 15.f); 
+    } 
 
     // 조명 위치 표시
     {
@@ -558,7 +562,7 @@ void AppBase::Update(float dt) {
     const Matrix viewRow = m_camera->GetViewRow();
     const Matrix projRow = m_camera->GetProjRow();
 
-    UpdateLights(dt);
+    UpdateLights(dt); 
 
     // 공용 ConstantBuffer 업데이트
     AppBase::UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
@@ -592,84 +596,96 @@ void AppBase::UpdateLights(float dt) {
     if (m_lightRotate) {
         lightDev = Vector3::Transform(
             lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
-    }
-
+    } 
+     
     m_globalConstsCPU.lights[1].position = Vector3(0.0f, 1.1f, 2.0f) + lightDev;
     Vector3 focusPosition = Vector3(0.0f, -0.5f, 1.7f);
     m_globalConstsCPU.lights[1].direction =
         focusPosition - m_globalConstsCPU.lights[1].position;
     m_globalConstsCPU.lights[1].direction.Normalize();
      
+    static float updateTimer = 0.0f;
+    if (updateTimer > 0.0f) {
+            m_globalConstsCPU.lights[0].position.x = std::floorf(m_camera->GetPosision().x ) ;
+            m_globalConstsCPU.lights[0].position.z =  std::floorf((m_camera->GetPosision().z - 4.0f));
+            updateTimer = 0.0f; 
+    } 
+    updateTimer += dt;
+
+     
     // 그림자맵을 만들기 위한 시점
     for (int i = 0; i < MAX_LIGHTS; i++) {
         auto &light = m_globalConstsCPU.lights[i];
         if (light.type & LIGHT_SHADOW) {
 
-            Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
-            if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
-                up = Vector3(1.0f, 0.0f, 0.0f);
+            //if (false) {
+            //    if (false && m_camera->m_objectTargetCameraMode == false)
+            //                            light.position =
+            //                                m_camera->GetPosision() +
+            //                                -light.direction * 3.f;
+            //    else if (m_camera->GetTarget())
+            //                            light.position = m_camera->GetTarget()
+            //                                                 ->GetMesh()
+            //                                    ->GetPosition() +
+            //                                -light.direction * 3.f;
+            //}
 
-            if (false) {
-                if (false && m_camera->m_objectTargetCameraMode == false)
-                                        light.position =
-                                            m_camera->GetPosision() +
-                                            -light.direction * 3.f;
-                else if (m_camera->GetTarget())
-                                        light.position = m_camera->GetTarget()
-                                                             ->GetMesh()
-                                                ->GetPosition() +
-                                            -light.direction * 3.f;
-            }
-
-             
-            // 그림자맵을 만들 때 필요
-            Matrix lightViewRow = XMMatrixLookAtLH(
-                light.position, light.position + light.direction, up);  
-
-            //Matrix lightViewRow = XMMatrixLookAtLH(
-            //     m_camera->GetPosision(),
-            //     m_camera->GetPosision() + -light.direction * 5.f,  up);
-
-            Matrix lightProjRow = XMMatrixPerspectiveFovLH(
-                XMConvertToRadians(120.0f), 1.0f, 0.1f, 10.0f);
-            lightProjRow = m_camera->GetProjRow(false);
-            m_shadowGlobalConstsCPU[i].eyeWorld = light.position;
-            //m_shadowGlobalConstsCPU[i].eyeWorld =
-            //    light.position +
-            //    -light.direction * 3.f;
-
-            m_shadowGlobalConstsCPU[i].view = lightViewRow.Transpose();
-            m_shadowGlobalConstsCPU[i].proj = lightProjRow.Transpose();
-            m_shadowGlobalConstsCPU[i].invProj =
-                lightProjRow.Invert().Transpose();
-            m_shadowGlobalConstsCPU[i].viewProj =
-                (lightViewRow * lightProjRow).Transpose();
-
-            // LIGHT_FRUSTUM_WIDTH 확인
-            // Vector4 eye(0.0f, 0.0f, 0.0f, 1.0f);
-            // Vector4 xLeft(-1.0f, -1.0f, 0.0f, 1.0f);
-            // Vector4 xRight(1.0f, 1.0f, 0.0f, 1.0f);
-            // eye = Vector4::Transform(eye, lightProjRow);
-            // xLeft = Vector4::Transform(xLeft, lightProjRow.Invert());
-            // xRight = Vector4::Transform(xRight, lightProjRow.Invert());
-            // xLeft /= xLeft.w;
-            // xRight /= xRight.w;
-            // cout << "LIGHT_FRUSTUM_WIDTH = " << xRight.x - xLeft.x <<
-            // endl;
-
-            D3D11Utils::UpdateBuffer(m_context, m_shadowGlobalConstsCPU[i],
-                                     m_shadowGlobalConstsGPU[i]);
-
-            // 그림자를 실제로 렌더링할 때 필요
-            m_globalConstsCPU.lights[i].viewProj =
-                m_shadowGlobalConstsCPU[i].viewProj;
-            m_globalConstsCPU.lights[i].invProj =
-                m_shadowGlobalConstsCPU[i].invProj;
-
-            // 반사된 장면에서도 그림자를 그리고 싶다면 조명도 반사시켜서
-            // 넣어주면 됩니다.
+            UpdateLightInfo(m_shadowGlobalConstsGPU[i] , m_shadowGlobalConstsCPU[i], light, i == MAX_LIGHTS - 1);
         }
     }
+} 
+ 
+void AppBase::UpdateLightInfo(
+    ComPtr<ID3D11Buffer> &shadowGlobalConstsGPU, GlobalConstants
+        &shadowGlobalConstants, Light &light, bool isOverallShadowMap) 
+{
+    Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
+    if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
+        up = Vector3(1.0f, 0.0f, 0.0f); 
+
+    // 그림자맵을 만들 때 필요
+    Matrix lightViewRow =
+        XMMatrixLookAtLH(light.position, light.position + light.direction, up);
+
+    // Matrix lightViewRow = XMMatrixLookAtLH(
+    //      m_camera->GetPosision(),
+    //      m_camera->GetPosision() + -light.direction * 5.f,  up);
+
+    Matrix lightProjRow =
+        XMMatrixPerspectiveFovLH(XMConvertToRadians(120.0f), 1.0f, 0.1f, 10.0f);
+    lightProjRow = m_camera->GetShadowProjRow(isOverallShadowMap);
+    shadowGlobalConstants.eyeWorld = light.position;
+    // m_shadowGlobalConstsCPU[i].eyeWorld =
+    //     light.position +
+    //     -light.direction * 3.f;
+
+    shadowGlobalConstants.view = lightViewRow.Transpose();
+    shadowGlobalConstants.proj = lightProjRow.Transpose();
+    shadowGlobalConstants.invProj = lightProjRow.Invert().Transpose();
+    shadowGlobalConstants.viewProj =
+        (lightViewRow * lightProjRow).Transpose();
+
+    // LIGHT_FRUSTUM_WIDTH 확인
+    // Vector4 eye(0.0f, 0.0f, 0.0f, 1.0f);
+    // Vector4 xLeft(-1.0f, -1.0f, 0.0f, 1.0f);
+    // Vector4 xRight(1.0f, 1.0f, 0.0f, 1.0f);
+    // eye = Vector4::Transform(eye, lightProjRow);
+    // xLeft = Vector4::Transform(xLeft, lightProjRow.Invert());
+    // xRight = Vector4::Transform(xRight, lightProjRow.Invert());
+    // xLeft /= xLeft.w;
+    // xRight /= xRight.w;
+    // cout << "LIGHT_FRUSTUM_WIDTH = " << xRight.x - xLeft.x <<
+    // endl;
+
+    D3D11Utils::UpdateBuffer(m_context, shadowGlobalConstants,
+                             shadowGlobalConstsGPU);
+
+    // 그림자를 실제로 렌더링할 때 필요
+    light.viewProj = shadowGlobalConstants.viewProj;
+    light.invProj = shadowGlobalConstants.invProj;
+
+    // 반사된 장면에서도 그림자를 그리고 싶다면 조명도 반사시켜서
+    // 넣어주면 됩니다.
 }
 
 void AppBase::RenderDepthOnly(){
@@ -712,10 +728,12 @@ void AppBase::RenderShadowMaps() {
     AppBase::SetShadowViewport(); // 그림자맵 해상도
     for (int i = 0; i < MAX_LIGHTS; i++) {
         if (m_globalConstsCPU.lights[i].type & LIGHT_SHADOW) {
-            m_context->OMSetRenderTargets(0, NULL, // DepthOnly라서 RTV 불필요
-                                          m_shadowDSVs[i].Get());
+            m_context->OMSetRenderTargets(0, NULL, 
+                    m_shadowDSVs[i].Get());
+
             m_context->ClearDepthStencilView(m_shadowDSVs[i].Get(),
                                              D3D11_CLEAR_DEPTH, 1.0f, 0);
+
             AppBase::SetGlobalConsts(m_shadowGlobalConstsGPU[i]);
 
             for (const auto &model : m_basicList) {
@@ -729,6 +747,7 @@ void AppBase::RenderShadowMaps() {
                 m_mirror->Render(m_context);
         }
     }
+
 } 
 
 void AppBase::RenderOpaqueObjects() { 
@@ -744,20 +763,21 @@ void AppBase::RenderOpaqueObjects() {
                                          
         m_floatRTV.Get(), m_indexRenderTargetView.Get()
     };
-
+      
     m_context->OMSetRenderTargets(2, targets,
-                                  m_defaultDSV.Get()); 
-     
+                                  m_defaultDSV.Get());  
+      
     // 그림자맵들도 공용 텍스춰들 이후에 추가
     // 주의: 마지막 shadowDSV를 RenderTarget에서 해제한 후 설정
     vector<ID3D11ShaderResourceView *> shadowSRVs;
-    for (int i = 0; i < MAX_LIGHTS; i++) {
-        shadowSRVs.push_back(m_shadowSRVs[i].Get());
+    for (int i = 0; i < MAX_LIGHTS; i++) { 
+        shadowSRVs.push_back(m_shadowSRVs[i].Get()); 
     } 
 
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
-    m_context->PSSetShaderResources(20, 1, m_billboardTreeSRV.GetAddressOf());
+
+    m_context->PSSetShaderResources(20, 1, m_billboardTreeSRV.GetAddressOf()); 
 
     m_context->ClearDepthStencilView(
         m_defaultDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -1166,6 +1186,8 @@ void AppBase::CreateDepthBuffers() {
         ThrowIfFailed(m_device->CreateTexture2D(
             &desc, NULL, m_shadowBuffers[i].GetAddressOf()));
     }
+    ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL,
+                              m_overallShadowBuffer.GetAddressOf()));
 
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
     ZeroMemory(&dsvDesc, sizeof(dsvDesc));
@@ -1180,7 +1202,9 @@ void AppBase::CreateDepthBuffers() {
             m_device->CreateDepthStencilView(m_shadowBuffers[i].Get(), &dsvDesc,
                                              m_shadowDSVs[i].GetAddressOf()));
     }
-     
+    ThrowIfFailed(
+        m_device->CreateDepthStencilView(m_overallShadowBuffer.Get(), &dsvDesc, m_overallShadowDSV.GetAddressOf()));
+
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
     ZeroMemory(&srvDesc, sizeof(srvDesc));
     srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -1195,6 +1219,9 @@ void AppBase::CreateDepthBuffers() {
             m_shadowBuffers[i].Get(), &srvDesc,
             m_shadowSRVs[i].GetAddressOf()));
     }
+    ThrowIfFailed(m_device->CreateShaderResourceView(
+        m_overallShadowBuffer.Get(), &srvDesc,
+        m_overallShadowSRV.GetAddressOf()));
 } 
  
 void AppBase::SetPipelineState(const GraphicsPSO &pso) {

@@ -531,8 +531,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     terrainSolidPSO.m_domainShader = terrainDS;
   //  terrainSolidPSO.m_pixelShader = terrainPS;
     terrainSolidPSO.m_primitiveTopology =
-        D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST; 
-    
+        D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST;
   //  D3D_PRIMITIVE_TOPO
 
     terrainWirePSO = terrainSolidPSO; 

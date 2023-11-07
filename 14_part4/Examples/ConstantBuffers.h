@@ -4,7 +4,7 @@
 #include <directxtk/SimpleMath.h>
 
 // "Common.hlsli"와 동일해야 함
-#define MAX_LIGHTS 3
+#define MAX_LIGHTS 4
 #define LIGHT_OFF 0x00
 #define LIGHT_DIRECTIONAL 0x01
 #define LIGHT_POINT 0x02

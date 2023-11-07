@@ -14,7 +14,8 @@ class Camera {
     Camera(class AppBase *appBase);
 
     Matrix GetViewRow();
-    Matrix GetProjRow(bool isPerspectivePojecion = true);
+    Matrix GetProjRow();
+    Matrix GetShadowProjRow(bool isOverallShadowMap = false);
     Vector3 GetEyePos();
     
     void Reset(Vector3 pos, float yaw, float pitch) {
@@ -46,8 +47,11 @@ class Camera {
     bool m_isCameraLock = true;
     float cameraDistance = 1.0f;
     float cameraSpeed = 1.0f;
-    float m_cameraFarZ = 1.0f;
-    Vector2 m_cameraAspect;
+
+        float m_shadowFarZ = 24.0f;
+        Vector2 m_shadowAspect = Vector2(5.0f, -5.0f);
+        float m_overallShadowFarZ = 180.0f;
+        Vector2 m_overallShadowAspect = Vector2(30.0f, -30.0f);
 
   private:
     Vector3 m_position = Vector3(0.312183f, 0.957463f, -1.88458f);

@@ -48,6 +48,7 @@ class AppBase {
     virtual void UpdateGUI();
     virtual void Update(float dt); 
     virtual void UpdateLights(float dt);
+    void UpdateLightInfo(ComPtr<ID3D11Buffer>& shadowGlobalConstsGPU, GlobalConstants& shadowGlobalConstants, Light &light, bool isOverallShadowMap = false);
     virtual void RenderDepthOnly();
     virtual void RenderShadowMaps();
     virtual void RenderOpaqueObjects();
@@ -160,8 +161,11 @@ class AppBase {
     int m_shadowHeight = 1280;
 
     ComPtr<ID3D11Texture2D> m_shadowBuffers[MAX_LIGHTS]; // No MSAA
+    ComPtr<ID3D11Texture2D> m_overallShadowBuffer; // No MSAA
     ComPtr<ID3D11DepthStencilView> m_shadowDSVs[MAX_LIGHTS];
+    ComPtr<ID3D11DepthStencilView> m_overallShadowDSV;
     ComPtr<ID3D11ShaderResourceView> m_shadowSRVs[MAX_LIGHTS];
+    ComPtr<ID3D11ShaderResourceView> m_overallShadowSRV;
 
     D3D11_VIEWPORT m_screenViewport;
 
