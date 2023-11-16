@@ -25,7 +25,7 @@ void main(int3 gID : SV_GroupID, int3 gtID : SV_GroupThreadID,
     float2 DDown = velocity.SampleLevel(linearWrapSS, down, 0);
 
     
-    
+     
     //divergence[dtID.xy] = 0.5 * (DRight - Dleft).x
     //+ (DUp - DDown).y;
     

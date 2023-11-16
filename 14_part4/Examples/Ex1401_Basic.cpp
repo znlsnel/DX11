@@ -62,14 +62,14 @@ void Ex1401_Basic::Render() {
 
     // TODO: ThreadGroupCount를 쉐이더의 numthreads에 따라 잘 바꿔주기
     // TODO: ceil() 사용하는 이유 이해하기
-    m_context->Dispatch(UINT(ceil(m_screenWidth / 32.0f)), UINT(ceil(m_screenHeight / 32.0f)), 1);
+    m_context->Dispatch(UINT(ceil(m_screenWidth / 32.0f)), UINT(ceil(m_screenHeight / 32.0f)), 32);
 
     // 컴퓨터 쉐이더가 하던 일을 끝내게 만들고 Resources 해제
     AppBase::ComputeShaderBarrier();
-}
-
+} 
+ 
 void Ex1401_Basic::UpdateGUI() {
     ImGui::SliderFloat("Scale", &m_constsCPU.scale, 0.0f, 1.0f);
 }
-
-} // namespace hlab
+ 
+} // namespace hlab   

@@ -37,7 +37,8 @@ class GeometryGenerator {
     MakeTessellationPlane(const int numSlices,
                                           const int numStacks,
                                           const float scale,
-                                          const Vector2 texScale);
+                                          const Vector2 texScale,
+                                        std::vector<uint8_t>& heightMap);
     static MeshData MakeGrass();
     static MeshData MakeBox(float scale = 1.0f);
     static MeshData MakeWireBox(const Vector3 center, const Vector3 extents);

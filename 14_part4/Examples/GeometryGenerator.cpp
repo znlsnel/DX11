@@ -131,25 +131,11 @@ MeshData GeometryGenerator::MakeTestTessellation()
 MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                                            const int numStacks,
                                            const float scale,
-                                           const Vector2 texScale ) 
+                                           const Vector2 texScale ,
+        std::vector<uint8_t>& heightMap) 
 {   
-        std::vector<uint8_t> heightMapImage;
-            int mapWidth = 1024;
-            int mapHeight = 1024;
-        string heightMapPath;
-        bool hasHeightMap = false;
-
-        auto filePath = std::filesystem::current_path();
-        for (const auto file : std::filesystem::directory_iterator(filePath)) {
-                if (file.path().stem() == "heightMap") {
-                        hasHeightMap = true;
-                        heightMapPath = file.path().string();
-                        break;
-                }
-        }
-        if (hasHeightMap) {
-                D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
-        } 
+        int mapWidth = 1024;
+        int mapHeight = 1024;
 
         MeshData meshData;
         float dx = 2.0f / numSlices;
@@ -157,95 +143,98 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
 
         float y = 1.0f;
         float x = -1.f;
-          
-        x += dx;
-    for (int j = 0; j < numStacks * numSlices; j++) {
 
-            x -= dx;
-        Vertex v;
-        {
-                v.position = Vector3(x, y, 0.0f) * scale;
+        auto updateMeshData = [&](float posX, float posY) {
+
+                float tempX = posX;
+            float tempY = posY;
+                Vertex v;
+                v.position = Vector3(tempX, tempY, 0.0f) * scale;
                 v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
-                v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
+                v.texcoord = Vector2(tempX + 1.0f, tempY + 1.0f) * 0.5f * texScale;
                 v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-
                 SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
-                                       heightMapImage);
-
-                meshData.vertices.push_back(v);
-
-        }
-
-        v = Vertex();
-        x += dx;
-        v.position = Vector3(x, y, 0.0f) * scale;
-        v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
-        v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
-        v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-        SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
-                               heightMapImage);
-        meshData.vertices.push_back(v); 
+                                       heightMap);
+                meshData.vertices.push_back(v);  
 
                 v = Vertex();
+                tempX += dx;
+                v.position = Vector3(tempX, tempY, 0.0f) * scale;
+                v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
+                v.texcoord =
+                        Vector2(tempX + 1.0f, tempY + 1.0f) * 0.5f * texScale;
+                v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
+                SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                                       heightMap);
+                meshData.vertices.push_back(v);
 
-        y -= dy;
-        x -= dx;
-        v.position = Vector3(x , y, 0.0f) * scale;
-        v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
-        v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
-        v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-        SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
-                               heightMapImage);
-        meshData.vertices.push_back(v);
+                v = Vertex();
+                tempX -= dx;
+                tempY -= dy;
+                v.position = Vector3(tempX, tempY, 0.0f) * scale;
+                v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
+                v.texcoord =
+                        Vector2(tempX + 1.0f, tempY + 1.0f) * 0.5f * texScale;
+                v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
+                SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                                       heightMap);
+                meshData.vertices.push_back(v);
 
-               v = Vertex();
+                v = Vertex();
+                tempX += dx;
+                v.position = Vector3(tempX, tempY, 0.0f) * scale;
+                v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
+                v.texcoord = Vector2(tempX + 1.0f, tempY + 1.0f) * 0.5f * texScale;
+                v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
+                SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
+                                       heightMap);
+                meshData.vertices.push_back(v);
+        };
+        
+        int xDir = 1;
 
-        x += dx;
-        v.position = Vector3(x, y, 0.0f) * scale;
-        v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
-        v.texcoord = Vector2(x + 1.0f, y + 1.0f) * 0.5f * texScale;
-        v.tangentModel = Vector3(1.0f, 0.0f, 0.0f);
-        SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
-                               heightMapImage);
-        meshData.vertices.push_back(v);
-
-        x += dx;
-        if (x > 1.0f) {
-            x = -1.0f + dx;
-        } else {
-                y += dy;
-        }
-
-    }
-
-    // 0 1 2 2 1 3
-    //for (int j = 0; j < numStacks; j++) {
-    //    for (int i = 0; i < numSlices; i++) {
-    //        meshData.indices.push_back((numSlices + 1) * j + i); 
-    //        meshData.indices.push_back((numSlices + 1) * j + i + 1); 
-    //        meshData.indices.push_back((numSlices + 1) * (j + 1) + i);
-    //        meshData.indices.push_back((numSlices + 1) * (j + 1) + i);
-    //        meshData.indices.push_back((numSlices + 1) * j + i + 1);
-    //        meshData.indices.push_back((numSlices + 1) * (j + 1) + i + 1);
-    //    }
-    //}
     for (int j = 0; j < numStacks * numSlices; j++) {
-        // ...
 
-        // 현재 정점의 인덱스를 계산합니다.
-        uint32_t currentIndex = j * 4;
+                updateMeshData(x, y);
 
-        // 첫 번째 삼각형을 형성하는 인덱스를 추가합니다.
-        meshData.indices.push_back(currentIndex);
-        meshData.indices.push_back(currentIndex + 1);
-        meshData.indices.push_back(currentIndex + 2);
+                x += dx * xDir;
+                if (x > 1.0f - dx || x < -1.0f) {
 
-        // 두 번째 삼각형을 형성하는 인덱스를 추가합니다.
-        meshData.indices.push_back(currentIndex + 2);
-        meshData.indices.push_back(currentIndex + 1);
-        meshData.indices.push_back(currentIndex + 3);
-    }
+                        xDir *= -1;
+                        x += dx * xDir;
+                        y -= dy;
+                }
 
+                // 0 1 2 2 1 3
+                // for (int j = 0; j < numStacks; j++) {
+                //    for (int i = 0; i < numSlices; i++) {
+                //        meshData.indices.push_back((numSlices + 1) * j + i);
+                //        meshData.indices.push_back((numSlices + 1) * j + i +
+                //        1); meshData.indices.push_back((numSlices + 1) * (j +
+                //        1) + i); meshData.indices.push_back((numSlices + 1) *
+                //        (j + 1) + i); meshData.indices.push_back((numSlices +
+                //        1) * j + i + 1); meshData.indices.push_back((numSlices
+                //        + 1) * (j + 1) + i + 1);
+                //    }
+                //}
+        }
+                for (int j = 0; j < numStacks * numSlices; j++) {
+                        // ...
+
+                        // 현재 정점의 인덱스를 계산합니다.
+                        uint32_t currentIndex = j * 4;
+
+                        // 첫 번째 삼각형을 형성하는 인덱스를 추가합니다.
+                        meshData.indices.push_back(currentIndex);
+                        meshData.indices.push_back(currentIndex + 1);
+                        meshData.indices.push_back(currentIndex + 2);
+
+                        // 두 번째 삼각형을 형성하는 인덱스를 추가합니다.
+                        meshData.indices.push_back(currentIndex + 0);
+                        meshData.indices.push_back(currentIndex + 2);
+                        meshData.indices.push_back(currentIndex + 3);
+                }
+        
     return meshData;
 }
 
@@ -859,6 +848,7 @@ MeshData GeometryGenerator::MakeLine() {
         return mesh;
 }
 
+
 void GeometryGenerator::SetVertexFromHeightMap(
     int mapWidth, int mapHeight, float scale, float dx, float dy, Vertex &v,
     std::vector<uint8_t> &heightMapImage) {
@@ -926,13 +916,6 @@ void GeometryGenerator::SetVertexFromHeightMap(
         float heights[4] = {upH, rightH, downH, leftH};
         Vector3 vertexs[4] = {upNormal, rightNormal, downNormal, leftNormal};
 
-        int max = 0;
-        for (int i = 0; i < 4; i++) {
-                max = std::abs(heights[i]) > std::abs(heights[max]) ? i : max;
-        }  
-
-        //Vector3 nm = vertexs[max].Cross(vertexs[(max + 1) % 4]);
-       //Vector3 nm = vertexs[(max - 1) % 4].Cross(vertexs[max]);
         Vector3 nm = upNormal.Cross(rightNormal) +
                      rightNormal.Cross(downNormal) +
                      downNormal.Cross(leftNormal) + 

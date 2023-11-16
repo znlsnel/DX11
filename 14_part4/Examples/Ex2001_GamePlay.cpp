@@ -42,34 +42,47 @@ bool Ex2001_GamePlay::InitScene() {
     // Plane    
     if (true)
     {    
-                    // https://freepbr.com/materials/stringy-marble-pbr/
-            // auto mesh = GeometryGenerator::MakeSquare(10.0, {10.0f, 10.0f});
-            //auto mesh = GeometryGenerator::MakeSquareGrid(2, 2, 1.f ,
-            //                                              Vector2(1.0f, 1.0f));  
-             //auto mesh = GeometryGenerator::MakeTestTessellation();
-                    auto mesh = GeometryGenerator::MakeTessellationPlane(
-                        200, 200, 30.0f, Vector2(30.0f, 30.0f)); 
-            string path = "../Assets/Textures/PBR/Ground037_4K-PNG/";
-            mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
-            mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
-            mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
-            // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-            mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
-                 
-            shared_ptr<Model> m_ground = 
-                make_shared<TessellationModel>(
-                m_device, m_context, vector{mesh});
-            m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
-            m_ground->m_materialConsts.GetCpu().emissionFactor =
-                Vector3(0.0f);
-            m_ground->m_materialConsts.GetCpu().metallicFactor = 0.f;
-            m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.65f;
+        string heightMapPath;
+        bool hasHeightMap = false;
 
+        auto filePath = std::filesystem::current_path();
+        for (const auto file : std::filesystem::directory_iterator(filePath)) {
+            if (file.path().stem() == "heightMap") {
+                hasHeightMap = true;
+                heightMapPath = file.path().string();
+                break;
+            }
+        }
+        if (hasHeightMap) {
+            D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
+        } 
+
+
+        auto mesh = GeometryGenerator::MakeTessellationPlane(
+                200, 200, 30.0f, Vector2(30.0f, 30.0f), heightMapImage); 
+        string path = "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
+        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+        mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
+        // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
+        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+                 
+            m_groundPlane = 
+                make_shared<TessellationModel>(
+                m_device, m_context,  vector{mesh}, this, true);
+
+            m_groundPlane->m_materialConsts.GetCpu().albedoFactor =
+                Vector3(0.2f);
+            m_groundPlane->m_materialConsts.GetCpu().emissionFactor =
+                Vector3(0.0f);
+            m_groundPlane->m_materialConsts.GetCpu().metallicFactor = 0.f;
+            m_groundPlane->m_materialConsts.GetCpu().roughnessFactor = 1.0f;
+            m_groundPlane->m_materialConsts.GetCpu().useNormalMap = 1;
             Vector3 position = Vector3(-4.80f, -0.115f, -0.229f);
-            m_ground->UpdateRotation(Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
-            m_ground->isPlane = true;
-           // m_groundPlane = m_ground;
-            AddBasicList(m_ground);
+            m_groundPlane->UpdateRotation(
+                Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
+            shared_ptr<Model> temp = m_groundPlane;
+            AddBasicList(temp);
     }
 
     // ocean
@@ -297,27 +310,30 @@ void Ex2001_GamePlay::InitAudio() {
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
  //   ImGui::SetNextItemOpen(false, ImGuiCond_Once);
-
     Vector3 tempPos = m_camera->GetEyePos();
     float camera[3] = {tempPos.x, tempPos.y, tempPos.z};
     ImGui::DragFloat3("Camera Pos", camera, 1.0f, -1000.f, 1000.f);
-    ImGui::DragFloat("shadow farZ", &m_camera->m_shadowFarZ, 1.0f, -1000.f, 1000.f);
-    float tempAspect[2] = {m_camera->m_shadowAspect.x,
-                           m_camera->m_shadowAspect.y};
-    if (ImGui::DragFloat2("shadow Aspect", tempAspect, 0.1f, -30.0f, 30.f)) {
-        m_camera->m_shadowAspect.x = tempAspect[0];
-        m_camera->m_shadowAspect.y = tempAspect[1];
-    }
-    ImGui::DragFloat("overallShadow farZ", &m_camera->m_overallShadowFarZ, 1.0f, -1000.f,
-                     1000.f);
-    float overallShadowAspect[2] = {m_camera->m_overallShadowAspect.x,
-                                    m_camera->m_overallShadowAspect.y};
-    if (ImGui::DragFloat2("overallShadow Aspect", overallShadowAspect, 0.1f,
-                          -30.0f, 30.f)) {
-        m_camera->m_overallShadowAspect.x = overallShadowAspect[0];
-        m_camera->m_overallShadowAspect.y = overallShadowAspect[1];
-    }
 
+    if (ImGui::TreeNode("Shadow")) {
+            ImGui::DragFloat("shadow farZ", &m_camera->m_shadowFarZ, 1.0f, -1000.f, 1000.f);
+            float tempAspect[2] = {m_camera->m_shadowAspect.x,
+                                   m_camera->m_shadowAspect.y};
+            if (ImGui::DragFloat2("shadow Aspect", tempAspect, 0.1f, -30.0f, 30.f)) {
+                m_camera->m_shadowAspect.x = tempAspect[0];
+                m_camera->m_shadowAspect.y = tempAspect[1];
+            }
+            ImGui::DragFloat("overallShadow farZ", &m_camera->m_overallShadowFarZ, 1.0f, -1000.f,
+                             1000.f);
+            float overallShadowAspect[2] = {m_camera->m_overallShadowAspect.x,
+                                            m_camera->m_overallShadowAspect.y};
+            if (ImGui::DragFloat2("overallShadow Aspect", overallShadowAspect, 0.1f,
+                                  -30.0f, 30.f)) {
+                m_camera->m_overallShadowAspect.x = overallShadowAspect[0];
+                m_camera->m_overallShadowAspect.y = overallShadowAspect[1];
+            }
+
+
+    }
 
     if (ImGui::TreeNode("Basic")) {
     
@@ -472,10 +488,20 @@ void Ex2001_GamePlay::UpdateGUI() {
     int tempMouseMode = (int)m_mouseMode;
     if (ImGui::SliderInt(
         "MouseMode", &tempMouseMode, 0, 2,
-            "0 : None \n 1 : ObjectPickingMode \n 2: HeightMapEditMode")) {
+            "0 : None  1 : ObjectPickingMode  2: HeightMapEditMode")) {
             m_mouseMode = (EMouseMode)tempMouseMode;
     }
+    if (m_mouseMode == EMouseMode::TextureMapEditMode) {
+            int type = (int)m_textureType;
 
+            if (ImGui::SliderInt("EditTexture", &type, -1, 3,
+                                 "-1: None")) {
+                m_textureType = (EEditTextureType)type; 
+            }
+            
+            ImGui::SliderFloat("EditRadius", &m_groundPlane->editRadius, 1.0f,
+                               50.0f);
+    }
     if (m_pickedModel && m_pickedModel->m_editable) {
             ImGui::Checkbox("ObjectLock", &m_pickedModel->isObjectLock);
 

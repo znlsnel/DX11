@@ -29,10 +29,19 @@ using std::vector;
 using std::wstring;
 using std::map;
 
+
 enum EMouseMode : int {
-        None = 0,
+        MouseModeNone = 0,
         ObjectPickingMode = 1,
-        HeightMapEditMode = 2,
+        TextureMapEditMode = 2,
+};
+
+enum EEditTextureType : int {
+        EditTextureTypeNone = -1,
+        Ground = 0,
+        RiverBed = 1,
+        PavingStones = 2,
+        Rock = 3,
 };
 
 class AppBase {
@@ -77,10 +86,14 @@ class AppBase {
     void ProcessMouseControl();
     void DestroyObject(shared_ptr<class Model> object);
     bool MouseObjectPicking();
-    virtual void RayTracing();
+    virtual void RayCasting();
+    virtual void RayCasting(Vector3 origin, Vector3 dir, float& dist);
+    virtual void SetHeightPosition(Vector3 origin, Vector3 dir, float& dist);
+     
     void replicateObject();
     void AddBasicList(shared_ptr<Model>& object, bool editable = true, bool saveable = false);
     bool IsMouseHoveringImGui();
+    void ComputeShaderBarrier();
 
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();
@@ -89,7 +102,6 @@ class AppBase {
     void CreateBuffers();
     void SetMainViewport();
     void SetShadowViewport();
-    void ComputeShaderBarrier();
 
     virtual void ObjectDrag();
     template <typename T>
@@ -193,7 +205,7 @@ class AppBase {
 
     float cameraSpeed_min = 0.01f;
     float cameraSpeed_max = 2.0f;
-
+   
     double timeSeconds = 0.0;
     // 렌더링 -> PostEffects -> PostProcess
     PostEffectsConstants m_postEffectsConstsCPU;
@@ -217,6 +229,8 @@ class AppBase {
             
     bool m_lightRotate = false;            
     bool m_pauseAnimation = false;   
+
+    vector<uint8_t> heightMapImage;
          
     // 여러 예제들 공용     
     shared_ptr<Model> m_screenSquare; // PostEffect에 사용   
@@ -225,7 +239,7 @@ class AppBase {
     shared_ptr<class TessellationModel> m_groundPlane; 
     shared_ptr<Model> m_terrain;
     shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
-    shared_ptr<Model> m_cursorSphere;
+    vector<shared_ptr<Model>> m_cursorSphere;
     shared_ptr<Model> m_mirror; // 거울은 별도로 그림
     shared_ptr<class InputManager> m_inputManager;
 
@@ -233,7 +247,7 @@ class AppBase {
     float m_mirrorAlpha = 1.0f; // Opacity
 
     EMouseMode m_mouseMode = EMouseMode::ObjectPickingMode;
-
+    EEditTextureType m_textureType = EEditTextureType::EditTextureTypeNone;
 
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
     map<int, shared_ptr<Model>> m_objects;

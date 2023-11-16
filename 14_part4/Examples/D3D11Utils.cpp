@@ -414,7 +414,9 @@ void CreateTextureHelper(ComPtr<ID3D11Device> &device,
     txtDesc.Format = pixelFormat;
     txtDesc.SampleDesc.Count = 1;
     txtDesc.Usage = D3D11_USAGE_DEFAULT; // ½ºÅ×ÀÌÂ¡ ÅØ½ºÃç·ÎºÎÅÍ º¹»ç °¡´É
-    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET |
+                        D3D11_BIND_UNORDERED_ACCESS;
+
     txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // ¹Ó¸Ê »ç¿ë
     txtDesc.CPUAccessFlags = 0;
 
@@ -554,9 +556,9 @@ void D3D11Utils::CreateTexture(
         ComPtr<ID3D11DeviceContext> &context,
     ComPtr<ID3D11Texture2D> &texture,
     ComPtr<ID3D11ShaderResourceView> &textureResourceView, 
-        bool usSRGB, int width, int height) {
+        bool usSRGB, int width, int height, int initValue) {
 
-        std::vector<uint8_t> image(width * height * 4, 0);
+        std::vector<uint8_t> image(width * height * 4, initValue);
     DXGI_FORMAT pixelFormat =
         usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 

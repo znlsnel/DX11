@@ -94,14 +94,15 @@ bool AppBase::MouseObjectPicking() {
     return ReadPixelOfMousePos<UINT8>(m_device, m_context);
 }
 
-void AppBase::RayTracing() 
+void AppBase::RayCasting() 
 { 
-        if (m_mouseMode != EMouseMode::HeightMapEditMode)
-        return;
-
-       if (MouseObjectPicking() == false || m_pickedModel == nullptr)
+        if (m_mouseMode != EMouseMode::TextureMapEditMode)
                 return;
-        
+
+
+       //if (MouseObjectPicking() == false || m_pickedModel == nullptr)
+       //         return;
+       // 
 
         Matrix viewRow = m_camera->GetViewRow();
         Matrix projRow = m_camera->GetProjRow();
@@ -118,106 +119,240 @@ void AppBase::RayTracing()
         Vector3 cursorWorldFar =
             Vector3::Transform(cursorNdcFar, inverseProjView);
 
-        cout << "cursorWorldNear : " << cursorWorldNear.x << ", "
-             << cursorWorldNear.y
-             << ", " << cursorWorldNear.z << ", " << endl;
-
         Vector3 dir = cursorWorldFar - cursorWorldNear;
         dir.Normalize();
-
+        Vector3 tempPos;
        float fDist = FLT_MAX;
-        if (m_pickedModel->isPlane && false) {
-                SimpleMath::Ray ray = SimpleMath::Ray(cursorWorldNear, dir);
-                float dist = 0.0f;
-                Vector3 normalizedUpVector = Vector3(0.0f, 1.0f, 0.0f);
-                //{
-                //    Vector3 modelRot = m_pickedModel->GetRotation();
-                //    DirectX::XMFLOAT4X4 rotationMatrix;
-                //    DirectX::XMStoreFloat4x4(
-                //        &rotationMatrix, DirectX::XMMatrixRotationRollPitchYaw(
-                //                             modelRot.x, modelRot.y, modelRot.z));
+        int fLevel = 0;
+         
 
-                //    // 업 벡터 추출
-                //    DirectX::XMVECTOR upVector = DirectX::XMVectorSet(
-                //        rotationMatrix._21, rotationMatrix._22,
-                //        rotationMatrix._23, 0.0f);
-                //    normalizedUpVector =
-                //        DirectX::XMVector3Normalize(upVector);
-                //}
-
-                SimpleMath::Plane tempPlane(m_pickedModel->GetPosition(),
-                                            normalizedUpVector);
-                bool selected = ray.Intersects(tempPlane, dist);
-
-                if (selected) {
-                    fDist = dist;
-                }
-        }
-        // 0
-        //  1    2
-        // 3 4 5 6
-        else {
-
-                for (auto &BVH : m_pickedModel->m_BVHs) {
+        for (auto &BVH : m_groundPlane->m_BVHs) {
 
                    
-                    std::queue<int> queue;
-                    queue.push(0);
+                std::queue<pair<int, int>> queue;
+                queue.push(make_pair(0,0));
 
-                    while (queue.empty() == false) {
-                        int index = queue.front();
-                        queue.pop();
+                while (queue.empty() == false) {
+                    int level = queue.front().second;
+                int index = queue.front().first;
+                queue.pop();
 
-                        SimpleMath::Ray ray =
-                            SimpleMath::Ray(cursorWorldNear, dir);
-                        float dist = 0.0f;
+                SimpleMath::Ray ray =
+                        SimpleMath::Ray(cursorWorldNear, dir);
+                float dist = 0.0f;
 
-                        Vector3 tempCenter = BVH[index].Center;
-                        Vector3 tempExtents = BVH[index].Extents;
+                Vector3 tempCenter = BVH[index].m_bb.Center;
+                Vector3 tempExtents = BVH[index].m_bb.Extents;
 
-                        Matrix temp = m_pickedModel->m_worldRow;
+                Matrix temp = m_groundPlane->m_worldRow;
 
-                        BVH[index].Center =
-                            Vector3::Transform(tempCenter, temp);
-                        temp.Translation(Vector3(0.0f));
-                        BVH[index].Extents =
-                            Vector3::Transform(tempExtents, temp);
+                BVH[index].m_bb.Center =
+                        Vector3::Transform(tempCenter, temp);
+                temp.Translation(Vector3(0.0f));
+                BVH[index].m_bb.Extents =
+                        Vector3::Transform(tempExtents, temp);
 
 
-                        bool m_selected =
-                            BVH[index].Intersects(cursorWorldNear, dir, dist);
+                bool m_selected =
+                        BVH[index].Intersects(cursorWorldNear, dir, dist);
                         
-                        // bool m_selected = ray.Intersects(BVH[index], dist);
+                // bool m_selected = ray.Intersects(BVH[index], dist);
 
                         if (m_selected) {
-                            fDist = dist;
-                            int left = (index * 2) + 1;
-                            int right = left + 1;
+                                if (fLevel < level || (fLevel == level && fDist > dist)) {
+                                fDist = dist;
+                                fLevel = level;
+                                }
 
-                            bool hasLeftChild = left < BVH.size();
-                            bool hasRightChild = right < BVH.size();
+                                int left = (index * 2) + 1;
+                                int right = left + 1;
 
-                            if (hasLeftChild)
-                                queue.push(left);
-                            if (hasRightChild)
-                                queue.push(right);
+                                bool hasLeftChild = left < BVH.size();
+                                bool hasRightChild = right < BVH.size();
 
-                             //if (!hasLeftChild && !hasRightChild) {
-                             //   fDist = min(dist, fDist);
-                             //}
-
+                                if (hasLeftChild)
+                                        queue.push(make_pair(left, level+1));
+                                if (hasRightChild)
+                                        queue.push(make_pair(right, level + 1));
                         }
-                        BVH[index].Center = tempCenter;
-                        BVH[index].Extents = tempExtents;
-                    }
+                        BVH[index].m_bb.Center = tempCenter;
+                        BVH[index].m_bb.Extents = tempExtents;
                 }
         }
-       if (fDist < FLT_MAX) {
-               Vector3 pos = cursorWorldNear + dir * fDist;
-               m_cursorSphere->UpdatePosition(pos);
-               cout << "RayTracing ---- World Location : " << pos.x << ", "
-                    << pos.y << ", " << pos.z << "\n";
+        
+       if (fDist < FLT_MAX) { 
+                       Vector3 pos = cursorWorldNear + dir * fDist;
+                m_cursorSphere[0]->UpdatePosition(pos);
+                       m_cursorSphere[0]->m_isVisible = true;
+                       m_groundPlane->UpdateTextureMap(m_context, pos,
+                                                       (int)m_textureType);
        }
+}
+
+void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
+
+       float fDist = FLT_MAX;
+       int fLevel = 0;
+       int resultIndex = -1;
+       bool hasLeftChild = false;
+       bool hasRightChild = false;
+       Matrix tempRow = m_groundPlane->m_worldRow;
+       for (auto &BVH : m_groundPlane->m_BVHs) {
+
+                std::queue<pair<int, int>> queue;
+                queue.push(make_pair(0, 0));
+
+                while (queue.empty() == false) {
+                        int level = queue.front().second;
+                        int index = queue.front().first;
+                        queue.pop();
+
+                        float dist = 0.0f;
+
+                        Vector3 tempCenter = BVH[index].m_bb.Center;
+                        Vector3 tempExtents = BVH[index].m_bb.Extents;
+
+                        
+                        bool m_selected = false;
+
+                        BVH[index].m_bb.Center =
+                                Vector3::Transform(tempCenter, tempRow);
+                        tempRow.Translation(Vector3(0.0f));
+                        BVH[index].m_bb.Extents =
+                                Vector3::Transform(tempExtents, tempRow);
+
+                        m_selected = BVH[index].Intersects(origin, dir, dist);      
+                        
+                        if (m_selected) 
+                        {
+                                if (fLevel < level ||
+                                        (fLevel == level && fDist > dist)) {
+                                        fDist = dist;
+                                        fLevel = level;
+                                        resultIndex = index;
+                                }
+
+                                int left = (index * 2) + 1;
+                                int right = left + 1;
+
+                                hasLeftChild = left < BVH.size();
+                                hasRightChild = right < BVH.size();
+
+                                if (hasLeftChild)
+                                        queue.push(make_pair(left, level + 1));
+                                if (hasRightChild)
+                                        queue.push(make_pair(right, level + 1));
+                        }
+                        BVH[index].m_bb.Center = tempCenter;
+                        BVH[index].m_bb.Extents = tempExtents;
+                 }
+       }
+
+       if (fDist < FLT_MAX) {
+                 m_groundPlane->m_BVHs[0][resultIndex].updateWorldVertex(
+                     tempRow);
+                 bool r = m_groundPlane->m_BVHs[0][resultIndex].TriangleIntersects(origin, dir, dist);
+                       
+                 if (r == false) 
+                         dist = fDist;
+
+                 if (r) {
+                         cout << "succeeed \n";
+                 
+                 }
+                 else {
+                         cout << "failed  \n";
+                 }
+
+                cout << "vertexSize : "
+                      << int(m_groundPlane->m_BVHs[0][resultIndex]
+                            .worldVertexs.size())
+                 << "\n";
+
+                 for (int i = 0;
+                      i <
+                      m_groundPlane->m_BVHs[0][resultIndex].worldVertexs.size();
+                      i++) {
+
+                         cout << "v0 : "
+                              << m_groundPlane->m_BVHs[0][resultIndex]
+                                     .worldVertexs[i]
+                                     .x
+                              << ", "
+                              << m_groundPlane->m_BVHs[0][resultIndex]
+                                     .worldVertexs[i]
+                                     .y
+                              << ", "
+                              << m_groundPlane->m_BVHs[0][resultIndex]
+                                     .worldVertexs[i]
+                                     .z
+                              << "\n";
+                 }
+       } 
+}
+
+void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) { 
+        float dv = 1024.f / 200.f * 0.5f;
+        float a = 1024.f / 60.f;
+        float rv = 60.f / 200.f * 0.5f;
+
+        // up down left right pos; 
+
+        int currPos[2] = {int(a * (origin.x + 30.0f)),
+                          int(a * (origin.z + 30.0f))
+        }; 
+
+        float upPos[2] = {round((a * (origin.x + 30.0f) + dv)/ (dv * 2)) * (dv * 2),
+            round((a * (origin.z + 30.0f) + dv) / (dv * 2)) * (dv * 2)
+        }; 
+        
+        float downPos[2] = {round((a * (origin.x + 30.0f) - dv) / (dv * 2)) *
+                                (dv * 2),
+            round((a * (origin.z + 30.0f) - dv) / (dv * 2)) * (dv * 2)
+        }; 
+
+        float leftPos[2] = {round((a * (origin.x + 30.0f) - dv) / (dv * 2)) *
+                                (dv * 2),
+            round((a * (origin.z + 30.0f) + dv) / (dv * 2)) * (dv * 2)
+        }; 
+        float rightPos[2] = {round((a * (origin.x + 30.0f) + dv) / (dv * 2)) *
+                                 (dv * 2),
+            round((a * (origin.z + 30.0f) - dv) / (dv * 2)) * (dv * 2)
+        }; 
+
+         auto changePos = [&](float idxPos[2], Vector3& pos) { 
+                 idxPos[0] = clamp(idxPos[0], 0.0f, 1024.f);
+                 idxPos[1] = clamp(idxPos[1], 0.0f, 1024.f);
+
+                 int idx = int(idxPos[1]) * 1024 * 4 + int(idxPos[0]) * 4;
+                 float h = heightMapImage[idx] / 255.f * 8.0f;
+                 
+                 pos.x = roundf(pos.x / (rv * 2)) * (rv * 2);
+                 pos.z = roundf(pos.z / (rv * 2)) * (rv * 2);
+                 pos.y = h;
+        };
+
+         Vector3 upPosition = Vector3(origin.x + rv, 0.0f, origin.z + rv);
+         Vector3 downPosition = Vector3(origin.x - rv, 0.0f, origin.z - rv);
+         Vector3 leftPosition = Vector3(origin.x - rv, 0.0f, origin.z + rv);
+         Vector3 rightPosition = Vector3(origin.x + rv, 0.0f, origin.z - rv);
+          
+         changePos(upPos, upPosition);
+         changePos(downPos, downPosition);
+         changePos(leftPos, leftPosition);
+         changePos(rightPos, rightPosition);
+
+         m_cursorSphere[1]->UpdatePosition(upPosition);
+         m_cursorSphere[2]->UpdatePosition(downPosition);
+         m_cursorSphere[3]->UpdatePosition(leftPosition);
+         m_cursorSphere[4]->UpdatePosition(rightPosition);
+
+         DirectX::SimpleMath::Ray ray = SimpleMath::Ray(origin, dir);
+         bool result = ray.Intersects(downPosition, leftPosition, upPosition, dist);
+         if (result == false)
+                 result =
+                     ray.Intersects(downPosition, upPosition, rightPosition,
+                                         dist);
 }
 
 void AppBase::ObjectDrag() {
@@ -261,7 +396,7 @@ void AppBase::ObjectDrag() {
                 if (m_selected) 
                 {
                         Vector3 pickPoint = cursorWorldNear + dist * dir;
-                        m_cursorSphere->UpdatePosition(pickPoint);
+                    m_cursorSphere[0]->UpdatePosition(pickPoint);
 
                         if (m_dragStartFlag) 
                         {
@@ -508,17 +643,20 @@ bool AppBase::InitScene() {
     }
 
     // 커서 표시 (Main sphere와의 충돌이 감지되면 월드 공간에 작게 그려지는 구)
+    for (int i = 0; i < 5; i++)
     {
         MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
-        m_cursorSphere =
+        shared_ptr<Model>cursorSphere =
             make_shared<Model>(m_device, m_context, vector{sphere});
-        m_cursorSphere->m_isVisible = true; // 마우스가 눌렸을 때만 보임
-        m_cursorSphere->m_castShadow = false; // 그림자 X
-        m_cursorSphere->m_materialConsts.GetCpu().albedoFactor = Vector3(0.0f);
-        m_cursorSphere->m_materialConsts.GetCpu().emissionFactor =
+        cursorSphere->m_isVisible = true; // 마우스가 눌렸을 때만 보임
+        cursorSphere->m_castShadow = true; // 그림자 X
+        cursorSphere->m_materialConsts.GetCpu().albedoFactor = Vector3(0.0f);
+        cursorSphere->m_materialConsts.GetCpu().emissionFactor =
             Vector3(1.0f, 0.0f, 0.0f);
-       // m_basicList.push_back(m_cursorSphere); // 리스트에 등록
-        AddBasicList(m_cursorSphere);
+
+        cursorSphere->UpdateScale(Vector3(30.f, 30.f, 30.f));
+        m_cursorSphere.push_back(cursorSphere);
+        AddBasicList(cursorSphere);
     }
 
     return true;
@@ -545,13 +683,22 @@ void AppBase::UpdateGUI() {
 
 void AppBase::Update(float dt) {
 
-        float length =  (m_cursorSphere->GetPosition() - m_camera->GetPosision()).Length() * 5;
-    length = max(length, 5.0f);
-        m_cursorSphere->UpdateScale(Vector3(length));
+        m_inputManager->Update(dt);
+
+        for (auto sphere : m_cursorSphere) {
+                float length =
+            (sphere->GetPosition() - m_camera->GetPosision())
+                        .Length() * 5;
+                length = max(length, 5.0f);
+
+                sphere->UpdateScale(Vector3(length) * 2);
+        }
+         
 
         for (const auto &model : m_characters) {
                 model->Update(dt);
         }
+
 
     // 카메라의 이동
     //m_camera.UpdateKeyboard(dt, m_keyPressed);
@@ -886,7 +1033,8 @@ void AppBase::Render() {
                              Graphics::sampleStates.data());
     m_context->HSSetSamplers(0, UINT(Graphics::sampleStates.size()),
                         Graphics::sampleStates.data());
-    
+    m_context->CSSetSamplers(0, UINT(Graphics::sampleStates.size()),
+                             Graphics::sampleStates.data());
 
     // 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
     vector<ID3D11ShaderResourceView *> commonSRVs = {
@@ -1142,6 +1290,7 @@ void AppBase::SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU) {
     m_context->HSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
     m_context->DSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
     m_context->GSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
+
 }
    
 void AppBase::CreateDepthBuffers() {
@@ -1394,11 +1543,11 @@ void AppBase::ProcessMouseControl() {
             activeModel->m_worldRow.Translation();
 
         // 충돌 지점에 작은 구 그리기
-        m_cursorSphere->m_isVisible = true;
+        m_cursorSphere[0]->m_isVisible = true;
         //m_cursorSphere->UpdateWorldRow(Matrix::CreateTranslation(pickPoint));
-        m_cursorSphere->UpdatePosition(pickPoint);
+        m_cursorSphere[0]->UpdatePosition(pickPoint);
     } else {
-        m_cursorSphere->m_isVisible = false;
+        m_cursorSphere[0]->m_isVisible = false;
     }
 }
 

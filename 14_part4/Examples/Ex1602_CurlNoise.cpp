@@ -93,6 +93,7 @@ void Ex1602_CurlNoise::Update(float dt) {
     m_context->CSSetShader(m_curlNoiseCS.Get(), 0, 0);
     m_context->Dispatch(UINT(ceil(m_screenWidth / 32.0f)),
                         UINT(ceil(m_screenHeight / 32.0f)), 1);
+  
     ComputeShaderBarrier();
 }
 

@@ -37,10 +37,11 @@ float cloudDensity(float3 uvw)
 [numthreads(16, 16, 4)]
 void main(uint3 dtID : SV_DispatchThreadID)
 {
-    uint width, height, depth;
+    uint width, height, depth; 
     densityTex.GetDimensions(width, height, depth);
     
     float3 uvw = dtID / float3(width, height, depth) + uvwOffset; // 노이즈 생성을 위해 uvwOffset 사용
 
     densityTex[dtID] = cloudDensity(uvw);
 }
+ 

@@ -368,13 +368,18 @@ PixelShaderOutput main(PixelShaderInput input)
     
     float3 directLighting = float3(0, 0, 0);
 
-
-    if (length(eyeWorld - input.posWorld) > 5.0)
-        directLighting += DrawLight(input, lights[MAX_LIGHTS - 1], shadowMaps[MAX_LIGHTS-1],
+    float3 temp1 = float3(0.0, 0.0, 0.0);
+    float3 temp2 = float3(0.0, 0.0, 0.0);
+    temp1 = DrawLight(input, lights[MAX_LIGHTS - 1], shadowMaps[MAX_LIGHTS - 1],
         normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
-    else
-        directLighting += DrawLight(input, lights[0], shadowMaps[0],
+    temp2 = DrawLight(input, lights[0], shadowMaps[0],
         normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
+    
+    float lerpValue = length(eyeWorld - input.posWorld);
+    lerpValue /= 4.0;
+    directLighting += (temp1 * lerpValue) + (temp2 * (1.0 - lerpValue));
+    
+    
     
     // 임시로 unroll 사용
     [unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll

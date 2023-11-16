@@ -4,7 +4,6 @@
 struct VertexOutput
 {
     float3 posModel : POSITION0; //¸ðµ¨ ÁÂÇ¥°èÀÇ À§Ä¡ position
-    float3 posModelHeightMap : POSITION1;
     float3 normalModel : NORMAL; // ¸ðµ¨ ÁÂÇ¥°èÀÇ normal    
     float2 texcoord : TEXCOORD;
     float3 tangentModel : TANGENT;
@@ -33,10 +32,10 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
 {
     PatchConstOutput pt;
     
-    float3 posWorld1 = mul(float4(patch[0].posModelHeightMap, 1.0), world).xyz;
-    float3 posWorld2 = mul(float4(patch[1].posModelHeightMap, 1.0), world).xyz;
-    float3 posWorld3 = mul(float4(patch[2].posModelHeightMap, 1.0), world).xyz;
-    float3 posWorld4 = mul(float4(patch[3].posModelHeightMap, 1.0), world).xyz;
+    float3 posWorld1 = mul(float4(patch[0].posModel, 1.0), world).xyz;
+    float3 posWorld2 = mul(float4(patch[1].posModel, 1.0), world).xyz;
+    float3 posWorld3 = mul(float4(patch[2].posModel, 1.0), world).xyz;
+    float3 posWorld4 = mul(float4(patch[3].posModel, 1.0), world).xyz;
     
     
     float3 posCenter = (posWorld1 + posWorld2 + posWorld3 + posWorld4) / 4.0;
@@ -57,7 +56,7 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     len4 = 1.0 - saturate((distMax - len4) / (distMax - distMin));
     len5 = 1.0 - saturate((distMax - len5) / (distMax - distMin));
 
-    float maxSize = 30.0;
+    float maxSize = 5.0;
     //pt.edges[0] = lerp(1.0, maxSize, len2);
     //pt.edges[1] = lerp(1.0, maxSize, len1);
     //pt.edges[2] = lerp(1.0, maxSize, len4);

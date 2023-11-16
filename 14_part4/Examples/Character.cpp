@@ -21,7 +21,7 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
                 } 
         }
         Vector3 center(0.0f, 0.1f, 1.0f);
-
+        
         m_mesh =
                 make_shared<SkinnedMeshModel>(device, context, meshes, aniData);
 
@@ -31,7 +31,8 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
         //m_mesh->UpdateWorldRow(Matrix::CreateScale(0.2f) *
         //                            Matrix::CreateTranslation(center));
         m_mesh->UpdateTranseform(Vector3(0.2f), m_mesh->GetRotation(), center);
-        appBase = (Ex2001_GamePlay*)base;
+        m_mesh->SetLocalPosition(Vector3(0.0f, 0.1f, 0.0f));
+        m_appBase = (Ex2001_GamePlay*)base;
 
 }
 
@@ -47,9 +48,11 @@ void hlab::Character::BeginPlay() {
 
 void hlab::Character::UpdateTransform(float dt) 
 {
-        if (appBase->m_camera->m_objectTargetCameraMode == false)
+        
+       
+        if (m_appBase->m_camera->m_objectTargetCameraMode == false)
                 return;
-        if (appBase->m_keyPressed['A']) {
+        if (m_appBase->m_keyPressed['A']) {
 
                 //m_mesh->UpdateWorldRow(
                 //    Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
@@ -57,7 +60,7 @@ void hlab::Character::UpdateTransform(float dt)
                 m_mesh->AddYawOffset(-3.141592f * 240.f / 180.f * dt);
                 
                  
-        } else if (appBase->m_keyPressed['D']) {
+        } else if (m_appBase->m_keyPressed['D']) {
                 //m_mesh->UpdateWorldRow(
                 //    Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
                 //    m_mesh->m_worldRow);
@@ -79,6 +82,22 @@ void hlab::Character::UpdateTransform(float dt)
 
                   m_mesh->UpdatePosition(velocity);
         }
+
+        static float updateTime = 0.0f;
+        static const float updateCycle = 1.0f / 165.0f;
+
+        if (updateTime > updateCycle) 
+        {
+                Vector3 pos = m_mesh->GetPosition();
+                  Vector3 origin = pos + Vector3(0.0f, 0.5f, 0.0f);
+                float dist = 0.0f;
+                m_appBase->SetHeightPosition(origin, Vector3(0.0f, -1.0f, 0.0f), dist);
+
+                if (dist > 0.0f)
+                        m_mesh->UpdatePosition(origin + (Vector3(0.0f, -1.0f, 0.0f) * dist) + Vector3(0.0f, 0.1f, 0.0f));
+                updateTime = 0.0f;        
+        }
+        updateTime += dt;
 }
 
 void hlab::Character::UpdateState(float dt) {
@@ -86,15 +105,15 @@ void hlab::Character::UpdateState(float dt) {
         switch (state) { 
         case EActorState::idle:
         {
-                  if (appBase->m_keyPressed[VK_SPACE]) {
+                  if (m_appBase->m_keyPressed[VK_SPACE]) {
                 state = EActorState::attack;
                   } 
-                  else if (appBase->m_keyPressed['W'] && appBase->m_camera->m_objectTargetCameraMode)
+                  else if (m_appBase->m_keyPressed['W'] && m_appBase->m_camera->m_objectTargetCameraMode)
                         state = EActorState::walk;
         }
                 break;
         case EActorState::walk: {
-                  if (appBase->m_keyPressed['W'] == false)
+                  if (m_appBase->m_keyPressed['W'] == false)
                         state = EActorState::idle;
         }
                 break;
@@ -120,7 +139,7 @@ void hlab::Character::UpdateState(float dt) {
                         dir.Normalize();
                         dir *= 1.5f / m_simToRenderScale;
 
-                        appBase->CreateDynamic(
+                        m_appBase->CreateDynamic(
                             PxTransform(
                                 PxVec3(handPos.x, handPos.y, handPos.z) /
                                 m_simToRenderScale),
@@ -139,7 +158,7 @@ void hlab::Character::UpdateState(float dt) {
         
           //std::cout << "state : " << state << std::endl;
         m_mesh->ChangeAnimation(state);
-          m_mesh->UpdatePose(appBase->m_context, dt , appBase->bUseBlendAnimation);
+          m_mesh->UpdatePose(m_appBase->m_context, dt , m_appBase->bUseBlendAnimation);
    //    m_mesh->UpdateAnimation(appBase->m_context, 0, 0);
 
 }

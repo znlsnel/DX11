@@ -32,7 +32,7 @@ class Character {
 
     private:
         shared_ptr<SkinnedMeshModel> m_mesh;
-       class Ex2001_GamePlay* appBase;
+       class Ex2001_GamePlay* m_appBase;
 
         bool bUseUpdateTick = false;
         bool isUsingSkill = false;

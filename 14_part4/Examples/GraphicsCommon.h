@@ -56,6 +56,7 @@ extern ComPtr<ID3D11VertexShader> terrainVS;
 extern ComPtr<ID3D11HullShader> terrainHS;
 
 extern ComPtr<ID3D11DomainShader> terrainDS;
+extern ComPtr<ID3D11DomainShader> terrainDepthDS;
 
 extern ComPtr<ID3D11PixelShader> basicPS;
 extern ComPtr<ID3D11PixelShader> billboardPS;
@@ -72,6 +73,8 @@ extern ComPtr<ID3D11PixelShader> oceanPS;
 extern ComPtr<ID3D11PixelShader> volumetricFirePS;
 extern ComPtr<ID3D11PixelShader> gameExplosionPS;
 extern ComPtr<ID3D11PixelShader> terrainPS;
+
+extern ComPtr<ID3D11ComputeShader> editTexureMapCS;
 
 extern ComPtr<ID3D11GeometryShader> normalGS;
 extern ComPtr<ID3D11GeometryShader> billboardGS;
@@ -117,10 +120,12 @@ extern GraphicsPSO grassWirePSO;
 extern GraphicsPSO oceanPSO;
 extern GraphicsPSO terrainSolidPSO;
 extern GraphicsPSO terrainWirePSO;
+extern GraphicsPSO terrainDepthPSO;
 
 // 주의: 초기화가 느려서 필요한 경우에만 초기화
 extern GraphicsPSO volumeSmokePSO;
 
+extern ComputePSO editTexturePSO;
 void InitCommonStates(ComPtr<ID3D11Device> &device);
 
 // 내부적으로 InitCommonStates()에서 사용

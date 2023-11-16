@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "GeometryGenerator.h"
 #include <filesystem>
+#include <DirectXMath.h>
 #include <queue>
 
 namespace hlab {
@@ -27,6 +28,8 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
     exit(-1);
 }
 
+
+
 void Model::InitMeshBuffers(ComPtr<ID3D11Device> &device,
                             const MeshData &meshData,
                             shared_ptr<Mesh> &newMesh) {
@@ -50,7 +53,8 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
 
 
-BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, int min, int max) {
+BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, int min,
+                            int max) {
 
     if (vertices.size() == 0)
         return BoundingBox();
@@ -67,13 +71,16 @@ BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, int min, int ma
     Vector3 center = (minCorner + maxCorner) * 0.5f;
     Vector3 extents = maxCorner - center;
 
-    return BoundingBox(center, extents);
+  return BoundingBox(center, extents);
+  //  return BoundingBox(center, extents);
 }
-BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, const vector<uint32_t>& indices, int min, int max) {
+
+BoundingCollision GetBoundingBox(const vector<hlab::Vertex> &vertices,
+                            const vector<uint32_t> &indices, int min, int max, bool isLastLevel = false) {
 
     if (vertices.size() == 0)
-        return BoundingBox();
-
+        return BoundingCollision();
+    DirectX::SimpleMath::Plane;
     Vector3 minCorner = vertices[indices[min]].position;
     Vector3 maxCorner = vertices[indices[min]].position;
 
@@ -84,11 +91,23 @@ BoundingBox GetBoundingBox(const vector<hlab::Vertex> &vertices, const vector<ui
 
     Vector3 center = (minCorner + maxCorner) * 0.5f;
     Vector3 extents = maxCorner - center;
+    
+    //        // 0 1 2 3 4
+    //bool leftChild = nextMinID < nextMaxID - 3;
+    BoundingCollision tempBox = BoundingCollision(center, extents);
+    if (isLastLevel) {
+        for (int i = min; i < max; i++) {
+            tempBox.vertexs.push_back(vertices[indices[i]].position);
+        } 
+    }
 
-    return BoundingBox(center, extents);
+  return tempBox;
 }
 
 
+BoundingOrientedBox GetBoundingOrientedBox(const vector<hlab::Vertex> &vertices, const vector<uint32_t> &indices, int min, int max) {
+
+}
 
  
 void ExtendBoundingBox(const BoundingBox &inBox, BoundingBox &outBox) {
@@ -339,6 +358,7 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
             context->PSSetShaderResources(0, // register(t0)
                                           UINT(resViews.size()), 
                                           resViews.data());
+
             context->PSSetConstantBuffers(1, 2, constBuffers);
                
             // Volume Rendering
@@ -416,16 +436,18 @@ void Model::RenderBVH(ComPtr<ID3D11DeviceContext> &context)
     int startIndex = 0;
     int maxIndex = 0;
     for (int i = 0; i < maxRenderingBVHLevel - 1; i++) {
-        maxIndex = maxIndex * 2 + 2;
+        startIndex = startIndex * 2 + 2;
         //if (i == maxRenderingBVHLevel - 3)
         //    startIndex = maxIndex;
     }
-//    cout << "maxIndex : " << maxIndex << endl;
+    maxIndex = startIndex * 2 + 2;
+    startIndex++;
+        //    cout << "maxIndex : " << maxIndex << endl;
 
     for (auto mesh : m_BVHMesh) {
         for (int i = startIndex; i < mesh.size(); i++) {
             
-                    if (i >= maxIndex)
+                    if (i > maxIndex)
                         break;
 
                // cout << "rendering BVH level : " << i << "\n";
@@ -472,6 +494,7 @@ void Model::UpdateScale(Vector3 scale) {
 
 void Model::UpdatePosition(Vector3 position) { 
   //      m_position = position;
+
     UpdateWorldRow(m_scale, m_rotation, position);
 }
 
@@ -502,26 +525,27 @@ void Model::SetChildModel(shared_ptr<Model> model) {
 }
 
 void Model::SetBVH(ComPtr<ID3D11Device> device,
-                   vector<DirectX::BoundingBox> &BVHBoxs,
-                   vector<shared_ptr<Mesh>> &BVBMeshs, 
-                   const MeshData &mesh,
+                   vector<BoundingCollision> &BVHBoxs,
+                   vector<shared_ptr<Mesh>> &BVBMeshs, const MeshData &mesh,
                    int minIndex, int maxIndex, int level) {
 
         std::queue < std::tuple<int, int, int >> queue;
     queue.push(std::make_tuple(minIndex, maxIndex, level));
 
     while (!queue.empty()) {
-        auto curr = queue.front();
+        auto curr = queue.front(); 
         queue.pop();
-
+         
         int minID = std::get<0>(curr);
-        int maxID = std::get<1>(curr);
+        int maxID = std::get<1>(curr);  
         int currLevel = std::get<2>(curr);
-
-        BVHBoxs.push_back(GetBoundingBox(mesh.vertices, mesh.indices, minID, maxID));
+        // 0 1 2 3 4
+        bool isLastLevel = maxID - minID <= 6;
+        BVHBoxs.push_back(GetBoundingBox(mesh.vertices, mesh.indices, minID,
+                                         maxID, isLastLevel));  
         auto meshData = GeometryGenerator::MakeWireBox(
-            BVHBoxs.back().Center,
-            Vector3(BVHBoxs.back().Extents) + Vector3(1e-3f));
+            BVHBoxs.back().m_bb.Center,
+            Vector3(BVHBoxs.back().m_bb.Extents) + Vector3(1e-3f));
 
         BVBMeshs.push_back(std::make_shared<Mesh>());
 
@@ -537,31 +561,33 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
         BVBMeshs.back()->meshConstsGPU = m_meshConsts.Get();
         BVBMeshs.back()->materialConstsGPU = m_materialConsts.Get();
 
-        if (currLevel > 21)
+        int maxLevel = 20;
+        if (isPlane)
+                maxLevel = 20;
+
+        if (currLevel > maxLevel)
             break;
 
-        DirectX::BoundingBox& currBox = BVHBoxs.back();
+        BoundingCollision &currBox = BVHBoxs.back();
         int InterID = (maxID + minID) / 2;
+        
 
         int nextMinID = minID;
-        int nextMaxID = InterID;
-
-        if (nextMinID < nextMaxID - 4)
+        int nextMaxID = InterID; 
+        // 0 1 2 3 4 5 
+        bool leftChild = nextMinID + 2 < nextMaxID;
+        if (leftChild)
             queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
 
 
         nextMinID = nextMaxID;
         nextMaxID = maxID;
 
-        if (nextMinID < nextMaxID - 4)
+        bool rightChild = nextMinID + 2 < nextMaxID;
+        if (rightChild)
                 queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
 
     }
-    
-
-
-    
-
 }
 
 void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
@@ -590,7 +616,6 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     m_boundingSphere.Center = this->m_worldRow.Translation();
     m_boundingSphere.Radius =
         m_boundingSphereRadius * max(m_scale.x, max(m_scale.y, m_scale.z));
-    
 
     /*m_boundingSphereMesh*/
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();

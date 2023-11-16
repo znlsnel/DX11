@@ -14,7 +14,7 @@ void main(int3 gID : SV_GroupID, uint3 tID : SV_DispatchThreadID)
 
 
     if (gID.y % 2 == 0 ^ gID.x % 2 == 0)
-    {
+    { 
         gOutput[tID.xy] = float4(0.5, 0.5, 0.5, 1.0);
     }
     else

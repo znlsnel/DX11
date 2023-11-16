@@ -597,5 +597,7 @@
     <FxCompile Include="BillboardPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="tessellatedDepthDS.hlsl" />
+    <FxCompile Include="EditTextureMapCS.hlsl" />
   </ItemGroup>
 </Project>

@@ -5,12 +5,26 @@
 #include "JsonManager.h"
 
 
+void hlab::InputManager::Update(float dt) 
+{ 
+    static float rayTime = 0.0f;
+    if (usingRayCasting && rayTime > 1.0f / 60.f){
+        m_appBase->RayCasting(); 
+
+        rayTime = 0.0f;        
+
+    } 
+    else if (usingRayCasting == false){
+                m_appBase->m_cursorSphere[0]->m_isVisible = false;
+    }  
+        rayTime += dt; 
+}
+
 void hlab::InputManager::InputLeftMouse(bool isPress, int mouseX, int mouseY) {
 
         static float lastPressTime = 0.0;
         const float clickAllowTime = 0.2f;
 
-        
         if (m_appBase->IsMouseHoveringImGui())
             return;
 
@@ -25,6 +39,16 @@ void hlab::InputManager::InputLeftMouse(bool isPress, int mouseX, int mouseY) {
                 }
                 m_appBase->m_leftButton = true;
 
+                switch (m_appBase->m_mouseMode) {
+                case EMouseMode::MouseModeNone:
+                        break;
+                case EMouseMode::ObjectPickingMode:
+                        break;
+                case EMouseMode::TextureMapEditMode:
+                        usingRayCasting = true;
+                        break;
+                }
+
         } 
         else 
         {
@@ -32,16 +56,27 @@ void hlab::InputManager::InputLeftMouse(bool isPress, int mouseX, int mouseY) {
                 if (m_appBase->timeSeconds - lastPressTime < clickAllowTime) {
 
                         switch (m_appBase->m_mouseMode) { 
-                        case EMouseMode::None:
+                        case EMouseMode::MouseModeNone:
                             break;
                         case EMouseMode::ObjectPickingMode:
                                 m_appBase->MouseObjectPicking();
                             break;
-                        case EMouseMode::HeightMapEditMode:
-                            m_appBase->RayTracing();
+                        case EMouseMode::TextureMapEditMode:
+                            m_appBase->RayCasting();
                             break;
                         }
 
+                }
+
+                
+                switch (m_appBase->m_mouseMode) {
+                case EMouseMode::MouseModeNone:
+                        break;
+                case EMouseMode::ObjectPickingMode:
+                        break;
+                case EMouseMode::TextureMapEditMode:
+                        usingRayCasting = false;
+                        break;
                 }
         }
 }
@@ -71,6 +106,7 @@ void hlab::InputManager::InputKey(bool isPress, char key) {
         if (isPress) {
                 m_appBase->m_keyPressed[key] = true;
                 m_appBase->m_keyToggle[key] = !m_appBase->m_keyToggle[key];
+                cout << key << "\n";
 
                 if (m_appBase->m_keyPressed[17]) { // ctrl
                         InputCtrl(true, key);
@@ -106,13 +142,13 @@ void hlab::InputManager::InputCtrl(bool isPress, char key) {
         }
 
         if (m_appBase->m_keyPressed['1']) {
-                m_appBase->m_mouseMode = EMouseMode::None;
+                m_appBase->m_mouseMode = EMouseMode::MouseModeNone;
         }
         if (m_appBase->m_keyPressed['2']) {
                 m_appBase->m_mouseMode = EMouseMode::ObjectPickingMode;
         }
         if (m_appBase->m_keyPressed['3']) {
-                m_appBase->m_mouseMode = EMouseMode::HeightMapEditMode;
+                m_appBase->m_mouseMode = EMouseMode::TextureMapEditMode;
         }
 }
 

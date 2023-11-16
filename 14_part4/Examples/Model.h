@@ -8,7 +8,7 @@
 #include "StructuredBuffer.h"
 
 #include <directxtk/SimpleMath.h>
-
+#include <DirectXCollision.h>
 // 참고: DirectX-Graphics-Sampels
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Model/Model.h
 
@@ -18,6 +18,8 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using DirectX::SimpleMath::Vector3;
+using namespace DirectX;
 
 enum ERenderState : int {
         basic = 1,
@@ -25,9 +27,52 @@ enum ERenderState : int {
         reflect = 3,
 };
 
+struct BoundingCollision {
+  public:
+    BoundingCollision() { 
+            m_bb = BoundingBox(); 
+    };
+    BoundingCollision(Vector3 center, Vector3 extents) {
+        m_bb = BoundingBox(center, extents);
+    }
+    bool Intersects(Vector3 origin, Vector3 dir, float &dist) {
+        return m_bb.Intersects(origin, dir, dist);
+    };
+    bool TriangleIntersects(Vector3 origin, Vector3 dir, float& dist) {
+
+        bool result = false;
+        if (worldVertexs.size() < 3)
+                return result;
+
+        DirectX::SimpleMath::Ray ray = SimpleMath::Ray(origin, dir);
+        result = ray.Intersects(worldVertexs[0], worldVertexs[1],
+                worldVertexs[2], dist);
+        if (result == false && worldVertexs.size() > 5)
+                result = ray.Intersects(worldVertexs[3], worldVertexs[4],
+                                        worldVertexs[5], dist);
+
+        return result;
+    }
+
+    void updateWorldVertex(Matrix worldRow) { 
+
+            worldVertexs.resize(vertexs.size());
+        for (int i = 0; i < vertexs.size(); i++) {
+                worldVertexs[i] = Vector3::Transform(vertexs[i], worldRow);
+        }
+    }
+    BoundingBox m_bb;
+    vector<Vector3> vertexs;
+    vector<Vector3> worldVertexs;
+};
+
+
+
+
 
 class Model {
   public:
+
     Model(){};
     Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
           const string &basePath, const string &filename);
@@ -73,6 +118,7 @@ class Model {
     
     void UpdateScale(Vector3 scale);
     void UpdatePosition(Vector3 position);
+    void SetLocalPosition(Vector3 pos) { m_localPosition = pos; };
     void UpdateRotation(Vector3 ratation);
     void UpdateTranseform(Vector3 scale, Vector3 rotation, Vector3 position);
     void AddYawOffset(float addYawOffset);
@@ -110,8 +156,7 @@ class Model {
     };
 
     void SetChildModel(shared_ptr<Model> model);
-    void SetBVH(ComPtr<ID3D11Device> device,
-                vector<DirectX::BoundingBox>& bvhBoxs,
+    void SetBVH(ComPtr<ID3D11Device> device, vector<BoundingCollision> &bvhBoxs,
                 vector<shared_ptr<Mesh>>& bvhMeshs,
             const MeshData &mesh, int minIndex,
                 int maxIndex, int level);
@@ -145,7 +190,7 @@ public:
     ConstantBuffer<MaterialConstants> m_materialConsts;
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;
-    vector<vector<DirectX::BoundingBox>> m_BVHs;
+    vector<vector<BoundingCollision>> m_BVHs;
     ERenderState renderState = ERenderState::basic;
     //                        [0]
     //          [1]                        [2]
@@ -168,6 +213,7 @@ public:
 
     Vector3 m_scale{1.f};
     Vector3 m_position{0.f};
+    Vector3 m_localPosition{0.f};
     Vector3 m_rotation{0.f};
     float m_boundingSphereRadius = 0.0f;
 };

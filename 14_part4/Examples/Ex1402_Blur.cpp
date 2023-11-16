@@ -132,7 +132,7 @@ void Ex1402_Blur::PrepareForStagingTexture() {
     // Staging Texture 만들고 CPU -> GPU 복사
     m_stagingTexture = D3D11Utils::CreateStagingTexture(
         m_device, m_context, m_screenWidth, m_screenHeight, f16Image,
-        DXGI_FORMAT_R16G16B16A16_FLOAT, 1, 1);
+        DXGI_FORMAT_R16G16B16A16_FLOAT, 1, 1); 
 }
 
 void Ex1402_Blur::PixelShaderBlur() {
@@ -168,7 +168,7 @@ void Ex1402_Blur::ComputeShaderBlur(const bool useGroupCache) {
     if (useGroupCache) {
         const UINT tgx = UINT(ceil(m_screenWidth / 256.0f));
         const UINT tgy = UINT(ceil(m_screenHeight / 256.0f));
-
+         
         // Horizontal X-Blur, A to B
         AppBase::SetPipelineState(m_blurXGroupCacheComputePSO);
         m_context->CSSetShaderResources(0, 1, m_srvA.GetAddressOf());

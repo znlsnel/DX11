@@ -6,7 +6,7 @@ class InputManager {
   public:
     InputManager(class AppBase *appBase){ m_appBase = appBase;
     };
-     
+    void Update(float dt);
     void InputLeftMouse(bool isPress, int mouseX = -1 , int mouseY = -1);
     void InputRightMouse(bool isPress, int mouseX = -1, int mouseY = -1);
     void InputKey(bool isPress, char key);
@@ -15,7 +15,7 @@ class InputManager {
 
     private:
     class AppBase *m_appBase;
-
+      bool usingRayCasting = false;
     
 };
 }

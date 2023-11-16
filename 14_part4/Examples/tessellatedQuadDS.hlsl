@@ -1,9 +1,9 @@
 
 #include "Common.hlsli"
 
-Texture2D g_meshHeightTexture : register(t0);
-Texture2D g_heightMapTexture : register(t1);
 
+Texture2D g_textureMap : register(t0);
+Texture2DArray g_heightTextures : register(t1);
 
 struct HullShaderOutput
 {
@@ -67,21 +67,16 @@ PixelShaderInput main(PatchConstOutput patchConst,
         float2 temp2 = quad[2].texcoord * (1 - uv.x) + quad[3].texcoord * (uv.x);
         output.texcoord = (temp1 * (1 - uv.y) + temp2 * (uv.y));
     }
-    
+     
     if (useHeightMap) 
     {
-        float height = g_meshHeightTexture.SampleLevel(linearWrapSampler, output.texcoord, 0).r;
+        float temp = g_textureMap.SampleLevel(linearWrapSampler, output.texcoord / 30, 0).r;
+        int currTexture = round(temp * 255);
+        float height = g_heightTextures.SampleLevel(linearWrapSampler, float3(output.texcoord, currTexture), 0).r;
         height = height * 2.0 - 1.0;
         output.posWorld += output.normalWorld * height * heightScale;
         output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
     }
-
-    //float2 temp = output.texcoord / 30.0;
-    //float height = g_heightMapTexture.SampleLevel(linearWrapSampler, temp, 0).r;
-    //height = height * 2.0 - 1.0;
-    //output.posWorld += output.normalWorld * height * 5;
-    //output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
-
     return output;
     
 }

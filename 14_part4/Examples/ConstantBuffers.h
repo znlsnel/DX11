@@ -135,10 +135,18 @@ __declspec(align(256)) struct VolumeConsts {
     float aniso = 0.3f;
 };
 
+
+
 // bone 개수 제약을 없애기 위해 StructuredBuffer로 교체
 // __declspec(align(256)) struct SkinnedConsts {
 //    Matrix boneTransforms[52]; // bone 개수
 //};
+
+__declspec(align(256)) struct EditTextureConsts {
+    Vector2 pos = {0, 0};
+    float radius = 0.0f;
+    float type = 0.0f;
+};
 
 template <typename T_CONSTS> class ConstantBuffer {
   public:
