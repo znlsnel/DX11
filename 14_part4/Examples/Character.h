@@ -5,13 +5,11 @@
 
 namespace hlab{
 
-        enum EActorState : int { 
-                idle = 0, 
-                walk = 1,
-                attack = 2,
-        };
 
-using namespace std;
+
+
+        using namespace std;
+
 class Character {
   public:
     Character(class AppBase* base, ComPtr<ID3D11Device> &device,
@@ -38,6 +36,10 @@ class Character {
         bool isUsingSkill = false;
 
         EActorState state = EActorState::idle;
+
+        float m_walkSpeed = 1.0f;
+        float m_runSpeed = 3.0f;
 };
 }
 
+   

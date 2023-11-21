@@ -5,13 +5,15 @@
 // https://github.com/Nadrin/PBR/blob/master/data/shaders/hlsl/pbr.hlsl
 
 // 메쉬 재질 텍스춰들 t0 부터 시작
-Texture2D albedoTex : register(t0);
-Texture2D normalTex : register(t1);
-Texture2D aoTex : register(t2);
-Texture2D metallicRoughnessTex : register(t3);
-Texture2D emissiveTex : register(t4);
+Texture2DArray albedoTex : register(t0);
+Texture2DArray normalTex : register(t1);
+Texture2DArray aoTex : register(t2);
+Texture2DArray metallicRoughnessTex : register(t3);
+Texture2DArray emissiveTex : register(t4);
 
 static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
+static float lod = 0.0f;
+static float2 texcoord = float2(0.0f, 0.0f);
 
 float3 SchlickFresnel(float3 F0, float NdotH)
 {
@@ -25,18 +27,39 @@ struct PixelShaderOutput
     float4  indexColor : SV_Target1;
 };
 
+float4 GetPixelFromTextureArray(Texture2DArray textures, SamplerState state, float tLod)
+{
+    float3 txc = float3(texcoord, 0.0f);
+    float4 result = textures.SampleLevel(linearWrapSampler, txc, lod);
+    
+    if (length(result) > 0.0f)
+        return result;
+    
+    for (int i = 0; i < 5; i++)
+    {
+        txc.z += 1.0f;
+        result = textures.SampleLevel(linearWrapSampler, txc, lod);
+
+        if (length(result) > 0.0f)
+            break;
+    }
+    return result;
+}
+
 float3 GetNormal(PixelShaderInput input, float lod)
 {
     float3 normalWorld = normalize(input.normalWorld);
     
     if (useNormalMap) // NormalWorld를 교체
     {
-        float3 normal = normalTex.SampleLevel(linearWrapSampler, input.texcoord, lod).rgb;
+        float3 txc = float3(input.texcoord, 0.0f);
+        
+        float3 normal = GetPixelFromTextureArray(normalTex, linearWrapSampler, lod).rgb;
         normal = 2.0 * normal - 1.0; // 범위 조절 [-1.0, 1.0]
 
         // OpenGL 용 노멀맵일 경우에는 y 방향을 뒤집어줍니다.
         normal.y = invertNormalMapY ? -normal.y : normal.y;
-        
+         
         float3 N = normalWorld;
         float3 T = normalize(input.tangentWorld - dot(input.tangentWorld, N) * N);
         float3 B = cross(N, T);
@@ -340,28 +363,29 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
     return directLighting;
 }
 
+
+
 PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
-    float lod = length(input.posWorld - eyeWorld);
+    lod = length(input.posWorld - eyeWorld);
     lod -= 3;
     lod = clamp(lod, 0.0, 5.0);
-    
+    texcoord = input.texcoord;
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);
     
-    float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord, lod) * float4(albedoFactor, 1)
+    float4 albedo = useAlbedoMap ? GetPixelFromTextureArray(albedoTex, linearWrapSampler, lod) * float4(albedoFactor, 1)
                                  : float4(albedoFactor, 1);
-
     
-    clip(albedo.a - 0.5); // Tree leaves
+    clip(albedo.a - 0.05); // Tree leaves
     
-    float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, input.texcoord, lod).r : 1.0;
-    float metallic = useMetallicMap ? metallicRoughnessTex.SampleLevel(linearWrapSampler, input.texcoord, lod).b * metallicFactor
+    float ao = useAOMap ? GetPixelFromTextureArray(aoTex, linearWrapSampler, lod).r : 1.0;
+    float metallic = useMetallicMap ? GetPixelFromTextureArray(metallicRoughnessTex, linearWrapSampler, lod).b * metallicFactor
                                     : metallicFactor;
-    float roughness = useRoughnessMap ? metallicRoughnessTex.SampleLevel(linearWrapSampler, input.texcoord, lodBias).g * roughnessFactor
+    float roughness = useRoughnessMap ? GetPixelFromTextureArray(metallicRoughnessTex, linearWrapSampler, lodBias).g * roughnessFactor
                                       : roughnessFactor;
-    float3 emission = useEmissiveMap ? emissiveTex.SampleLevel(linearWrapSampler, input.texcoord, lod).rgb
+    float3 emission = useEmissiveMap ? GetPixelFromTextureArray(emissiveTex, linearWrapSampler, lod).rgb
                                      : emissionFactor;
 
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
@@ -388,9 +412,9 @@ PixelShaderOutput main(PixelShaderInput input)
         directLighting += DrawLight(input,  lights[i], shadowMaps[i],
          normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
     }
-
+     
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
-    output.pixelColor *= 1.5;
+  //  output.pixelColor *= 1.5;
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
     

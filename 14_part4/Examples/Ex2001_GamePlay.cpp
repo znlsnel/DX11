@@ -8,6 +8,7 @@
 #include "AppBase.h"
 #include "JsonManager.h"
 #include "TessellationModel.h"
+#include "GrassModel.h"
 
 namespace hlab {
 
@@ -61,11 +62,13 @@ bool Ex2001_GamePlay::InitScene() {
         auto mesh = GeometryGenerator::MakeTessellationPlane(
                 200, 200, 30.0f, Vector2(30.0f, 30.0f), heightMapImage); 
         string path = "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
-        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
-        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
-        mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
+        mesh.albedoTextureFilenames.push_back( path + "Ground037_4K-PNG_Color.png");
+        mesh.aoTextureFilenames.push_back(
+            path + "Ground037_4K-PNG_AmbientOcclusion.png");
+        mesh.normalTextureFilenames.push_back( path + "Ground037_d4K-PNG_NormalDX.png");
         // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+        mesh.heightTextureFilenames.push_back(
+            path + "Ground037_4K-PNG_Displacement.png");
                  
             m_groundPlane = 
                 make_shared<TessellationModel>(
@@ -85,6 +88,51 @@ bool Ex2001_GamePlay::InitScene() {
             AddBasicList(temp);
     }
 
+    //    // Grass object
+    //{
+    //        shared_ptr<GrassModel> grass = make_shared<GrassModel>();
+
+    //        shared_ptr<Model> temp = static_pointer_cast<Model>(grass);
+    //        AddBasicList(temp);
+    //        // Instances 만들기
+
+    //        std::mt19937 gen(0);
+    //        std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+
+    //        vector<GrassInstance> &grassInstances = grass->m_instancesCpu;
+
+    //        for (int i = 0; i < 100000; i++) {
+    //        const float lengthScale = dist(gen) * 0.7f + 0.3f;
+    //        const float widthScale = 0.5f + dist(gen) * 0.5f;
+    //        const Vector3 pos = Vector3(dist(gen) * 0.1f, 0.0f, dist(gen) * 0.1f) *  5.0f;
+    //        const float angle = dist(gen) * 3.141592f; // 바라보는 방향
+    //        const float slope =
+    //            (dist(gen) - 0.5f) * 2.0f * 3.141592f * 0.2f; // 기본 기울기
+
+    //        GrassInstance gi;
+    //        gi.instanceWorld =
+    //            Matrix::CreateRotationX(slope) *
+    //            Matrix::CreateRotationY(angle) *
+    //            Matrix::CreateScale(widthScale* 0.1, lengthScale * 0.1f, 0.1f) *
+    //            Matrix::CreateTranslation(pos);  
+    //        gi.windStrength = 0.5f;
+
+    //        grassInstances.push_back(gi);
+    //        }
+
+    //        // 쉐이더로 보내기 위해 transpose
+    //        for (auto &i : grassInstances) {
+    //        i.instanceWorld = i.instanceWorld.Transpose();
+    //        }
+
+    //        grass->Initialize(m_device, m_context);
+    //        // m_grass->UpdateWorldRow(Matrix::CreateScale(0.5f) *
+    //        //                         Matrix::CreateTranslation(0.0f,
+    //        //                         0.0f, 2.0f));
+    //}
+
+
+
     // ocean
         {
         auto mesh = GeometryGenerator::MakeSquare(200.0, {10.0f, 10.0f});
@@ -92,7 +140,7 @@ bool Ex2001_GamePlay::InitScene() {
             make_shared<OceanModel>(m_device, m_context, vector{mesh});
         m_ocean->m_castShadow = false;
 
-        Vector3 position = Vector3(0.0f, -0.2f, 2.0f);
+        Vector3 position = Vector3(0.0f, 0.3f, 2.0f);
         //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
         //                        Matrix::CreateTranslation(position));
         m_ocean->UpdateTranseform(m_ocean->GetScale(),
@@ -371,16 +419,11 @@ void Ex2001_GamePlay::UpdateGUI() {
 
             ImGui::Checkbox("BlendAnimation", &bUseBlendAnimation);
 
-                static float oceanHeight = 0.626f;
+                static float oceanHeight = 0.3f;
             if (ImGui::SliderFloat("OceanHeight", &oceanHeight, -1.0f, 1.0f)) {
                 Vector3 position = Vector3(0.0f, oceanHeight, 2.0f);
-                //m_ocean->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                //                        Matrix::CreateTranslation(position));
-                m_ocean->UpdateTranseform(m_ocean->GetScale(),
-                                          Vector3(3.141592f * 0.5f,
-                                                  m_ocean->GetRotation().y,
-                                                  m_ocean->GetRotation().z),
-                                          position);
+
+                m_ocean->UpdatePosition(position);
 
             }
 
@@ -426,7 +469,7 @@ void Ex2001_GamePlay::UpdateGUI() {
 
                 ImGui::TreePop();
             }
-              
+               
             if (ImGui::TreeNode("Post Processing")) {
                 int flag = 0;
                 flag += ImGui::SliderFloat(

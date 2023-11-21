@@ -140,99 +140,99 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         InitMeshBuffers(device, meshData, newMesh);
 
-        if (!meshData.albedoTextureFilename.empty()) {
-            if (filesystem::exists(meshData.albedoTextureFilename)) {
-                if (!meshData.opacityTextureFilename.empty()) {
-                    D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename,
-                        meshData.opacityTextureFilename, false,
+        if (!meshData.albedoTextureFilenames.empty()) {
+            if (filesystem::exists(meshData.albedoTextureFilenames[0])) {
+                if (!meshData.opacityTextureFilenames.empty()) {
+                    D3D11Utils::CreateTextureArray(
+                        device, context, meshData.albedoTextureFilenames,
+                        meshData.opacityTextureFilenames,
                         newMesh->albedoTexture, newMesh->albedoSRV);
                 } else {
-                    D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename, true,
+                    D3D11Utils::CreateTextureArray(
+                        device, context, meshData.albedoTextureFilenames,
                         newMesh->albedoTexture, newMesh->albedoSRV);
                 }
 
                 m_materialConsts.GetCpu().useAlbedoMap = true;
             } else {
-                cout << meshData.albedoTextureFilename
+                cout << meshData.albedoTextureFilenames[0]
                      << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.emissiveTextureFilename.empty()) {
-            if (filesystem::exists(meshData.emissiveTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.emissiveTextureFilename, true,
+        if (!meshData.emissiveTextureFilenames.empty()) {
+            if (filesystem::exists(meshData.emissiveTextureFilenames[0])) {
+                D3D11Utils::CreateTextureArray(
+                    device, context, meshData.emissiveTextureFilenames,
                     newMesh->emissiveTexture, newMesh->emissiveSRV);
                 m_materialConsts.GetCpu().useEmissiveMap = true;
             } else {
-                cout << meshData.emissiveTextureFilename
+                cout << meshData.emissiveTextureFilenames[0]
                      << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.normalTextureFilename.empty()) {
-            if (filesystem::exists(meshData.normalTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.normalTextureFilename, false,
+        if (!meshData.normalTextureFilenames.empty()) {
+            if (filesystem::exists(meshData.normalTextureFilenames[0])) {
+                D3D11Utils::CreateTextureArray(
+                    device, context, meshData.normalTextureFilenames, 
                     newMesh->normalTexture, newMesh->normalSRV);
                 m_materialConsts.GetCpu().useNormalMap = true;
             } else {
-                cout << meshData.normalTextureFilename
+                cout << meshData.normalTextureFilenames[0]
                      << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.heightTextureFilename.empty()) {
-            if (filesystem::exists(meshData.heightTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.heightTextureFilename, false,
+        if (!meshData.heightTextureFilenames.empty()) {
+            if (filesystem::exists(meshData.heightTextureFilenames[0])) {
+                D3D11Utils::CreateTextureArray(
+                    device, context, meshData.heightTextureFilenames,
                     newMesh->heightTexture, newMesh->heightSRV);
                 m_meshConsts.GetCpu().useHeightMap = true;
             } else {
-                cout << meshData.heightTextureFilename
+                cout << meshData.heightTextureFilenames[0]
                      << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.aoTextureFilename.empty()) {
-            if (filesystem::exists(meshData.aoTextureFilename)) {
-                D3D11Utils::CreateTexture(device, context,
-                                          meshData.aoTextureFilename, false,
+        if (!meshData.aoTextureFilenames.empty()) {
+            if (filesystem::exists(meshData.aoTextureFilenames[0])) {
+                D3D11Utils::CreateTextureArray(device, context,
+                                          meshData.aoTextureFilenames,
                                           newMesh->aoTexture, newMesh->aoSRV);
                 m_materialConsts.GetCpu().useAOMap = true;
             } else {
-                cout << meshData.aoTextureFilename
+                cout << meshData.aoTextureFilenames[0]
                      << " does not exists. Skip texture reading." << endl;
             }
         }
 
         // GLTF 방식으로 Metallic과 Roughness를 한 텍스춰에 넣음
         // Green : Roughness, Blue : Metallic(Metalness)
-        if (!meshData.metallicTextureFilename.empty() ||
-            !meshData.roughnessTextureFilename.empty()) {
+        if (!meshData.metallicTextureFilenames.empty() ||
+            !meshData.roughnessTextureFilenames.empty()) {
 
-            if (filesystem::exists(meshData.metallicTextureFilename) &&
-                filesystem::exists(meshData.roughnessTextureFilename)) {
+            if (filesystem::exists(meshData.metallicTextureFilenames[0]) &&
+                filesystem::exists(meshData.roughnessTextureFilenames[0])) {
 
-                D3D11Utils::CreateMetallicRoughnessTexture(
-                    device, context, meshData.metallicTextureFilename,
-                    meshData.roughnessTextureFilename,
+                D3D11Utils::CreateMetallicRoughnessTextureArray(
+                    device, context, meshData.metallicTextureFilenames,
+                    meshData.roughnessTextureFilenames,
                     newMesh->metallicRoughnessTexture,
                     newMesh->metallicRoughnessSRV);
             } else {
-                cout << meshData.metallicTextureFilename << " or "
-                     << meshData.roughnessTextureFilename
+                cout << meshData.metallicTextureFilenames[0] << " or "
+                     << meshData.roughnessTextureFilenames[0]
                      << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.metallicTextureFilename.empty()) {
+        if (!meshData.metallicTextureFilenames.empty()) {
             m_materialConsts.GetCpu().useMetallicMap = true;
         }
 
-        if (!meshData.roughnessTextureFilename.empty()) {
+        if (!meshData.roughnessTextureFilenames.empty()) {
             m_materialConsts.GetCpu().useRoughnessMap = true;
         }
 
@@ -342,9 +342,8 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
           
 
-    if (m_isVisible) { 
+    if (m_isVisible) {  
         for (const auto &mesh : m_meshes) {
-
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
             context->VSSetConstantBuffers(1, 2, constBuffers);

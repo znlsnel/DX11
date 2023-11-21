@@ -46,14 +46,14 @@ struct MeshData {
     vector<Vertex> vertices;
     vector<SkinnedVertex> skinnedVertices;
     vector<uint32_t> indices;
-    string albedoTextureFilename;
-    string emissiveTextureFilename;
-    string normalTextureFilename;
-    string heightTextureFilename;
-    string aoTextureFilename; // Ambient Occlusion
-    string metallicTextureFilename;
-    string roughnessTextureFilename;
-    string opacityTextureFilename;
+    vector<string> albedoTextureFilenames;
+    vector<string> emissiveTextureFilenames;
+    vector<string> normalTextureFilenames;
+    vector<string> heightTextureFilenames;
+    vector<string> aoTextureFilenames; // Ambient Occlusion
+    vector<string> metallicTextureFilenames;
+    vector<string> roughnessTextureFilenames;
+    vector<string> opacityTextureFilenames;
 
 };
 

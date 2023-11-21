@@ -2,6 +2,7 @@
 #include "SkinnedMeshModel.h"
 #include "Ex2001_GamePlay.h"
 
+using namespace hlab;
 hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
                            ComPtr<ID3D11DeviceContext> &context,
                            const string meshPath, const string meshFileName,
@@ -28,6 +29,7 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
         m_mesh->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
         m_mesh->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
         m_mesh->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+
         //m_mesh->UpdateWorldRow(Matrix::CreateScale(0.2f) *
         //                            Matrix::CreateTranslation(center));
         m_mesh->UpdateTranseform(Vector3(0.2f), m_mesh->GetRotation(), center);
@@ -37,7 +39,7 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
 }
 
 void hlab::Character::Update(float dt) { 
-        UpdateState(dt); 
+       UpdateState(dt); 
         UpdateTransform(dt);
 }
 
@@ -53,33 +55,30 @@ void hlab::Character::UpdateTransform(float dt)
         if (m_appBase->m_camera->m_objectTargetCameraMode == false)
                 return;
         if (m_appBase->m_keyPressed['A']) {
-
-                //m_mesh->UpdateWorldRow(
-                //    Matrix::CreateRotationY(-3.141592f * 120.f / 180.f * dt) *
-                //    m_mesh->m_worldRow);
                 m_mesh->AddYawOffset(-3.141592f * 240.f / 180.f * dt);
-                
-                 
         } else if (m_appBase->m_keyPressed['D']) {
-                //m_mesh->UpdateWorldRow(
-                //    Matrix::CreateRotationY(3.141592f * 120.f / 180.f * dt) *
-                //    m_mesh->m_worldRow);
                 m_mesh->AddYawOffset(3.141592f * 240.f / 180.f * dt);
-        }
+        } 
 
-
-
-        if (state == walk) {
+        if (state == walk || state == run) {
                   Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
                   dir = Vector4::Transform(
                       dir, m_mesh->m_worldRow);
 
                   dir.Normalize();
+                  float speed = m_walkSpeed;
+                  if (state == run) 
+                        speed = m_runSpeed;
+
+                  Vector3 tdir = Vector3(dir.x, dir.y, dir.z);
+
+                  if (m_appBase->m_keyPressed['S'])
+                        tdir *= -0.7f;
 
                   Vector3 velocity = m_mesh->m_worldRow.Translation() +
-                                  (Vector3(dir.x, dir.y, dir.z)) * dt * 0.3f;
-                  
+                                     tdir * speed * dt * 0.3f;
 
+                   
                   m_mesh->UpdatePosition(velocity);
         }
 
@@ -102,63 +101,47 @@ void hlab::Character::UpdateTransform(float dt)
 
 void hlab::Character::UpdateState(float dt) {
 
+        if (m_appBase->m_camera->m_objectTargetCameraMode == false)
+                return;
+
         switch (state) { 
         case EActorState::idle:
         {
                   if (m_appBase->m_keyPressed[VK_SPACE]) {
-                state = EActorState::attack;
+                        //state = EActorState::attack;
                   } 
-                  else if (m_appBase->m_keyPressed['W'] && m_appBase->m_camera->m_objectTargetCameraMode)
+                  else if (m_appBase->m_keyPressed['W'] ||
+                             m_appBase->m_keyPressed['S'])
                         state = EActorState::walk;
         }
                 break;
         case EActorState::walk: {
-                  if (m_appBase->m_keyPressed['W'] == false)
+                  if (m_appBase->m_keyPressed['W'] == false &&
+                      m_appBase->m_keyPressed['S'] == false)
                         state = EActorState::idle;
+                  else if (m_appBase->m_keyPressed[VK_SHIFT])
+                  {
+                        state = EActorState::run;
+                  }
         }
                 break;
-        case EActorState::attack: {
-                state = EActorState::attack;
-                int currFrame = (int)m_mesh->currAnim->frame;
-                if (currFrame == 60 && isUsingSkill == false) {
-                        Vector3 handPos = (m_mesh->m_worldRow).Translation();
-                        Vector4 offset = Vector4::Transform(
-                            Vector4(0.0f, 0.0f, -0.1f, 0.0f),
-                            m_mesh->m_worldRow *
-                                m_mesh->m_aniData.accumulatedRootTransform);
-
-                        // Vector3 offset = Vector3(0.0f, 0.0f, -0.1f);
-                        handPos += Vector3(offset.x, offset.y, offset.z);
-
-                        Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
-                        dir = Vector4::Transform(
-                            dir,
-                            m_mesh->m_worldRow *
-                                m_mesh->m_aniData.accumulatedRootTransform);
-
-                        dir.Normalize();
-                        dir *= 1.5f / m_simToRenderScale;
-
-                        m_appBase->CreateDynamic(
-                            PxTransform(
-                                PxVec3(handPos.x, handPos.y, handPos.z) /
-                                m_simToRenderScale),
-                            PxSphereGeometry(5), PxVec3(dir.x, dir.y, dir.z));
-                        isUsingSkill = true;
-                } 
-                else if (currFrame != 60) {
-                        isUsingSkill = false;
-                }
-
-                if (currFrame == m_mesh->currAnim->endFrame - (61.f * m_mesh->currAnim->blendTime))
+        case EActorState::run: {
+                
+                  if (m_appBase->m_keyPressed['W'] == false &&
+                      m_appBase->m_keyPressed['S'] == false)
                         state = EActorState::idle;
+                   
+                  else if (m_appBase->m_keyPressed[VK_SHIFT] == false) {
+                        state = EActorState::walk;
+                  }
+
         }
                 break;
         }
         
           //std::cout << "state : " << state << std::endl;
-        m_mesh->ChangeAnimation(state);
-          m_mesh->UpdatePose(m_appBase->m_context, dt , m_appBase->bUseBlendAnimation);
+        m_mesh->ChangeAnimation(state, m_appBase->m_keyPressed['W']);
+          m_mesh->UpdatePose(m_appBase->m_context, dt);
    //    m_mesh->UpdateAnimation(appBase->m_context, 0, 0);
 
 }

@@ -93,8 +93,8 @@ class Model {
     void Initialize(ComPtr<ID3D11Device> &device,
                     ComPtr<ID3D11DeviceContext> &context,
                     const vector<MeshData> &meshes);
-    virtual void UpdatePose(ComPtr<ID3D11DeviceContext> &context, float dt,
-                            bool bUseBlendAnim = false){};
+    virtual void UpdatePose(ComPtr<ID3D11DeviceContext> &context, float dt
+                            ){};
     
     void UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context);
@@ -171,19 +171,19 @@ public:
 
     bool m_drawNormals = false;
     bool m_isVisible = true;
-    bool m_castShadow = true;
+    bool m_castShadow = true; 
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
     bool isDestory = false;
-    bool isChildModel = false;
+    bool isChildModel = false; 
     bool isObjectLock = false;
     bool bRenderingBVH = false;
     bool m_saveable = false;
     bool m_editable = false;
     bool isPlane = false;
 
-    int maxRenderingBVHLevel = 0;
+    int maxRenderingBVHLevel = 0; 
 
-
+      
     vector<shared_ptr<Mesh>> m_meshes;
 
     ConstantBuffer<MeshConstants> m_meshConsts;

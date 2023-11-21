@@ -464,23 +464,23 @@ shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     //    "../Assets/Tier2/",
     //    "MI_White_Cloth_sbklx0p0_2K.uasset", false, false);
     // 
-    meshes[0].albedoTextureFilename =
-        temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+    meshes[0].albedoTextureFilenames.push_back(
+        temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse);
 
-    meshes[0].normalTextureFilename =
-        temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
+    meshes[0].normalTextureFilenames.push_back(
+        temp->Normal == "" ? "" : info.quicellPath + temp->Normal);
 
-    meshes[0].heightTextureFilename =
-        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
+    meshes[0].heightTextureFilenames.push_back(
+        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
 
-     meshes[0].aoTextureFilename =
-            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
+     meshes[0].aoTextureFilenames.push_back(
+            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion);
 
-    meshes[0].roughnessTextureFilename =
-        temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
+    meshes[0].roughnessTextureFilenames.push_back(
+        temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness);
 
-    meshes[0].metallicTextureFilename =
-        temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
+    meshes[0].metallicTextureFilenames.push_back(
+        temp->metallic == "" ? "" : info.quicellPath + temp->metallic);
     
 
     shared_ptr<Model> tempModel =
@@ -497,24 +497,30 @@ shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
 }
 
 std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
-    vector<string> clipNames = {"Idle.fbx", "walk_start.fbx", "walk.fbx",
-                                "walk_end.fbx", "fireBall.fbx"};
+    vector<string> clipNames = {
+            "ch08_Breathing Idle.fbx", 
+            "ch80_Walk.fbx",
+            "ch80_Walking Backwards.fbx", 
+            "ch80_Standard Run.fbx", 
+            "ch80_Running Backward.fbx", 
+            "ch80_Jumping Up.fbx",
+            "ch80_Jumping Down.fbx",
+            "ch80_Falling Idle.fbx",
+            "ch80_Left Turn.fbx",
+            "ch80_Right Turn.fbx",
+    };
+     
+     
     string path = "../Assets/Characters/Mixamo/";
-
-    // auto [meshes, _] =
-    //      GeometryGenerator::ReadAnimationFromFile(path,
-    //      "Character_Kachujin.fbx");
-
+      
     shared_ptr<Character> m_player = make_shared<Character>(m_appBase, m_appBase->m_device, m_appBase->m_context, path,
-                                      "Character_Kachujin.fbx", clipNames);
+                                      "Ch08_nonPBR.fbx", clipNames);
     m_appBase->m_characters.push_back(m_player);
-    //m_player->GetMesh()->UpdateWorldRow(
-    //    Matrix::CreateScale(info.scale.x) *
-    //    Matrix::CreateRotationX(info.rotation.x) *
-    //    Matrix::CreateRotationY(info.rotation.y) *
-    //    Matrix::CreateRotationZ(info.rotation.z) *
-    //    Matrix::CreateTranslation(info.position)
-    //    );
+      
+    m_player->GetMesh()->m_materialConsts.GetCpu().invertNormalMapY = true;
+    m_player->GetMesh()->m_materialConsts.GetCpu().roughnessFactor = 1.0f;
+    m_player->GetMesh()->m_materialConsts.GetCpu().metallicFactor = 1.0f;
+    m_player->GetMesh()->m_materialConsts.GetCpu().useAOMap = true;
     m_player->GetMesh()->UpdateTranseform(info.scale, info.rotation,
                                           info.position);
    
@@ -532,7 +538,8 @@ shared_ptr<Model> JsonManager::CreateMountain(ObjectSaveInfo info) {
 
     for (auto &v : meshes[0].vertices)
         v.texcoord /= 1024.0f;
-    meshes[0].albedoTextureFilename = "../Assets/Terrain/Chalaadi/overlay.png";
+    meshes[0].albedoTextureFilenames.push_back(
+        "../Assets/Terrain/Chalaadi/overlay.png");
 
     Vector3 center(0.f, 0.02f, 0.f);
     shared_ptr<Model> tempModel =
@@ -638,15 +645,6 @@ shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
     auto meshes = GeometryGenerator::ReadFromFile(
         path, "Gledista_Triacanthos_3.fbx", false);
 
-    int id = 0;
-    for (auto mesh : meshes) {
-        for (auto i : mesh.indices) {
-                id++;
-                if (id > 100)
-                        break;
-                cout << i << " ";
-        }
-    }
     Vector3 center(0.0f, 0.0f, 2.0f);
 
     shared_ptr<Model> m_leaves =

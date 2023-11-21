@@ -1,5 +1,5 @@
 #include "TessellationModel.h"
-#include "AppBase.h"
+#include "AppBase.h" 
 #include "GraphicsPSO.h"
 #include <filesystem>
 
@@ -87,6 +87,8 @@ hlab::TessellationModel::TessellationModel(ComPtr<ID3D11Device> &device,
 
 TessellationModel::~TessellationModel() {
          
+        if (true)
+                return;
     D3D11_TEXTURE2D_DESC desc;
 
     m_textureMapBuffer->GetDesc(&desc);

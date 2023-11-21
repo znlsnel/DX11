@@ -392,10 +392,10 @@ PixelShaderOutput main(PixelShaderInput input)
     }
 
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
-    output.pixelColor *= 1.5;
+   // output.pixelColor *= 1.5;
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
-    
+     
         
     //if (isSelected)
     //{

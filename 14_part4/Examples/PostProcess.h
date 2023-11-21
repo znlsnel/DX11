@@ -3,9 +3,9 @@
 #include "ImageFilter.h"
 
 namespace hlab {
-class PostProcess {
+class PostProcess { 
   public:
-    void
+    void 
     Initialize(ComPtr<ID3D11Device> &device,
                ComPtr<ID3D11DeviceContext> &context,
                const std::vector<ComPtr<ID3D11ShaderResourceView>> &resources,
@@ -33,4 +33,4 @@ class PostProcess {
     vector<ComPtr<ID3D11ShaderResourceView>> m_bloomSRVs;
     vector<ComPtr<ID3D11RenderTargetView>> m_bloomRTVs;
 };
-} // namespace hlab
+} // namespa ce hlab 

@@ -77,5 +77,5 @@ float4 main(SamplingPixelShaderInput input) : SV_TARGET
     
     combined = lerp(combined, g_prevFrame.Sample(g_sampler, input.texcoord).rgb, blur);
     
-    return float4(combined, 1.0f);
+    return float4(combined, 1.0f); 
 }

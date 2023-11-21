@@ -36,8 +36,9 @@ class ModelLoader {
 
     void ReadAnimation(const aiScene *scene);
 
-    std::string ReadTextureFilename(const aiScene *scene, aiMaterial *material,
-                                    aiTextureType type);
+void ReadTextureFilename(const aiScene *scene, aiMaterial *material,
+                                    aiTextureType type,
+                                    vector<string> &textureFiles);
 
     void UpdateTangents();
 

@@ -310,45 +310,52 @@ void ModelLoader::ProcessNode(aiNode *node, const aiScene *scene, Matrix tr) {
     }
 }
 
-string ModelLoader::ReadTextureFilename(const aiScene *scene,
+void ModelLoader::ReadTextureFilename(const aiScene *scene,
                                         aiMaterial *material,
-                                        aiTextureType type) {
+                                        aiTextureType type, vector<string>& textureFiles) {
 
-    if (material->GetTextureCount(type) > 0) {
-        aiString filepath;
-        material->GetTexture(type, 0, &filepath);
+        int i = 0;
+    while (true) {
+        if (material->GetTextureCount(type) > 0) {
+            aiString filepath;
+            material->GetTexture(type, i, &filepath);
 
-        string fullPath =
-            m_basePath +
-            string(filesystem::path(filepath.C_Str()).filename().string());
+            string fullPath =
+                m_basePath +
+                string(filesystem::path(filepath.C_Str()).filename().string());
 
-        // 1. 실제로 파일이 존재하는지 확인
-        if (!filesystem::exists(fullPath)) {
-            // 2. 파일이 없을 경우 혹시 fbx 자체에 Embedded인지 확인
-            const aiTexture *texture =
-                scene->GetEmbeddedTexture(filepath.C_Str());
-            if (texture) {
-                // 3. Embedded texture가 존재하고 png일 경우 저장
-                if (string(texture->achFormatHint).find("png") !=
-                    string::npos) {
-                    ofstream fs(fullPath.c_str(), ios::binary | ios::out);
-                    fs.write((char *)texture->pcData, texture->mWidth);
-                    fs.close();
-                    // 참고: compressed format일 경우 texture->mHeight가 0
+            if (!filesystem::exists(fullPath)) {
+                // 2. 파일이 없을 경우 혹시 fbx 자체에 Embedded인지 확인
+                const aiTexture *texture =
+                    scene->GetEmbeddedTexture(filepath.C_Str());
+                if (texture) {
+                    // 3. Embedded texture가 존재하고 png일 경우 저장
+                    if (string(texture->achFormatHint).find("png") !=
+                        string::npos) {
+                        ofstream fs(fullPath.c_str(), ios::binary | ios::out);
+                        fs.write((char *)texture->pcData, texture->mWidth);
+                        fs.close();
+                        // 참고: compressed format일 경우 texture->mHeight가 0
+                    }
+                } else {
+                    cout << fullPath
+                         << " doesn't exists. Return empty filename." << endl;
                 }
             } else {
-                cout << fullPath << " doesn't exists. Return empty filename."
-                     << endl;
+                fullPath;
             }
-        } else {
-            return fullPath;
+
+            if (fullPath == "" || fullPath == m_basePath)
+                break;
+            textureFiles.push_back(fullPath);
+            i++;
         }
 
-        return fullPath;
-
-    } else {
-        return "";
+        // 1. 실제로 파일이 존재하는지 확인
+        else
+            return;
     }
+
 }
 
 MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
@@ -468,34 +475,34 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-        newMesh.albedoTextureFilename =
-            ReadTextureFilename(scene, material, aiTextureType_BASE_COLOR);
-        if (newMesh.albedoTextureFilename.empty()) {
-            newMesh.albedoTextureFilename =
-                ReadTextureFilename(scene, material, aiTextureType_DIFFUSE);
+        
+            ReadTextureFilename(scene, material, aiTextureType_BASE_COLOR,
+                            newMesh.albedoTextureFilenames);
+        if (newMesh.albedoTextureFilenames.empty()) {
+            ReadTextureFilename(scene, material, aiTextureType_DIFFUSE,
+                                newMesh.albedoTextureFilenames);
         }
-        newMesh.emissiveTextureFilename =
-            ReadTextureFilename(scene, material, aiTextureType_EMISSIVE);
-        newMesh.heightTextureFilename =
-            ReadTextureFilename(scene, material, aiTextureType_HEIGHT);
-        newMesh.normalTextureFilename =
-            ReadTextureFilename(scene, material, aiTextureType_NORMALS);
-        newMesh.metallicTextureFilename =
-            ReadTextureFilename(scene, material, aiTextureType_METALNESS);
-        newMesh.roughnessTextureFilename = ReadTextureFilename(
-            scene, material, aiTextureType_DIFFUSE_ROUGHNESS);
-        newMesh.aoTextureFilename = ReadTextureFilename(
-            scene, material, aiTextureType_AMBIENT_OCCLUSION);
-        if (newMesh.aoTextureFilename.empty()) {
-            newMesh.aoTextureFilename =
-                ReadTextureFilename(scene, material, aiTextureType_LIGHTMAP);
+        ReadTextureFilename(scene, material, aiTextureType_EMISSIVE,
+                              newMesh.emissiveTextureFilenames);
+        ReadTextureFilename(scene, material, aiTextureType_HEIGHT,
+                            newMesh.heightTextureFilenames);
+        ReadTextureFilename(scene, material, aiTextureType_NORMALS,
+                            newMesh.normalTextureFilenames);
+        ReadTextureFilename(scene, material, aiTextureType_METALNESS,
+                            newMesh.metallicTextureFilenames);
+         ReadTextureFilename(scene, material, aiTextureType_DIFFUSE_ROUGHNESS, newMesh.roughnessTextureFilenames);
+         ReadTextureFilename(scene, material, aiTextureType_AMBIENT_OCCLUSION,
+                             newMesh.aoTextureFilenames);
+        if (newMesh.aoTextureFilenames.empty()) {
+            ReadTextureFilename(scene, material, aiTextureType_LIGHTMAP,
+                                newMesh.aoTextureFilenames);
         }
-        newMesh.opacityTextureFilename =
-            ReadTextureFilename(scene, material, aiTextureType_OPACITY);
+         ReadTextureFilename(scene, material, aiTextureType_OPACITY,
+                              newMesh.opacityTextureFilenames);
 
-        if (!newMesh.opacityTextureFilename.empty()) {
-            cout << newMesh.albedoTextureFilename << endl;
-            cout << "Opacity " << newMesh.opacityTextureFilename << endl;
+        if (!newMesh.opacityTextureFilenames.empty()) {
+            cout << newMesh.albedoTextureFilenames[0] << endl;
+            cout << "Opacity " << newMesh.opacityTextureFilenames[0] << endl;
         }
 
         // 디버깅용

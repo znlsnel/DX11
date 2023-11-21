@@ -140,4 +140,6 @@ struct PixelShaderInput
     float3 posModel : POSITION1; // Volume casting Ω√¿€¡° 
 };
 
+
+
 #endif // __COMMON_HLSLI__

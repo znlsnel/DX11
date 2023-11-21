@@ -270,8 +270,8 @@ void ReadImage(const std::string filename, std::vector<uint8_t> &image,
 
     // assert(channels == 4);
 
-    cout << "ReadImage() " << filename << " " << width << " " << height << " "
-         << channels << endl;
+    //cout << "ReadImage() " << filename << " " << width << " " << height << " "
+    //     << channels << endl;
 
     // 4채널로 만들어서 복사
     image.resize(width * height * 4);
@@ -329,6 +329,18 @@ void ReadImage(const std::string albedoFilename,
             image[3 + 4 * i + 4 * width * j] =
                 opacityImage[4 * i + 4 * width * j]; // Copy alpha channel
         }
+}
+
+void ReadImages(const vector<std::string>& Filenames, vector<vector<uint8_t>>& images, int& width, int& height) {
+
+    for (const auto &f : Filenames) {
+
+        std::vector<uint8_t> image;
+
+        ReadImage(f, image, width, height);
+
+        images.push_back(image);
+    }
 }
 
 ComPtr<ID3D11Texture2D> D3D11Utils::CreateStagingTexture(
@@ -487,6 +499,62 @@ void D3D11Utils::CreateMetallicRoughnessTexture(
         CreateTextureHelper(device, context, mWidth, mHeight, combinedImage,
                             DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
     }
+}
+
+void D3D11Utils::CreateMetallicRoughnessTextureArray(
+    ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+    const vector<string> &metallicFilenames,
+    const vector<string> &roughnessFilenames, ComPtr<ID3D11Texture2D> &texture,
+    ComPtr<ID3D11ShaderResourceView> &srv) {
+
+          if (!metallicFilenames.empty() &&
+        (metallicFilenames[0] == roughnessFilenames[0])) {
+        CreateTextureArray(device, context, metallicFilenames, texture, srv);
+    } else {
+        // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
+
+        // ReadImage()를 활용하기 위해서 두 이미지들을 각각 4채널로 변환 후 다시
+        // 3채널로 합치는 방식으로 구현
+        int mWidth = 0, mHeight = 0;
+        int rWidth = 0, rHeight = 0;
+        vector<vector<uint8_t>> mImage;
+        vector<vector<uint8_t>> rImage; 
+
+        // (거의 없겠지만) 둘 중 하나만 있을 경우도 고려하기 위해 각각 파일명
+        // 확인
+        if (!metallicFilenames.empty()) {
+            ReadImages(metallicFilenames, mImage, mWidth, mHeight);
+        }
+
+        if (!roughnessFilenames.empty()) {
+            ReadImages(roughnessFilenames, rImage, rWidth, rHeight);
+        }
+
+        // 두 이미지의 해상도가 같다고 가정
+        if (!metallicFilenames.empty() && !roughnessFilenames.empty()) {
+            assert(mWidth == rWidth);
+            assert(mHeight == rHeight);
+        }
+
+        vector<vector<uint8_t>> combinedImages(metallicFilenames.size());
+        for (int i = 0; i < combinedImages.size(); i++) {
+               combinedImages[i].resize(size_t(mWidth * mHeight) * 4);
+                fill(combinedImages[i].begin(), combinedImages[i].end(), 0);
+        }
+
+        for (int i = 0; i < metallicFilenames.size(); i++) {
+                for (size_t j = 0; j < size_t(mWidth * mHeight); j++) {
+                    if (rImage.size())
+                        combinedImages[i][4 * j + 1] = rImage[i][4 * j]; // Green = Roughness
+                    if (mImage.size())
+                        combinedImages[i][4 * j + 2] = mImage[i][4 * i]; // Blue = Metalness
+                }
+        }
+
+        CreateTextureArray(device, context, combinedImages.size(), mWidth,
+                           mHeight, combinedImages, texture, srv);
+    }
+
 }
 
 
@@ -797,6 +865,57 @@ void D3D11Utils::CreateAppendBuffer(ComPtr<ID3D11Device> &device,
 
 void D3D11Utils::CreateTextureArray(
     ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+        int size, int width, int height,
+    const std::vector<vector<uint8_t>> &images,
+    ComPtr<ID3D11Texture2D> &texture,
+    ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
+
+    // Texture2DArray를 만듭니다. 이때 데이터를 CPU로부터 복사하지 않습니다.
+    D3D11_TEXTURE2D_DESC txtDesc;
+    ZeroMemory(&txtDesc, sizeof(txtDesc));
+    txtDesc.Width = UINT(width);
+    txtDesc.Height = UINT(height);
+    txtDesc.MipLevels = 0; // 밉맵 레벨 최대
+    txtDesc.ArraySize = size;
+    txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    txtDesc.SampleDesc.Count = 1;
+    txtDesc.SampleDesc.Quality = 0;
+    txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
+    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // 밉맵 사용
+
+    // 초기 데이터 없이 텍스춰를 만듭니다.
+    device->CreateTexture2D(&txtDesc, NULL, texture.GetAddressOf());
+
+    // 실제로 만들어진 MipLevels를 확인
+    texture->GetDesc(&txtDesc);
+    // cout << txtDesc.MipLevels << endl;
+
+    // StagingTexture를 만들어서 하나씩 복사합니다.
+    for (size_t i = 0; i < images.size(); i++) {
+
+        auto &image = images[i];
+
+        // StagingTexture는 Texture2DArray가 아니라 Texture2D 입니다.
+        ComPtr<ID3D11Texture2D> stagingTexture = CreateStagingTexture(
+            device, context, width, height, image, txtDesc.Format, 1, 1);
+
+        // 스테이징 텍스춰를 텍스춰 배열의 해당 위치에 복사합니다.
+        UINT subresourceIndex =
+            D3D11CalcSubresource(0, UINT(i), txtDesc.MipLevels);
+
+        context->CopySubresourceRegion(texture.Get(), subresourceIndex, 0, 0, 0,
+                                       stagingTexture.Get(), 0, NULL);
+    }
+
+    device->CreateShaderResourceView(texture.Get(), NULL,
+                                     textureResourceView.GetAddressOf());
+
+    context->GenerateMips(textureResourceView.Get());
+}
+
+void D3D11Utils::CreateTextureArray(
+    ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
     const std::vector<std::string> filenames, ComPtr<ID3D11Texture2D> &texture,
     ComPtr<ID3D11ShaderResourceView> &textureSRV) {
 
@@ -823,48 +942,56 @@ void D3D11Utils::CreateTextureArray(
 
     UINT size = UINT(filenames.size());
 
-    // Texture2DArray를 만듭니다. 이때 데이터를 CPU로부터 복사하지 않습니다.
-    D3D11_TEXTURE2D_DESC txtDesc;
-    ZeroMemory(&txtDesc, sizeof(txtDesc));
-    txtDesc.Width = UINT(width);
-    txtDesc.Height = UINT(height);
-    txtDesc.MipLevels = 0; // 밉맵 레벨 최대
-    txtDesc.ArraySize = size;
-    txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    txtDesc.SampleDesc.Count = 1;
-    txtDesc.SampleDesc.Quality = 0;
-    txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
-    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-    txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // 밉맵 사용
+        CreateTextureArray(device, context, int(size), width, height, imageArray, texture, textureSRV);
+}
 
-    // 초기 데이터 없이 텍스춰를 만듭니다.
-    device->CreateTexture2D(&txtDesc, NULL, texture.GetAddressOf());
+void D3D11Utils::CreateTextureArray(
+    ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+    const std::vector<std::string> albedoFilenames,
+    const std::vector<std::string> opacityFilenames,
+    ComPtr<ID3D11Texture2D> &texture,
+    ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
 
-    // 실제로 만들어진 MipLevels를 확인
-    texture->GetDesc(&txtDesc);
-    // cout << txtDesc.MipLevels << endl;
+        using namespace std;
 
-    // StagingTexture를 만들어서 하나씩 복사합니다.
-    for (size_t i = 0; i < imageArray.size(); i++) {
+    if (albedoFilenames.empty())
+        return;
+    if (opacityFilenames.empty())
+        return;
 
-        auto &image = imageArray[i];
+    // 모든 이미지의 width와 height가 같다고 가정합니다.
 
-        // StagingTexture는 Texture2DArray가 아니라 Texture2D 입니다.
-        ComPtr<ID3D11Texture2D> stagingTexture = CreateStagingTexture(
-            device, context, width, height, image, txtDesc.Format, 1, 1);
+    // 파일로부터 이미지 여러 개를 읽어들입니다.
+    int width = 0, height = 0;
+    vector<vector<uint8_t>> imageArray;
+    for (int i = 0; i < albedoFilenames.size(); i++) {
 
-        // 스테이징 텍스춰를 텍스춰 배열의 해당 위치에 복사합니다.
-        UINT subresourceIndex =
-            D3D11CalcSubresource(0, UINT(i), txtDesc.MipLevels);
+       // cout << albedoFilenames[0] << endl;
+        std::vector<uint8_t> image;
+        ReadImage(albedoFilenames[i], image, width, height);
 
-        context->CopySubresourceRegion(texture.Get(), subresourceIndex, 0, 0, 0,
-                                       stagingTexture.Get(), 0, NULL);
+        std::vector<uint8_t> opacityImage;
+        int opaWidth, opaHeight;
+
+        ReadImage(opacityFilenames[i], opacityImage, opaWidth, opaHeight);
+
+        assert(width == opaWidth && height == opaHeight);
+
+        for (int j = 0; j < height; j++)
+            for (int i = 0; i < width; i++) {
+                image[3 + 4 * i + 4 * width * j] =
+                    opacityImage[4 * i + 4 * width * j]; // Copy alpha channel
+            }
+
+        imageArray.push_back(image);
     }
 
-    device->CreateShaderResourceView(texture.Get(), NULL,
-                                     textureSRV.GetAddressOf());
+    UINT size = UINT(albedoFilenames.size());
 
-    context->GenerateMips(textureSRV.Get());
+
+        CreateTextureArray(device, context, int(size), width, height, imageArray,
+                        texture, textureResourceView);
+
 }
 
 void D3D11Utils::CreateDDSTexture(

@@ -7,10 +7,17 @@
 
 namespace hlab {
 
-       static bool isValid(void *ptr) { return ptr != nullptr; };
+        enum EActorState : int
+        {
+                idle = 0,
+                walk = 1,
+                run = 2,
+                jump = 3,
+        };
+
+static bool isValid(void *ptr) { return ptr != nullptr; };
 
 using std::make_shared;
-
 
 
 class SkinnedMeshModel : public Model {
@@ -36,10 +43,16 @@ class SkinnedMeshModel : public Model {
                 return;
         };
 
-        void GetCurrFramePos(vector<Matrix>& posMat, float dt, bool isCurrAnim = true) {
-            int currFrame = (int)frame; 
+        void GetCurrFramePos(vector<Matrix>& posMat, float dt, bool useBlendFrame = false) {
+
+            float *tempFrame = &frame;
+                if (useBlendFrame)
+                tempFrame = &blendFrame;
+
+
+                int currFrame = (int)*tempFrame; 
             int nextFrame = std::min(currFrame + 1, endFrame);
-            float lerpValue = (float)frame - currFrame;
+                float lerpValue = (float)*tempFrame - currFrame;
 
             aniData->Update(clipId, currFrame);
             for (int i = 0; i < posMat.size(); i++) {
@@ -54,16 +67,13 @@ class SkinnedMeshModel : public Model {
                     lerpValue);
             }
             
-               frame += (dt * 60.f);
+               *tempFrame += (dt * 60.f);
 
 
             //std::cout << "frame : " << frame << std::endl;
 
-            if ((int)frame > endFrame) {
-                //if (isCurrAnim)
-                    frame = 0.0f;
-                //else
-                //    frame = (float)endFrame;
+            if ((int)*tempFrame > endFrame) {
+               *tempFrame = 0.0f;
             }
 
         };
@@ -111,6 +121,7 @@ class SkinnedMeshModel : public Model {
         int clipId = 0;
 
         float frame = 0;
+        float blendFrame = 0;
         int startFrame = 0;
         int endFrame = 0;
         float blendTime = 1.0f;
@@ -131,7 +142,7 @@ class SkinnedMeshModel : public Model {
 
 
 
-    void UpdatePose(ComPtr<ID3D11DeviceContext> &context, float dt, bool bUseBlendAnim = false)override;
+    void UpdatePose(ComPtr<ID3D11DeviceContext> &context, float dt)override;
     
 
     void Initialize(ComPtr<ID3D11Device> &device,
@@ -183,8 +194,8 @@ class SkinnedMeshModel : public Model {
             m_boneTransforms.Initialize(device);
         }
     }
-    void ChangeAnimation(Animation *anim);
-    void ChangeAnimation(int animID);
+    void ChangeAnimation(Animation *anim); 
+    void ChangeAnimation(EActorState animID, bool forward);
 
     void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, int clipId,
                          float frame) override;
@@ -217,13 +228,15 @@ class SkinnedMeshModel : public Model {
     AnimationData m_aniData;
 
     Animation idle;
-
-    Animation walk_start;
-    Animation walk_end;
-
     Animation walk;
-   
-    Animation fireBall;
+    Animation walk_backward;
+    Animation run;
+    Animation run_backward;
+    Animation jumping_Up;
+    Animation jumping_Down;
+    Animation jumping_Falling;
+    Animation turn_Left;
+    Animation turn_Right;
 
     Animation *prevAnim = nullptr;
     Animation *currAnim = &idle;

@@ -259,10 +259,33 @@ class D3D11Utils {
         const std::string roughnessFilename, ComPtr<ID3D11Texture2D> &texture,
         ComPtr<ID3D11ShaderResourceView> &srv);
 
+    static void CreateMetallicRoughnessTextureArray(
+        ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+        const vector<std::string> &metallicFilenames,
+        const vector<std::string> &roughnessFilenames,
+        ComPtr<ID3D11Texture2D> &texture,
+        ComPtr<ID3D11ShaderResourceView> &srg);
+
+    static void
+    CreateTextureArray(ComPtr<ID3D11Device> &device,
+                       ComPtr<ID3D11DeviceContext> &context,
+                        int size, int width, int height,
+                       const std::vector<vector<uint8_t>> &images,
+                       ComPtr<ID3D11Texture2D> &texture,
+                       ComPtr<ID3D11ShaderResourceView> &textureResourceView);
+
     static void
     CreateTextureArray(ComPtr<ID3D11Device> &device,
                        ComPtr<ID3D11DeviceContext> &context,
                        const std::vector<std::string> filenames,
+                       ComPtr<ID3D11Texture2D> &texture,
+                       ComPtr<ID3D11ShaderResourceView> &textureResourceView);
+
+        static void
+    CreateTextureArray(ComPtr<ID3D11Device> &device,
+                       ComPtr<ID3D11DeviceContext> &context,
+                        const std::vector<std::string> albedoFilenames,
+                        const std::vector<std::string> opacityFilenames,
                        ComPtr<ID3D11Texture2D> &texture,
                        ComPtr<ID3D11ShaderResourceView> &textureResourceView);
 

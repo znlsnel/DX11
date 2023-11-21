@@ -981,8 +981,7 @@ vector<MeshData> GeometryGenerator::ReadFromFile(std::string basePath,
     return modelLoader.m_meshes;
 }
 
-auto GeometryGenerator::ReadAnimationFromFile(string basePath, string filename,
-                                              bool revertNormals)
+auto GeometryGenerator::ReadAnimationFromFile(string basePath, string filename, bool revertNormals)
     -> tuple<vector<MeshData>, AnimationData> {
 
     ModelLoader modelLoader;

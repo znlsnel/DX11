@@ -51,12 +51,12 @@ bool Ex1701_SkeletalAnimation::InitScene() {
         // https://freepbr.com/materials/stringy-marble-pbr/
         auto mesh = GeometryGenerator::MakeSquare(5.0);
         string path = "../Assets/Textures/PBR/black-tile1-ue/";
-        mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
-        mesh.emissiveTextureFilename = "";
-        mesh.aoTextureFilename = path + "black-tile1_ao.png";
-        mesh.metallicTextureFilename = path + "black-tile1_Metallic.png";
-        mesh.normalTextureFilename = path + "black-tile1_Normal-dx.png";
-        mesh.roughnessTextureFilename = path + "black-tile1_Roughness.png";
+        //mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
+        //mesh.emissiveTextureFilename = "";
+        //mesh.aoTextureFilename = path + "black-tile1_ao.png";
+        //mesh.metallicTextureFilename = path + "black-tile1_Metallic.png";
+        //mesh.normalTextureFilename = path + "black-tile1_Normal-dx.png";
+        //mesh.roughnessTextureFilename = path + "black-tile1_Roughness.png";
 
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.7f);

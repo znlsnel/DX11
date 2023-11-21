@@ -33,18 +33,18 @@ class ImageFilter {
 
   public:
     struct ImageFilterConstData {
-        float dx;
-        float dy;
+        float dx; 
+        float dy;  
         float threshold;
-        float strength;
+        float strength; 
         float option1;       // exposure in CombinePS.hlsl
         float option2;       // gamma in CombinePS.hlsl
         float option3 = 0.0; // blur in CombinePS.hlsl
         float option4;
-    };
-
+    }; 
+       
     ImageFilterConstData m_constData = {};
-
+     
   protected:
     ComPtr<ID3D11PixelShader> m_pixelShader;
     ComPtr<ID3D11Buffer> m_constBuffer;
