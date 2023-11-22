@@ -534,12 +534,12 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
     while (!queue.empty()) {
         auto curr = queue.front(); 
         queue.pop();
-         
+          
         int minID = std::get<0>(curr);
         int maxID = std::get<1>(curr);  
         int currLevel = std::get<2>(curr);
         // 0 1 2 3 4
-        bool isLastLevel = maxID - minID <= 6;
+        bool isLastLevel = maxID - minID <= 15;
         BVHBoxs.push_back(GetBoundingBox(mesh.vertices, mesh.indices, minID,
                                          maxID, isLastLevel));  
         auto meshData = GeometryGenerator::MakeWireBox(
@@ -564,25 +564,33 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
         if (isPlane)
                 maxLevel = 20;
 
-        if (currLevel > maxLevel)
+        if (currLevel > maxLevel) 
             break;
 
         BoundingCollision &currBox = BVHBoxs.back();
         int InterID = (maxID + minID) / 2;
         
-
+        // 0 1 2 3 4 
         int nextMinID = minID;
         int nextMaxID = InterID; 
+        bool leftChild = nextMinID + 3 < nextMaxID;
+        int temp = 4 - (InterID - nextMinID) % 4;
+        nextMaxID += temp == 4 ? 0 : temp;
+
         // 0 1 2 3 4 5 
-        bool leftChild = nextMinID + 2 < nextMaxID;
         if (leftChild)
             queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
 
 
         nextMinID = nextMaxID;
         nextMaxID = maxID;
+        bool rightChild = nextMinID + 3 < nextMaxID;
+        temp = 4 - (maxID - nextMinID) % 4;
+        nextMaxID += temp == 4 ? 0 
+                : nextMaxID + temp > maxIndex ? 0 
+                : temp;
+        
 
-        bool rightChild = nextMinID + 2 < nextMaxID;
         if (rightChild)
                 queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
 

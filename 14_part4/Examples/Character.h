@@ -27,16 +27,18 @@ class Character {
     shared_ptr<SkinnedMeshModel> GetMesh() { return m_mesh; };
 
     float m_simToRenderScale = 0.01f;
-
+     
     private:
         shared_ptr<SkinnedMeshModel> m_mesh;
        class Ex2001_GamePlay* m_appBase;
-
+         
         bool bUseUpdateTick = false;
         bool isUsingSkill = false;
-
+        bool isFalling = false;
+          
+         
         EActorState state = EActorState::idle;
-
+         
         float m_walkSpeed = 1.0f;
         float m_runSpeed = 3.0f;
 };

@@ -258,7 +258,6 @@ void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
 
                  if (r) {
                          cout << "succeeed \n";
-                 
                  }
                  else {
                          cout << "failed  \n";
@@ -269,24 +268,19 @@ void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
                             .worldVertexs.size())
                  << "\n";
 
-                 for (int i = 0;
-                      i <
-                      m_groundPlane->m_BVHs[0][resultIndex].worldVertexs.size();
-                      i++) {
+                for (auto &s : m_cursorSphere)
+                         s->m_isVisible = false;
 
-                         cout << "v0 : "
-                              << m_groundPlane->m_BVHs[0][resultIndex]
-                                     .worldVertexs[i]
-                                     .x
-                              << ", "
-                              << m_groundPlane->m_BVHs[0][resultIndex]
-                                     .worldVertexs[i]
-                                     .y
-                              << ", "
-                              << m_groundPlane->m_BVHs[0][resultIndex]
-                                     .worldVertexs[i]
-                                     .z
-                              << "\n";
+                int size =
+                    m_groundPlane->m_BVHs[0][resultIndex].worldVertexs.size();
+                for (int i = 0; i < size; i++) {
+                         if (m_cursorSphere.size() <= i)
+                                break;
+
+                        m_cursorSphere[i]->m_isVisible = true;
+                         m_cursorSphere[i]->UpdatePosition(
+                             m_groundPlane->m_BVHs[0][resultIndex]
+                                 .worldVertexs[i]);
                  }
        } 
 }
@@ -342,10 +336,10 @@ void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) {
          changePos(leftPos, leftPosition);
          changePos(rightPos, rightPosition);
 
-         m_cursorSphere[1]->UpdatePosition(upPosition);
-         m_cursorSphere[2]->UpdatePosition(downPosition);
-         m_cursorSphere[3]->UpdatePosition(leftPosition);
-         m_cursorSphere[4]->UpdatePosition(rightPosition);
+         //m_cursorSphere[1]->UpdatePosition(upPosition);
+         //m_cursorSphere[2]->UpdatePosition(downPosition);
+         //m_cursorSphere[3]->UpdatePosition(leftPosition);
+         //m_cursorSphere[4]->UpdatePosition(rightPosition);
 
          DirectX::SimpleMath::Ray ray = SimpleMath::Ray(origin, dir);
          bool result = ray.Intersects(downPosition, leftPosition, upPosition, dist);
@@ -643,7 +637,7 @@ bool AppBase::InitScene() {
     }
 
     // 커서 표시 (Main sphere와의 충돌이 감지되면 월드 공간에 작게 그려지는 구)
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 10; i++)
     {
         MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
         shared_ptr<Model>cursorSphere =

@@ -392,7 +392,7 @@ PixelShaderOutput main(PixelShaderInput input)
     
     float3 directLighting = float3(0, 0, 0);
 
-    float3 temp1 = float3(0.0, 0.0, 0.0);
+    float3 temp1 = float3(0.0, 0.0, 0.0); 
     float3 temp2 = float3(0.0, 0.0, 0.0);
     temp1 = DrawLight(input, lights[MAX_LIGHTS - 1], shadowMaps[MAX_LIGHTS - 1],
         normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);

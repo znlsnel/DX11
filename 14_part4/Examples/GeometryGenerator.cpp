@@ -216,8 +216,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                 //        1) * j + i + 1); meshData.indices.push_back((numSlices
                 //        + 1) * (j + 1) + i + 1);
                 //    }
-                //}
-        }
+                //} 
+        } 
                 for (int j = 0; j < numStacks * numSlices; j++) {
                         // ...
 
@@ -230,9 +230,9 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                         meshData.indices.push_back(currentIndex + 2);
 
                         // 두 번째 삼각형을 형성하는 인덱스를 추가합니다.
-                        meshData.indices.push_back(currentIndex + 0);
                         meshData.indices.push_back(currentIndex + 2);
-                        meshData.indices.push_back(currentIndex + 3);
+                        meshData.indices.push_back(currentIndex + 1);
+                        meshData.indices.push_back(currentIndex + 3); 
                 }
         
     return meshData;

@@ -78,7 +78,7 @@ class AppBase {
                                const Matrix &viewRow, const Matrix &projRow,
                                const Matrix &refl = Matrix());
     void SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU);
-
+     
     void CreateDepthBuffers();
     void SetPipelineState(const GraphicsPSO &pso);
     void SetPipelineState(const ComputePSO &pso);

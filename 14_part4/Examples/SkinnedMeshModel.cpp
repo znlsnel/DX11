@@ -8,28 +8,34 @@ void hlab::SkinnedMeshModel::UpdatePose(ComPtr<ID3D11DeviceContext> &context,  f
 
         //currAnim->GetCurrFramePos(m_boneTransforms.m_cpu, dt);
 
-        if (prevAnim == nullptr) { 
+        if (prevAnim == nullptr) 
+        {
              currAnim->GetCurrFramePos(m_boneTransforms.m_cpu, dt);
 
-             float rt = currAnim->frame / float(currAnim->endFrame);
-             if (rt > 0.9f) {
-                 currAnim->GetCurrFramePos(temp, dt, true);
-                 // 0.6 ~ 1 -> 0 ~ 1
-                 cout << "frame : " << currAnim->frame << endl;
-                 cout << "Endframe : " << currAnim->endFrame << endl;
-                 cout << "rt : " << rt << endl;
-                 for (int i = 0; i < m_boneTransforms.m_cpu.size(); i++) {
-                     m_boneTransforms.m_cpu[i] = Matrix::Lerp(
-                         m_boneTransforms.m_cpu[i], temp[i],
-                         std::clamp((rt - 0.9f) / 0.1f, 0.0f, 1.0f));
-                 } 
-                if (rt >= 1.0f) 
-                     currAnim->frame = currAnim->blendFrame;
-             } else {
-                 currAnim->blendFrame = 0.0f;
-             }
+             //float rt = currAnim->frame / float(currAnim->endFrame);
+             //if (rt >= 0.99f)
+             //    currAnim->frame = currAnim->blendFrame;
+             //else if (rt > 0.5f) 
+             //{
+             //    currAnim->GetCurrFramePos(temp, dt, true);
+             //    // 0.6 ~ 1 -> 0 ~ 1
+             //    cout << "frame : " << currAnim->frame << endl;
+             //    cout << "Endframe : " << currAnim->endFrame << endl;
+             //    cout << "rt : " << rt << endl;
 
-        }
+             //    for (int i = 0; i < m_boneTransforms.m_cpu.size(); i++) 
+             //    {
+             //        m_boneTransforms.m_cpu[i] = Matrix::Lerp(
+             //            m_boneTransforms.m_cpu[i], temp[i],
+             //            std::clamp((rt - 0.5f) / 0.5f, 0.0f, 1.0f));
+             //    }   
+             //} 
+             //else 
+             //{
+             //    currAnim->blendFrame = 0.0f;
+             //}
+
+        } 
         else{
                 blendingTime += dt;
 

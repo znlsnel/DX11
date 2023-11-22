@@ -50,6 +50,19 @@ struct BoundingCollision {
         if (result == false && worldVertexs.size() > 5)
                 result = ray.Intersects(worldVertexs[3], worldVertexs[4],
                                         worldVertexs[5], dist);
+         
+        // 0 1 2 3  - 4  
+        for (int i = 0; i <= worldVertexs.size() - 3; i++) {
+                result = ray.Intersects(worldVertexs[i], worldVertexs[i+1],
+                                        worldVertexs[i+2], dist);
+                if (result == false && i + 1 < worldVertexs.size()) {
+                    result = ray.Intersects(worldVertexs[i+2], worldVertexs[i + 1],
+                                       worldVertexs[i + 3], dist);
+                }
+
+                if (result)
+                    break;
+        }
 
         return result;
     }

@@ -56,7 +56,7 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     len4 = 1.0 - saturate((distMax - len4) / (distMax - distMin));
     len5 = 1.0 - saturate((distMax - len5) / (distMax - distMin));
 
-    float maxSize = 5.0;
+    float maxSize = 1.0;
     //pt.edges[0] = lerp(1.0, maxSize, len2);
     //pt.edges[1] = lerp(1.0, maxSize, len1);
     //pt.edges[2] = lerp(1.0, maxSize, len4);

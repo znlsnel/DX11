@@ -3,26 +3,27 @@
 #include "Ex2001_GamePlay.h"
 
 using namespace hlab;
-hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
-                           ComPtr<ID3D11DeviceContext> &context,
-                           const string meshPath, const string meshFileName,
-                           const vector<string> clipNames) {
+hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device>& device,
+        ComPtr<ID3D11DeviceContext>& context,
+        const string meshPath, const string meshFileName,
+        const vector<string> clipNames) {
         auto [meshes, _] =
                 GeometryGenerator::ReadAnimationFromFile(meshPath, meshFileName);
 
         AnimationData aniData;
-        for (auto &name : clipNames) {
+        for (auto& name : clipNames) {
                 auto [_, ani] =
-                GeometryGenerator::ReadAnimationFromFile(meshPath, name);
+                        GeometryGenerator::ReadAnimationFromFile(meshPath, name);
 
                 if (aniData.clips.empty()) {
-                aniData = ani;
-                } else {
-                aniData.clips.push_back(ani.clips.front());
-                } 
+                        aniData = ani;
+                }
+                else {
+                        aniData.clips.push_back(ani.clips.front());
+                }
         }
         Vector3 center(0.0f, 0.1f, 1.0f);
-        
+
         m_mesh =
                 make_shared<SkinnedMeshModel>(device, context, meshes, aniData);
 
@@ -38,8 +39,8 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device> &device,
 
 }
 
-void hlab::Character::Update(float dt) { 
-       UpdateState(dt); 
+void hlab::Character::Update(float dt) {
+        UpdateState(dt);
         UpdateTransform(dt);
 }
 
@@ -48,55 +49,76 @@ void hlab::Character::BeginPlay() {
 }
 
 
-void hlab::Character::UpdateTransform(float dt) 
+void hlab::Character::UpdateTransform(float dt)
 {
-        
-       
+
+
         if (m_appBase->m_camera->m_objectTargetCameraMode == false)
                 return;
         if (m_appBase->m_keyPressed['A']) {
                 m_mesh->AddYawOffset(-3.141592f * 240.f / 180.f * dt);
-        } else if (m_appBase->m_keyPressed['D']) {
+        }
+        else if (m_appBase->m_keyPressed['D']) {
                 m_mesh->AddYawOffset(3.141592f * 240.f / 180.f * dt);
-        } 
+        }
 
         if (state == walk || state == run) {
-                  Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
-                  dir = Vector4::Transform(
-                      dir, m_mesh->m_worldRow);
+                Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
+                dir = Vector4::Transform(
+                        dir, m_mesh->m_worldRow);
 
-                  dir.Normalize();
-                  float speed = m_walkSpeed;
-                  if (state == run) 
+                dir.Normalize();
+                float speed = m_walkSpeed;
+                if (state == run)
                         speed = m_runSpeed;
 
-                  Vector3 tdir = Vector3(dir.x, dir.y, dir.z);
+                Vector3 tdir = Vector3(dir.x, dir.y, dir.z);
 
-                  if (m_appBase->m_keyPressed['S'])
+                if (m_appBase->m_keyPressed['S'])
                         tdir *= -0.7f;
 
-                  Vector3 velocity = m_mesh->m_worldRow.Translation() +
-                                     tdir * speed * dt * 0.3f;
+                Vector3 velocity = m_mesh->m_worldRow.Translation() +
+                        tdir * speed * dt * 0.3f;
 
-                   
-                  m_mesh->UpdatePosition(velocity);
+
+                m_mesh->UpdatePosition(velocity);
         }
 
-        static float updateTime = 0.0f;
-        static const float updateCycle = 1.0f / 165.0f;
 
-        if (updateTime > updateCycle) 
+        static Vector3 dir = Vector3(0.0f, -1.0f, 0.0f);
+        static Vector3 velocity;
+
+        if (isFalling == false && m_appBase->m_keyPressed[VK_SPACE]) {
+                velocity = Vector3(0.0, 0.5f, 0.0f);
+        }
+
+
+        Vector3 pos = m_mesh->GetPosition();
+        Vector3 origin = pos + Vector3(0.0f, 0.5f, 0.0f);
+        float dist = 0.0f;
+        //m_appBase->SetHeightPosition(origin, dir, dist);
+        m_appBase->RayCasting(origin, dir, dist);
+         
+        if (dist > 0.0f)
         {
-                Vector3 pos = m_mesh->GetPosition();
-                  Vector3 origin = pos + Vector3(0.0f, 0.5f, 0.0f);
-                float dist = 0.0f;
-                m_appBase->SetHeightPosition(origin, Vector3(0.0f, -1.0f, 0.0f), dist);
+                if (pos.y >  origin.y - dist) 
+                {
+                         
+                        Vector3 temp;
+                        Vector3 nextPos = pos + velocity * dt;
+                        Vector3 groundPos = origin + Vector3(0.0f, -dist + 0.1f, 0.0f);
+                        if (nextPos.y < groundPos.y)
+                        {
+                            nextPos = groundPos;
+                            velocity = Vector3(0.0f, 0.0f, 0.0f);
+                        } else
+                            velocity += dir * dt;
 
-                if (dist > 0.0f)
-                        m_mesh->UpdatePosition(origin + (Vector3(0.0f, -1.0f, 0.0f) * dist) + Vector3(0.0f, 0.1f, 0.0f));
-                updateTime = 0.0f;        
+                                 
+                        m_mesh->UpdatePosition(nextPos);         
+                }
         }
-        updateTime += dt;
+         
 }
 
 void hlab::Character::UpdateState(float dt) {
