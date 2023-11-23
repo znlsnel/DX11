@@ -15,6 +15,7 @@ namespace hlab {
                 jump = 3,
         };
 
+
 static bool isValid(void *ptr) { return ptr != nullptr; };
 
 using std::make_shared;
@@ -195,7 +196,7 @@ class SkinnedMeshModel : public Model {
         }
     }
     void ChangeAnimation(Animation *anim); 
-    void ChangeAnimation(EActorState animID, bool forward);
+    void ChangeAnimation(EActorState& animID, bool forward);
 
     void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, int clipId,
                          float frame) override;
@@ -248,6 +249,8 @@ class SkinnedMeshModel : public Model {
     float lerpRatio = 0.0f;
 
     float blendingTime = 0.0f;
+    bool isFalling = false;
+
 };
 
 } // namespace hlab

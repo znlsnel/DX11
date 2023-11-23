@@ -59,8 +59,7 @@ struct BoundingCollision {
                     result = ray.Intersects(worldVertexs[i+2], worldVertexs[i + 1],
                                        worldVertexs[i + 3], dist);
                 }
-
-                if (result)
+                if (result) 
                     break;
         }
 

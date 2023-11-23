@@ -62,6 +62,7 @@ void hlab::Character::UpdateTransform(float dt)
                 m_mesh->AddYawOffset(3.141592f * 240.f / 180.f * dt);
         }
 
+        Vector3 vc;
         if (state == walk || state == run) {
                 Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
                 dir = Vector4::Transform(
@@ -75,46 +76,58 @@ void hlab::Character::UpdateTransform(float dt)
                 Vector3 tdir = Vector3(dir.x, dir.y, dir.z);
 
                 if (m_appBase->m_keyPressed['S'])
-                        tdir *= -0.7f;
+                        tdir *= -0.7f; 
 
-                Vector3 velocity = m_mesh->m_worldRow.Translation() +
-                        tdir * speed * dt * 0.3f;
-
+                vc = tdir * speed  * 0.3f;
+                Vector3 velocity = m_mesh->m_worldRow.Translation() + vc * dt;
 
                 m_mesh->UpdatePosition(velocity);
         }
 
-
+         
         static Vector3 dir = Vector3(0.0f, -1.0f, 0.0f);
         static Vector3 velocity;
 
-        if (isFalling == false && m_appBase->m_keyPressed[VK_SPACE]) {
-                velocity = Vector3(0.0, 0.5f, 0.0f);
-        }
+        bool isJumping =
+            m_mesh->isFalling == false && m_appBase->m_keyPressed[VK_SPACE];
 
+        //vc.Normalize();
+        if (isJumping) { 
+                state = EActorState::jump;
+                m_mesh->isFalling = true; 
+                m_appBase->m_keyPressed[VK_SPACE] = false;
+
+                velocity = vc + Vector3(0.0f, 0.5f, 0.0f);
+                cout << "vc  : " << vc.x << ", " << vc.y << ", " << vc.z << "\n";
+                cout << "Time : " << m_appBase->timeSeconds << "\n";
+        }
 
         Vector3 pos = m_mesh->GetPosition();
         Vector3 origin = pos + Vector3(0.0f, 0.5f, 0.0f);
         float dist = 0.0f;
-        //m_appBase->SetHeightPosition(origin, dir, dist);
-        m_appBase->RayCasting(origin, dir, dist);
+        m_appBase->SetHeightPosition(origin, dir, dist);
          
         if (dist > 0.0f)
         {
                 if (pos.y >  origin.y - dist) 
                 {
-                         
                         Vector3 temp;
                         Vector3 nextPos = pos + velocity * dt;
                         Vector3 groundPos = origin + Vector3(0.0f, -dist + 0.1f, 0.0f);
-                        if (nextPos.y < groundPos.y)
+                        if (nextPos.y > groundPos.y)
+                        {
+                            velocity += dir * dt;
+                        } 
+                        else 
                         {
                             nextPos = groundPos;
                             velocity = Vector3(0.0f, 0.0f, 0.0f);
-                        } else
-                            velocity += dir * dt;
+                        }
 
-                                 
+                        //  점프 시작 위치 높으면 falling
+                        // 바닥에 닿으면 ㄴㄴ falling
+                        m_mesh->isFalling = nextPos.y - groundPos.y > 0.025f;
+                                            
                         m_mesh->UpdatePosition(nextPos);         
                 }
         }
@@ -129,10 +142,7 @@ void hlab::Character::UpdateState(float dt) {
         switch (state) { 
         case EActorState::idle:
         {
-                  if (m_appBase->m_keyPressed[VK_SPACE]) {
-                        //state = EActorState::attack;
-                  } 
-                  else if (m_appBase->m_keyPressed['W'] ||
+                  if (m_appBase->m_keyPressed['W'] ||
                              m_appBase->m_keyPressed['S'])
                         state = EActorState::walk;
         }
@@ -144,11 +154,10 @@ void hlab::Character::UpdateState(float dt) {
                   else if (m_appBase->m_keyPressed[VK_SHIFT])
                   {
                         state = EActorState::run;
-                  }
+                  } 
         }
                 break;
         case EActorState::run: {
-                
                   if (m_appBase->m_keyPressed['W'] == false &&
                       m_appBase->m_keyPressed['S'] == false)
                         state = EActorState::idle;
@@ -156,12 +165,18 @@ void hlab::Character::UpdateState(float dt) {
                   else if (m_appBase->m_keyPressed[VK_SHIFT] == false) {
                         state = EActorState::walk;
                   }
-
         }
                 break;
-        }
+        case EActorState::jump: {
+                  // if (m_mesh->currAnim == &m_mesh->jumping_Down) {
+                  //       float rt = m_mesh->jumping_Down.frame /
+                  //                  (float)m_mesh->jumping_Down.endFrame;
+                  //         if (rt > 0.8f)
+                  //               state = EActorState::idle;
+                  // }
+        } break;
+        } 
         
-          //std::cout << "state : " << state << std::endl;
         m_mesh->ChangeAnimation(state, m_appBase->m_keyPressed['W']);
           m_mesh->UpdatePose(m_appBase->m_context, dt);
    //    m_mesh->UpdateAnimation(appBase->m_context, 0, 0);

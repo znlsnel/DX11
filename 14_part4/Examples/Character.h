@@ -34,7 +34,6 @@ class Character {
          
         bool bUseUpdateTick = false;
         bool isUsingSkill = false;
-        bool isFalling = false;
           
          
         EActorState state = EActorState::idle;
@@ -44,4 +43,4 @@ class Character {
 };
 }
 
-   
+    

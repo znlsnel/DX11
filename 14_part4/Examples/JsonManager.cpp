@@ -503,13 +503,12 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
             "ch80_Walking Backwards.fbx", 
             "ch80_Standard Run.fbx", 
             "ch80_Running Backward.fbx", 
-            "ch80_Jumping Up.fbx",
-            "ch80_Jumping Down.fbx",
-            "ch80_Falling Idle.fbx",
+            "ch80_Jumping_Up.fbx",
+            "ch80_Jumping_Down.fbx",
+            "ch80_Falling Idle.fbx", 
             "ch80_Left Turn.fbx",
             "ch80_Right Turn.fbx",
     };
-     
      
     string path = "../Assets/Characters/Mixamo/";
       

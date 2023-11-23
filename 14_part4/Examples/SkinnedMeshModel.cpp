@@ -88,13 +88,16 @@ void hlab::SkinnedMeshModel::AnimationInit() {
 
         run_backward =
             Animation(4, m_aniData.clips[4].keys[0].size(), &m_aniData);
+
         jumping_Up = Animation(5, m_aniData.clips[5].keys[0].size(), &m_aniData);
+
         jumping_Down =
             Animation(6, m_aniData.clips[6].keys[0].size(), &m_aniData);
         jumping_Falling =
-            Animation(6, m_aniData.clips[6].keys[0].size(), &m_aniData);
+            Animation(7, m_aniData.clips[7].keys[0].size(), &m_aniData);
 
 }
+
 
 void hlab::SkinnedMeshModel::ChangeAnimation(Animation *anim) 
 {
@@ -109,28 +112,70 @@ void hlab::SkinnedMeshModel::ChangeAnimation(Animation *anim)
 
 }
 
-void hlab::SkinnedMeshModel::ChangeAnimation(EActorState state, bool forward) {
+void hlab::SkinnedMeshModel::ChangeAnimation(EActorState& state, bool forward) {
 
 
-        Animation *anim = &idle;
+        Animation *anim = nullptr;
+
         switch (state) {
         case EActorState::idle:
+                anim = &idle;
                 break;
-        case EActorState::walk: {
+
+        case EActorState::walk: 
+        {
                 if (forward)
                          anim = &walk;
                 else
                          anim = &walk_backward;
-        }
-                break;
-        case EActorState::run: {
+        }break;
+
+        case EActorState::run: 
+        {
                 if (forward)
-                         anim = &run;
+                                anim = &run;
                 else
-                         anim = &run_backward;
+                                anim = &run_backward;
+        } break;
+        case EActorState::jump:
+        {
+                if (currAnim == &jumping_Up) {
+
+                        float rt = jumping_Up.frame /
+                                        float(jumping_Up.endFrame);
+                        if (rt > 0.5f)
+                            anim = &jumping_Falling;
+
+                }   
+
+                else if (currAnim == &jumping_Falling) 
+                {
+
+                        if (isFalling == false)
+                            anim = &jumping_Down;
+                } 
+
+                else if (currAnim == &jumping_Down) 
+                {
+
+                        float rt =
+                            jumping_Down.frame / (float)jumping_Down.endFrame;
+                        
+                        if (rt > 0.6f)
+                            state = EActorState::idle; 
+                } 
+
+                else 
+                { 
+                        anim = &jumping_Up;
+                }
+
+        } break;
         }
-                break;
-        }
+
+        if (anim == nullptr)
+                return;
+
         ChangeAnimation(anim);
 }
 
