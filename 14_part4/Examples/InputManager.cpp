@@ -9,7 +9,8 @@ void hlab::InputManager::Update(float dt)
 { 
     static float rayTime = 0.0f;
     if (usingRayCasting && rayTime > 1.0f / 60.f){
-        m_appBase->RayCasting(); 
+        if (m_appBase->m_mouseMode == EMouseMode::TextureMapEditMode)
+                m_appBase->RayCasting(); 
 
         rayTime = 0.0f;        
 
@@ -62,7 +63,7 @@ void hlab::InputManager::InputLeftMouse(bool isPress, int mouseX, int mouseY) {
                                 m_appBase->MouseObjectPicking();
                             break;
                         case EMouseMode::TextureMapEditMode:
-                            m_appBase->RayCasting();
+
                             break;
                         }
 

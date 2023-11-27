@@ -223,7 +223,7 @@ public:
     shared_ptr<Mesh> m_boundingBoxMesh;
     shared_ptr<Mesh> m_boundingSphereMesh;
 
-    Vector3 m_scale{1.f};
+    Vector3 m_scale{1.f}; 
     Vector3 m_position{0.f};
     Vector3 m_localPosition{0.f};
     Vector3 m_rotation{0.f};

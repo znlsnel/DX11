@@ -42,6 +42,32 @@ float4 main(VertexShaderInput input) : SV_POSITION
 
 #endif
     
+    float3 posWorld = mul(float4(input.posModel, 1.0), world).xyz;
+    float dist = length(posWorld - eyeWorld);
+    if (windTrunk != 0.0 && dist < 3)
+    { 
+        float2 rotCenter = float2(0.0f, -0.5f);
+        float2 temp = (input.posModel.xy - rotCenter);
+        float coeff = windTrunk * pow(max(0, temp.y), 2.0) * sin(globalTime);
+        
+        float2x2 rot = float2x2(cos(coeff), sin(coeff), -sin(coeff), cos(coeff));
+        
+        input.posModel.xy = mul(temp, rot);
+        input.posModel.xy += rotCenter;
+    }
+    
+    
+    if (windLeaves != 0.0 && dist < 0.3)
+    {
+        float3 windVel = float3(sin(input.posModel.x * 100.0 + globalTime * 0.1)
+                                * cos(input.posModel.y * 100 + globalTime * 0.1), 0, 0)
+                                * sin(globalTime * 10.0);
+        
+        float3 coeff = (1.0 - input.texcoord.y) * windLeaves * dot(input.normalModel, windVel) * input.normalModel;
+        
+        input.posModel.xyz += coeff;
+    } 
+    
     float4 pos = mul(float4(input.posModel, 1.0f), world);
     return mul(pos, viewProj);
 

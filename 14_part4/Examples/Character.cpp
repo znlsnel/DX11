@@ -98,8 +98,6 @@ void hlab::Character::UpdateTransform(float dt)
                 m_appBase->m_keyPressed[VK_SPACE] = false;
 
                 velocity = vc + Vector3(0.0f, 0.5f, 0.0f);
-                cout << "vc  : " << vc.x << ", " << vc.y << ", " << vc.z << "\n";
-                cout << "Time : " << m_appBase->timeSeconds << "\n";
         }
 
         Vector3 pos = m_mesh->GetPosition();

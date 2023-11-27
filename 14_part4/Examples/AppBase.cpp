@@ -42,12 +42,13 @@ AppBase::AppBase()
 {
 
     g_appBase = this;
-    m_camera = make_shared<Camera>(g_appBase);
-    m_JsonManager = make_shared<JsonManager>(this);
+
+            m_camera = make_shared<Camera>(g_appBase);
     m_inputManager = make_shared<InputManager>(this);
-    //m_JsonManager->TestJson_Parse();
-    //m_JsonManager->TestJson_AddMember();
+    // m_JsonManager->TestJson_Parse();
+    // m_JsonManager->TestJson_AddMember();
     m_camera->SetAspectRatio(this->GetAspectRatio());
+
 }
 
 AppBase::~AppBase() {
@@ -94,10 +95,10 @@ bool AppBase::MouseObjectPicking() {
     return ReadPixelOfMousePos<UINT8>(m_device, m_context);
 }
 
-void AppBase::RayCasting() 
+Vector3 AppBase::RayCasting(float mouseNdcX, float mouseNdcY)
 { 
-        if (m_mouseMode != EMouseMode::TextureMapEditMode)
-                return;
+       mouseNdcX = mouseNdcX == -10.f ? m_mouseNdcX : mouseNdcX;
+        mouseNdcY = mouseNdcY == -10.f ? m_mouseNdcY : mouseNdcY;
 
 
        //if (MouseObjectPicking() == false || m_pickedModel == nullptr)
@@ -109,8 +110,8 @@ void AppBase::RayCasting()
         Vector3 eyeWorld = m_camera->GetEyePos();
 
 
-        Vector3 cursorNdcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
-        Vector3 cursorNdcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
+        Vector3 cursorNdcNear = Vector3(mouseNdcX, mouseNdcY, 0.0f);
+        Vector3 cursorNdcFar = Vector3(mouseNdcX, mouseNdcY, 1.0f);
         Matrix inverseProjView = (viewRow * projRow).Invert();
 
         Vector3 cursorWorldNear =
@@ -182,11 +183,9 @@ void AppBase::RayCasting()
         
        if (fDist < FLT_MAX) { 
                        Vector3 pos = cursorWorldNear + dir * fDist;
-                m_cursorSphere[0]->UpdatePosition(pos);
-                       m_cursorSphere[0]->m_isVisible = true;
-                       m_groundPlane->UpdateTextureMap(m_context, pos,
-                                                       (int)m_textureType);
+                return pos;
        }
+       return Vector3(0.0f, 0.0f, 0.0f);
 }
 
 void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
@@ -564,6 +563,9 @@ bool AppBase::Initialize() {
     if (!InitScene())
         return false;
 
+
+    m_JsonManager = make_shared<JsonManager>(this);
+
     // PostEffect에 사용
     m_screenSquare = make_shared<Model>(
         m_device, m_context, vector{GeometryGenerator::MakeSquare()});
@@ -584,31 +586,21 @@ bool AppBase::Initialize() {
 bool AppBase::InitScene() {
          
     // 조명 설정 
-    { 
-        // 조명 0은 고정
-        m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
-        m_globalConstsCPU.lights[0].position = Vector3(0.0f, 2.698f, -0.159f);
-        m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.8f);
-        m_globalConstsCPU.lights[0].direction.Normalize();
-        m_globalConstsCPU.lights[0].spotPower = 3.0f;
-        m_globalConstsCPU.lights[0].radius = 0.131f;
-        m_globalConstsCPU.lights[0].type = LIGHT_DIRECTIONAL |
-             LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+    {  
+                for (int i = 0; i < MAX_LIGHTS; i++) {
+                        m_globalConstsCPU.lights[i].radiance = Vector3(5.0f);
+                        m_globalConstsCPU.lights[i].position =
+                            Vector3(0.0f, 2.698f, -0.159f);
+                        m_globalConstsCPU.lights[i].direction =
+                            Vector3(0.0f, -1.0f, 0.8f);
+                        m_globalConstsCPU.lights[i].direction.Normalize();
+                        m_globalConstsCPU.lights[i].spotPower = 3.0f;
+                        m_globalConstsCPU.lights[i].radius = 0.131f;
+                        m_globalConstsCPU.lights[i].type =
+                            LIGHT_DIRECTIONAL
+                                | LIGHT_SHADOW; // Point with shadow
+                }
 
-        // 조명 1의 위치와 방향은 Update()에서 설정
-        m_globalConstsCPU.lights[1].radiance = Vector3(5.0f); 
-        m_globalConstsCPU.lights[1].spotPower = 3.0f;
-        m_globalConstsCPU.lights[1].fallOffEnd = 20.0f;
-        m_globalConstsCPU.lights[1].radius = 0.02f;
-        m_globalConstsCPU.lights[1].type = LIGHT_OFF;
-            //LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
-         
-        // 조명 2는 꺼놓음   
-        m_globalConstsCPU.lights[2].type = LIGHT_OFF;
-        
-        m_globalConstsCPU.lights[MAX_LIGHTS - 1] = m_globalConstsCPU.lights[0];
-        m_globalConstsCPU.lights[MAX_LIGHTS - 1].position -=
-            Vector3(0.0f, 0.0f, 15.f); 
     } 
 
     // 조명 위치 표시
@@ -728,7 +720,7 @@ void AppBase::Update(float dt) {
     }
 
 
-}
+} 
 
 void AppBase::UpdateLights(float dt) {
 
@@ -737,64 +729,54 @@ void AppBase::UpdateLights(float dt) {
     if (m_lightRotate) {
         lightDev = Vector3::Transform(
             lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
-    } 
-     
-    m_globalConstsCPU.lights[1].position = Vector3(0.0f, 1.1f, 2.0f) + lightDev;
-    Vector3 focusPosition = Vector3(0.0f, -0.5f, 1.7f);
-    m_globalConstsCPU.lights[1].direction =
-        focusPosition - m_globalConstsCPU.lights[1].position;
-    m_globalConstsCPU.lights[1].direction.Normalize();
+    }  
      
     static float updateTimer = 0.0f;
     if (updateTimer > 0.0f) {
-            m_globalConstsCPU.lights[0].position.x = std::floorf(m_camera->GetPosision().x ) ;
-            m_globalConstsCPU.lights[0].position.z =  std::floorf((m_camera->GetPosision().z - 4.0f));
-            updateTimer = 0.0f; 
+        Vector3 tempCamPos = m_camera->m_objectTargetCameraMode == false
+            ? RayCasting(0.0f, -0.25f)
+                :  m_camera->GetTarget()->GetMesh()->GetPosition();
+
+        //Vector3 tempCamPos = m_camera->GetPosision();
+         
+        //Vector3 tempCamPos = RayCasting(0.0f, -0.25f); 
+        Vector3 tempLPos = m_globalConstsCPU.lights[0].direction;
+        tempCamPos += -tempLPos * 5;
+
+        for (int i = 0; i < 5; i++) 
+                m_globalConstsCPU.lights[i].position = tempCamPos;
+
+        updateTimer = 0.0f;  
     } 
     updateTimer += dt;
 
-     
     // 그림자맵을 만들기 위한 시점
     for (int i = 0; i < MAX_LIGHTS; i++) {
         auto &light = m_globalConstsCPU.lights[i];
         if (light.type & LIGHT_SHADOW) {
 
-            //if (false) {
-            //    if (false && m_camera->m_objectTargetCameraMode == false)
-            //                            light.position =
-            //                                m_camera->GetPosision() +
-            //                                -light.direction * 3.f;
-            //    else if (m_camera->GetTarget())
-            //                            light.position = m_camera->GetTarget()
-            //                                                 ->GetMesh()
-            //                                    ->GetPosition() +
-            //                                -light.direction * 3.f;
-            //}
-
-            UpdateLightInfo(m_shadowGlobalConstsGPU[i] , m_shadowGlobalConstsCPU[i], light, i == MAX_LIGHTS - 1);
+            UpdateLightInfo(m_shadowGlobalConstsGPU[i],
+                            m_shadowGlobalConstsCPU[i], light,
+                            m_shadowAspects[i]);
         }
     }
 } 
  
 void AppBase::UpdateLightInfo(
-    ComPtr<ID3D11Buffer> &shadowGlobalConstsGPU, GlobalConstants
-        &shadowGlobalConstants, Light &light, bool isOverallShadowMap) 
-{
+    ComPtr<ID3D11Buffer> &shadowGlobalConstsGPU, GlobalConstants &shadowGlobalConstants,
+                              Light &light, Vector3 &aspect) {
     Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
     if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
         up = Vector3(1.0f, 0.0f, 0.0f); 
+
+
 
     // 그림자맵을 만들 때 필요
     Matrix lightViewRow =
         XMMatrixLookAtLH(light.position, light.position + light.direction, up);
 
-    // Matrix lightViewRow = XMMatrixLookAtLH(
-    //      m_camera->GetPosision(),
-    //      m_camera->GetPosision() + -light.direction * 5.f,  up);
-
     Matrix lightProjRow =
-        XMMatrixPerspectiveFovLH(XMConvertToRadians(120.0f), 1.0f, 0.1f, 10.0f);
-    lightProjRow = m_camera->GetShadowProjRow(isOverallShadowMap);
+        m_camera->GetShadowProjRow(Vector2(aspect.x, aspect.y), aspect.z);
     shadowGlobalConstants.eyeWorld = light.position;
     // m_shadowGlobalConstsCPU[i].eyeWorld =
     //     light.position +
@@ -803,8 +785,7 @@ void AppBase::UpdateLightInfo(
     shadowGlobalConstants.view = lightViewRow.Transpose();
     shadowGlobalConstants.proj = lightProjRow.Transpose();
     shadowGlobalConstants.invProj = lightProjRow.Invert().Transpose();
-    shadowGlobalConstants.viewProj =
-        (lightViewRow * lightProjRow).Transpose();
+    shadowGlobalConstants.viewProj = (lightViewRow * lightProjRow).Transpose();
 
     // LIGHT_FRUSTUM_WIDTH 확인
     // Vector4 eye(0.0f, 0.0f, 0.0f, 1.0f);
@@ -917,7 +898,7 @@ void AppBase::RenderOpaqueObjects() {
 
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
-
+    
     m_context->PSSetShaderResources(20, 1, m_billboardTreeSRV.GetAddressOf()); 
 
     m_context->ClearDepthStencilView(
@@ -1252,6 +1233,9 @@ void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
                                     const Matrix &viewRow,
                                     const Matrix &projRow, const Matrix &refl) {
 
+       for (int i = 0; i < MAX_LIGHTS; i++)
+        m_shadowGlobalConstsCPU[i].globalTime += dt;
+        
     m_globalConstsCPU.globalTime += dt;
     m_globalConstsCPU.eyeWorld = eyeWorld;
     m_globalConstsCPU.view = viewRow.Transpose();
@@ -1342,8 +1326,7 @@ void AppBase::CreateDepthBuffers() {
     // 그림자 DSVs
     for (int i = 0; i < MAX_LIGHTS; i++) {
         ThrowIfFailed(
-            m_device->CreateDepthStencilView(m_shadowBuffers[i].Get(), &dsvDesc,
-                                             m_shadowDSVs[i].GetAddressOf()));
+            m_device->CreateDepthStencilView(m_shadowBuffers[i].Get(), &dsvDesc, m_shadowDSVs[i].GetAddressOf()));
     }
     ThrowIfFailed(
         m_device->CreateDepthStencilView(m_overallShadowBuffer.Get(), &dsvDesc, m_overallShadowDSV.GetAddressOf()));
@@ -1961,14 +1944,14 @@ void AppBase::CreateBuffers() {
         desc2.SampleDesc.Count = 1;
         desc2.SampleDesc.Quality = 0;
         desc2.BindFlags = D3D11_BIND_RENDER_TARGET |D3D11_BIND_SHADER_RESOURCE;
-        desc2.MiscFlags = 0;
+        desc2.MiscFlags = 0; 
         //desc2.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
        // desc2.Format = DXGI_FORMAT_R16G16B16A16_UINT;
         desc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         
-        ThrowIfFailed(
-        m_device->CreateTexture2D(&desc2, NULL, m_tempTexture.GetAddressOf()));
-
+        ThrowIfFailed( 
+        m_device->CreateTexture2D(&desc2, NULL,  m_tempTexture.GetAddressOf()));
+         
         ThrowIfFailed(m_device->CreateTexture2D(
                 &desc2, NULL, m_indexTempTexture.GetAddressOf()));
 
@@ -1977,10 +1960,10 @@ void AppBase::CreateBuffers() {
         desc2.Usage = D3D11_USAGE_STAGING;
         desc2.Width = 1;
         desc2.Height = 1;
-        ThrowIfFailed(m_device->CreateTexture2D(
+        ThrowIfFailed(m_device->CreateTexture2D( 
             &desc2, nullptr, m_indexStagingTexture.GetAddressOf()));
 
-    }
+    } 
     //desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
 

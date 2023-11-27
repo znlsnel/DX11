@@ -336,7 +336,7 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
         
        renderState = ERenderState::reflect;
     return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
-} 
+}  
  
  
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {

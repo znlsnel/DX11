@@ -66,7 +66,7 @@ float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
 {
     float2 specularBRDF = brdfTex.SampleLevel(linearClampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness), 0.0f).rg;
     float3 specularIrradiance = specularIBLTex.SampleLevel(linearWrapSampler, reflect(-pixelToEye, normalWorld),
-                                                            2 + roughness * 5.0f).rgb;
+                                                            roughness * 10.0f).rgb;
     const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
     float3 F0 = lerp(Fdielectric, albedo, metallic);
 
@@ -369,30 +369,72 @@ PixelShaderOutput main(PixelShaderInput input)
     
     float3 directLighting = float3(0, 0, 0);
 
-    float3 temp1 = float3(0.0, 0.0, 0.0);
-    float3 temp2 = float3(0.0, 0.0, 0.0);
-    temp1 = DrawLight(input, lights[MAX_LIGHTS - 1], shadowMaps[MAX_LIGHTS - 1],
-        normalWorld, pixelToEye, albedo, metallic, roughness, temp1);
-    temp2 = DrawLight(input, lights[0], shadowMaps[0],
-        normalWorld, pixelToEye, albedo, metallic, roughness, temp2);
-    
-    float lerpValue = length(eyeWorld - input.posWorld);
-    lerpValue = clamp(lerpValue, 0.0, 4.0);
-    lerpValue /= 4.0;
-    directLighting += (temp1 * lerpValue) + (temp2 * (1.0 - lerpValue));
-    
-    
-    
-    // 임시로 unroll 사용
-    [unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
-    for (int i = 1; i < MAX_LIGHTS - 1; ++i)
+    // 0.3, 1.0, 3.0, 5.0, 10.0
+    float distance_worldToEye = length(eyeWorld - input.posWorld);
+
+    int distanceID = 0;
+    float distances[7] = { 0.0, 0.3, 1.0, 3.0, 5.0, 10.0, 100.0 };
+     
+    [unroll]
+    for (int k = 0; k < 6; ++k)
     {
-        directLighting += DrawLight(input, lights[i], shadowMaps[i],
-         normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
+        if (distance_worldToEye >= distances[k] && distance_worldToEye < distances[k + 1])
+        {
+            distanceID = k;
+            break;
+        }
     }
+      
+    if (distanceID == 0)
+    {
+        directLighting = DrawLight(input, lights[0], shadowMaps[0],
+        normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
+    }
+    else if (distanceID == 5)
+    {
+        directLighting = DrawLight(input, lights[4], shadowMaps[4],
+        normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
+        
+    }
+    else
+    {
+        float3 tempDL[2] =
+        {
+            float3(0.0, 0.0, 0.0),
+            float3(0.0, 0.0, 0.0)
+        }; 
+        // 임시로 unroll 사용
+        // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
+
+        [unroll]
+        for (int i = 0; i <= 4; i++)
+        {
+            if (i == distanceID - 1 || i == distanceID)
+            {
+                int id = clamp(i - (distanceID - 1), 0, 1);
+                tempDL[id] = DrawLight(input, lights[i], shadowMaps[i],
+                    normalWorld, pixelToEye, albedo, metallic, roughness, tempDL[id]);
+
+            }
+        }
+             
+        // ex) 5.0 <= x < 10.0 - 5.0 / 10.0 - 5.0
+        float rt = distance_worldToEye - distances[distanceID] / 
+                        distances[distanceID + 1] - distances[distanceID];
+        rt = clamp(rt, 0.0, 1.0); 
+        directLighting = tempDL[0] * (1.0 - rt) + tempDL[1] * rt;
+    }
+      
+    
+    //[unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
+    //for (int j = MAX_DIRECTIONALLIGHT; j < MAX_LIGHTS; j++)
+    //{
+    //    directLighting += DrawLight(input, lights[j], shadowMaps[j],
+    //     normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
+    //}
+   
 
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
-   // output.pixelColor *= 1.5;
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
      

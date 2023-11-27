@@ -136,6 +136,30 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                         filePath.string() + "\\", *temp));
                                 }
 
+                        } 
+                        else if (entry.path().extension() == ".jpg" ||
+                                   entry.path().extension() == ".png") 
+                        {
+                                 
+                                auto it =
+                                    quicellPaths.find(filePath.string() + "\\");
+                                QuicellMeshPathInfo *temp =
+                                    new QuicellMeshPathInfo();
+
+                                if (it != quicellPaths.end()) {
+                                            temp = &it->second;
+                                }
+
+                                        D3D11Utils::CreateTexture(
+                                            m_appBase->m_device, m_appBase->m_context,
+                                            entry.path().string(), false,
+                                            temp->objectImage, temp->objectImageSRV);
+
+                                if (it == quicellPaths.end()) {
+                                            quicellPaths.insert(make_pair(
+                                                filePath.string() + "\\",
+                                                *temp));        
+                                }
                         }
                 }
 
@@ -454,7 +478,8 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
     return tempModel;
 }
 
-shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
+shared_ptr<class Model>
+JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
 
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
     auto meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
@@ -470,11 +495,14 @@ shared_ptr<class Model> JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     meshes[0].normalTextureFilenames.push_back(
         temp->Normal == "" ? "" : info.quicellPath + temp->Normal);
 
-    meshes[0].heightTextureFilenames.push_back(
-        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
+    //meshes[0].heightTextureFilenames.push_back(
+    //    temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
 
-     meshes[0].aoTextureFilenames.push_back(
-            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion);
+    // meshes[0].aoTextureFilenames.push_back(
+    //        temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion);
+
+          meshes[0].aoTextureFilenames.push_back(
+         temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
 
     meshes[0].roughnessTextureFilenames.push_back(
         temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness);
@@ -519,12 +547,12 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
     m_player->GetMesh()->m_materialConsts.GetCpu().invertNormalMapY = true;
     m_player->GetMesh()->m_materialConsts.GetCpu().roughnessFactor = 1.0f;
     m_player->GetMesh()->m_materialConsts.GetCpu().metallicFactor = 1.0f;
-    m_player->GetMesh()->m_materialConsts.GetCpu().useAOMap = true;
+    //m_player->GetMesh()->m_materialConsts.GetCpu().useAOMap = true;
     m_player->GetMesh()->UpdateTranseform(info.scale, info.rotation,
                                           info.position);
    
     // m_pickedModel = m_player->GetMesh()->m_meshes;
-
+     
     m_appBase->m_camera->SetTarget(m_player);
     return m_player->GetMesh();
     //return make_shared

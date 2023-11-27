@@ -161,7 +161,7 @@ void hlab::SkinnedMeshModel::ChangeAnimation(EActorState& state, bool forward) {
                         float rt =
                             jumping_Down.frame / (float)jumping_Down.endFrame;
                         
-                        if (rt > 0.6f)
+                        if (rt > 0.8f)
                             state = EActorState::idle; 
                 } 
 
@@ -172,6 +172,7 @@ void hlab::SkinnedMeshModel::ChangeAnimation(EActorState& state, bool forward) {
 
         } break;
         }
+
 
         if (anim == nullptr)
                 return;

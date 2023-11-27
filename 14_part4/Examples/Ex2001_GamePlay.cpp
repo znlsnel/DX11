@@ -318,7 +318,7 @@ void Ex2001_GamePlay::Update(float dt) {
         std::vector<PxContactPairPoint> contactPoints;
 
         for(PxU32 i=0;i<nbPairs;i++)
-        {
+        {  
             PxU32 contactCount = pairs[i].contactCount;
             if(contactCount)
             {
@@ -350,39 +350,37 @@ void Ex2001_GamePlay::InitAudio() {
                                                          L"Swoosh-4S.wav");
         
 }
-
+ 
 
 
 
 
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
- //   ImGui::SetNextItemOpen(false, ImGuiCond_Once);
+ //   ImGui::SetNextItemOpen(false, ImGuiCond_Once); 
     Vector3 tempPos = m_camera->GetEyePos();
     float camera[3] = {tempPos.x, tempPos.y, tempPos.z};
     ImGui::DragFloat3("Camera Pos", camera, 1.0f, -1000.f, 1000.f);
 
-    if (ImGui::TreeNode("Shadow")) {
-            ImGui::DragFloat("shadow farZ", &m_camera->m_shadowFarZ, 1.0f, -1000.f, 1000.f);
-            float tempAspect[2] = {m_camera->m_shadowAspect.x,
-                                   m_camera->m_shadowAspect.y};
-            if (ImGui::DragFloat2("shadow Aspect", tempAspect, 0.1f, -30.0f, 30.f)) {
-                m_camera->m_shadowAspect.x = tempAspect[0];
-                m_camera->m_shadowAspect.y = tempAspect[1];
-            }
-            ImGui::DragFloat("overallShadow farZ", &m_camera->m_overallShadowFarZ, 1.0f, -1000.f,
-                             1000.f);
-            float overallShadowAspect[2] = {m_camera->m_overallShadowAspect.x,
-                                            m_camera->m_overallShadowAspect.y};
-            if (ImGui::DragFloat2("overallShadow Aspect", overallShadowAspect, 0.1f,
-                                  -30.0f, 30.f)) {
-                m_camera->m_overallShadowAspect.x = overallShadowAspect[0];
-                m_camera->m_overallShadowAspect.y = overallShadowAspect[1];
-            }
+    if (ImGui::TreeNode("Shadow")) 
+    {
+        static int i = 0;
+        ImGui::SliderInt("Shadow index", &i, 0, 4);
+         
+            ImGui::Text("_______");
+            float *temp[2] = 
+            {
+                &m_shadowAspects[i].x,
+                &m_shadowAspects[i].y,  
+            }; 
+             
+            ImGui::DragFloat2("Shadow aspect", *temp, 0.025f, -20.f, 20.f); 
+             ImGui::DragFloat("Shadow farZ", &m_shadowAspects[i].z, 0.25f, 
+                                 0.0f, 1000.f); 
 
-
-    }
-
+        
+    } 
+     
     if (ImGui::TreeNode("Basic")) {
     
         //            m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
@@ -392,25 +390,7 @@ void Ex2001_GamePlay::UpdateGUI() {
         //m_globalConstsCPU.lights[0].radius = 0.04f;
             //float
 
-        float* temp[3] = {
-            &m_globalConstsCPU.lights[0].radiance.x,
-            &m_globalConstsCPU.lights[0].radiance.y,
-            &m_globalConstsCPU.lights[0].radiance.z,
-        };
-        float *tempPos[3] = {
-            &m_globalConstsCPU.lights[0].position.x,
-            &m_globalConstsCPU.lights[0].position.y,
-            &m_globalConstsCPU.lights[0].position.z,
-        };
-        float *tempDir[3] = {
-            &m_globalConstsCPU.lights[0].direction.x,
-            &m_globalConstsCPU.lights[0].direction.y,
-            &m_globalConstsCPU.lights[0].direction.z,
-        };
 
-        ImGui::SliderFloat3("light Radiance", *temp, -5.0f, 5.0f);
-        ImGui::SliderFloat3("position", *tempPos, -10.f, 10.f);
-        ImGui::SliderFloat3("direction", *tempDir, -1.f, 1.f);
         ImGui::SliderFloat("spotPower", &m_globalConstsCPU.lights[0].spotPower,
                            0.0f, 10.f);
         ImGui::SliderFloat("radius", &m_globalConstsCPU.lights[0].radius,
@@ -590,10 +570,10 @@ void Ex2001_GamePlay::UpdateGUI() {
                 int flagRotation = 
                     ImGui::DragFloat3("Rotation", modelRotation, 5.f,-720.0f, 720.f);
                 int flagScale = 
-                    ImGui::DragFloat3("Scale", modelScale, 0.01f, -50.0f, -50.f);
+                    ImGui::DragFloat3("Scale", modelScale, 0.01f, -50.0f, 50.f);
                 
                 
-
+                 
                 if (flagLotation) {
                     m_pickedModel->UpdatePosition(
                         Vector3(modelLocation[0], modelLocation[1], modelLocation[2]));
@@ -677,36 +657,41 @@ void Ex2001_GamePlay::UpdateGUI() {
         ImGui::NewLine();
     if (ImGui::TreeNode("Load Object")) {
 
-        ImGui::BeginListBox("Object List", ImVec2(300, 300));
-        for (auto object : m_JsonManager->objectInfo) {
-                if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
-                    ObjectSaveInfo temp;
-                    temp.meshID = (int)object.first;
-                    m_JsonManager->CreateMesh(temp);
-                }
-        }
-        ImGui::EndListBox();
-        ImGui::BeginListBox("GlTF List", ImVec2(300, 300));
-        for (auto object : m_JsonManager->meshPaths) {
-                if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) 
-                {
+        //ImGui::BeginListBox("Object List", ImVec2(300, 300));
+        //for (auto object : m_JsonManager->objectInfo) {
+        //        if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
+        //            ObjectSaveInfo temp;
+        //            temp.meshID = (int)object.first;
+        //            m_JsonManager->CreateMesh(temp);
+        //        }
+        //}
+        //ImGui::EndListBox();
+        //ImGui::BeginListBox("GlTF List", ImVec2(300, 300));
+        //for (auto object : m_JsonManager->meshPaths) {
+        //        if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) 
+        //        {
 
-                    ObjectSaveInfo temp;
-                    temp.meshID = -1;
-                    temp.meshName = object.first;
-                    temp.meshPath = object.second.first;
-                    temp.previewPath = object.second.second;
-                    m_JsonManager->CreateMesh(temp);
-                }
-        }
-        ImGui::EndListBox();
-        ImGui::BeginListBox("Quicell List", ImVec2(300, 300));
+        //            ObjectSaveInfo temp;
+        //            temp.meshID = -1;
+        //            temp.meshName = object.first;
+        //            temp.meshPath = object.second.first;
+        //            temp.previewPath = object.second.second;
+        //            m_JsonManager->CreateMesh(temp); 
+        //        }
+        //}
+        //ImGui::EndListBox();
+        ImGui::BeginListBox("Quicell List", ImVec2(300, 1000));
         for (auto object : m_JsonManager->quicellPaths) {
-                if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300, 30))) 
-                {
+                //if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300, 30))) 
+                if (ImGui::ImageButton(object.second.objectImageSRV.Get(),
+                                       ImVec2(100, 100)))
+                {  
                     ObjectSaveInfo temp;
                     temp.meshID = -2;
                     temp.quicellPath = object.first;
+                    temp.position = RayCasting(0.0f, 0.0f);
+                    temp.rotation = Vector3(90.f, 0.0f, 0.0f);
+ 
                     m_JsonManager->CreateMesh(temp);
                 }
         }

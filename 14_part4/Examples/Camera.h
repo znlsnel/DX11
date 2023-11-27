@@ -15,7 +15,7 @@ class Camera {
 
     Matrix GetViewRow();
     Matrix GetProjRow();
-    Matrix GetShadowProjRow(bool isOverallShadowMap = false);
+    Matrix GetShadowProjRow(Vector2 aspect, float farZ);
     Vector3 GetEyePos();
     
     void Reset(Vector3 pos, float yaw, float pitch) {
@@ -47,11 +47,7 @@ class Camera {
     bool m_isCameraLock = true;
     float cameraDistance = 1.0f;
     float cameraSpeed = 1.0f;
-
-        float m_shadowFarZ = 24.0f;
-        Vector2 m_shadowAspect = Vector2(5.0f, -5.0f);
-        float m_overallShadowFarZ = 180.0f;
-        Vector2 m_overallShadowAspect = Vector2(30.0f, -30.0f);
+     
 
   private:
     Vector3 m_position = Vector3(0.312183f, 0.957463f, -1.88458f);
@@ -69,13 +65,12 @@ class Camera {
     // 프로젝션 옵션도 카메라 클래스로 이동
     float m_projFovAngleY = 90.0f * 0.5f; // Luna 교재 기본 설정
     float m_nearZ = 0.01f;
-    float m_farZ = 300.0f;
+    float m_farZ = 300.0f; 
     float m_aspect = 16.0f / 9.0f;
 
-    bool m_usePerspectiveProjection = true;
-
    std::shared_ptr< class Character> m_target;
-    class AppBase *m_appBase;
+    class AppBase *m_appBase;  
 };
-
+ 
 } // namespace hlab
+ 

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <map>
 #include <filesystem>
+#include "D3D11Utils.h"
+
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -23,6 +25,9 @@ struct QuicellMeshPathInfo {
     string Roughness; // R
     string Displacement; // dp
     string metallic; // F
+
+    ComPtr<ID3D11Texture2D> objectImage;
+    ComPtr<ID3D11ShaderResourceView> objectImageSRV;
         };
 
 class JsonManager {

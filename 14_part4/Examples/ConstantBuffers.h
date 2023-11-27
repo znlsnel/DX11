@@ -4,7 +4,7 @@
 #include <directxtk/SimpleMath.h>
 
 // "Common.hlsli"와 동일해야 함
-#define MAX_LIGHTS 4
+#define MAX_LIGHTS 5
 #define LIGHT_OFF 0x00
 #define LIGHT_DIRECTIONAL 0x01
 #define LIGHT_POINT 0x02
@@ -97,13 +97,13 @@ struct Light {
 
     Matrix viewProj; // 그림자 렌더링에 필요
     Matrix invProj;  // 그림자 렌더링 디버깅용
-};
-
+}; 
+ 
 // register(b1) 사용
 __declspec(align(256)) struct GlobalConstants {
     Matrix view;
     Matrix proj;
-    Matrix invProj; // 역프로젝션행렬
+    Matrix invProj; // 역프로젝션행렬 
     Matrix viewProj;
     Matrix invViewProj; // Proj -> World
     Matrix invView;

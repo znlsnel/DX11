@@ -47,17 +47,17 @@ enum EEditTextureType : int {
 class AppBase {
   public:
     AppBase();
-    virtual ~AppBase();
+    virtual ~AppBase(); 
 
     int Run();
     float GetAspectRatio() const;
 
     virtual bool Initialize();
     virtual bool InitScene();
-    virtual void UpdateGUI();
+    virtual void UpdateGUI(); 
     virtual void Update(float dt); 
     virtual void UpdateLights(float dt);
-    void UpdateLightInfo(ComPtr<ID3D11Buffer>& shadowGlobalConstsGPU, GlobalConstants& shadowGlobalConstants, Light &light, bool isOverallShadowMap = false);
+    void UpdateLightInfo(ComPtr<ID3D11Buffer>& shadowGlobalConstsGPU, GlobalConstants& shadowGlobalConstants, Light &light, Vector3& aspect);
     virtual void RenderDepthOnly();
     virtual void RenderShadowMaps();
     virtual void RenderOpaqueObjects();
@@ -86,7 +86,8 @@ class AppBase {
     void ProcessMouseControl();
     void DestroyObject(shared_ptr<class Model> object);
     bool MouseObjectPicking();
-    virtual void RayCasting();
+    virtual Vector3 RayCasting(float mouseNdcX = -10.f,
+                               float mouseNdcY = -10.0f);
     virtual void RayCasting(Vector3 origin, Vector3 dir, float& dist);
     virtual void SetHeightPosition(Vector3 origin, Vector3 dir, float& dist);
      
@@ -210,7 +211,7 @@ class AppBase {
     // 렌더링 -> PostEffects -> PostProcess
     PostEffectsConstants m_postEffectsConstsCPU;
     ComPtr<ID3D11Buffer> m_postEffectsConstsGPU;
-
+     
     PostProcess m_postProcess;
 
     // 다양한 Pass들을 더 간단히 구현하기 위해 ConstBuffer들 분리
@@ -227,23 +228,33 @@ class AppBase {
     ComPtr<ID3D11ShaderResourceView> m_specularSRV; 
     ComPtr<ID3D11ShaderResourceView> m_brdfSRV; 
             
-    bool m_lightRotate = false;            
-    bool m_pauseAnimation = false;   
-
-    vector<uint8_t> heightMapImage;
+    bool m_lightRotate = false;             
+    bool m_pauseAnimation = false;     
+     
+    vector<uint8_t> heightMapImage; 
+          
+    // shadow 0.3 -> 1.0 -> 3.0 -> 5.0 -> (10.0 * 10.0) 
+    Vector3 m_shadowAspects[5] =   
+    {
+            Vector3(0.8f, -0.8f, 20.f),   
+            Vector3(2.0f, -2.0f, 50.f),  
+            Vector3(3.5f, -3.5f, 100.f),   
+            Vector3(7.0f, -7.0f, 100.f),  
+            Vector3(20.0f, -20.0f, 200.f),  
+    };   
          
     // 여러 예제들 공용     
     shared_ptr<Model> m_screenSquare; // PostEffect에 사용   
     shared_ptr<Model> m_skybox;
     shared_ptr<Model> m_pickedModel; 
     shared_ptr<class TessellationModel> m_groundPlane; 
-    shared_ptr<Model> m_terrain;
+    shared_ptr<Model> m_terrain; 
     shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
     vector<shared_ptr<Model>> m_cursorSphere;
     shared_ptr<Model> m_mirror; // 거울은 별도로 그림
     shared_ptr<class InputManager> m_inputManager;
 
-    DirectX::SimpleMath::Plane m_mirrorPlane;
+    DirectX::SimpleMath::Plane m_mirrorPlane; 
     float m_mirrorAlpha = 1.0f; // Opacity
 
     EMouseMode m_mouseMode = EMouseMode::ObjectPickingMode;

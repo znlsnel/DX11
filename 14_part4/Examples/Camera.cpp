@@ -156,23 +156,14 @@ Vector3 Camera::GetPosision() { return m_position; }
 
 Matrix Camera::GetProjRow() {
 
-      //  std::cout << "aspect :" << m_aspect << std::endl;
-    return m_usePerspectiveProjection
-               ? XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
-                                          m_aspect, m_nearZ, m_farZ)
-               : XMMatrixOrthographicOffCenterLH(m_shadowAspect.x, m_shadowAspect.y, m_shadowAspect.x,
-                     m_shadowAspect.y, m_nearZ, m_shadowFarZ);
+    //  std::cout << "aspect :" << m_aspect << std::endl;
+    return XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
+                                    m_aspect, m_nearZ, m_farZ);
 }
+Matrix Camera::GetShadowProjRow(Vector2 aspect, float farZ) {
+    return XMMatrixOrthographicOffCenterLH(aspect.x, aspect.y, aspect.x,
+                                           aspect.y, m_nearZ, farZ);
 
-Matrix Camera::GetShadowProjRow(bool isOverallShadowMap) {
-    return isOverallShadowMap == false
-               ? XMMatrixOrthographicOffCenterLH(
-                     m_shadowAspect.x, m_shadowAspect.y, m_shadowAspect.x,
-                     m_shadowAspect.y, m_nearZ, m_shadowFarZ)
-               : XMMatrixOrthographicOffCenterLH(
-                     m_overallShadowAspect.x, m_overallShadowAspect.y,
-                     m_overallShadowAspect.x, m_overallShadowAspect.y,
-                       m_nearZ, m_overallShadowFarZ);
 }
 
 
