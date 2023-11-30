@@ -46,6 +46,8 @@ __declspec(align(256)) struct MaterialConstants {
     float metallicFactor = 1.0f;
     Vector3 emissionFactor = Vector3(0.0f);
 
+    float minMetallic;
+    float minRoughness;
     // 여러 옵션들에 uint 플래그 하나만 사용할 수도 있습니다.
     int useAlbedoMap = 0;
     int useNormalMap = 0;
@@ -53,10 +55,10 @@ __declspec(align(256)) struct MaterialConstants {
     int invertNormalMapY = 0;
     int useMetallicMap = 0;
     int useRoughnessMap = 0;
-    int useEmissiveMap = 0;
+    int useEmissiveMap = 0; 
     int isSelected = 0;
 
-    // 참고 flags 구현
+    // 참고 flags 구현 
     /* union {
         uint32_t flags;
         struct {

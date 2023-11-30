@@ -21,16 +21,16 @@ bool ExampleApp::Initialize() {
         return false;
 
     m_cubeMapping.Initialize(
-        m_device, L"../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
-        L"../Assets/Textures/Cubemaps/skybox/cubemap_diffuse.dds",
-        L"../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
+        m_device, L"../../Assets/Textures/Cubemaps/skybox/cubemap_bgra.dds",
+        L"../../Assets/Textures/Cubemaps/skybox/cubemap_diffuse.dds",
+        L"../../Assets/Textures/Cubemaps/skybox/cubemap_specular.dds");
 
     // Main Sphere
     {
         Vector3 center(0.0f, 0.3f, 3.0f);
         float radius = 1.3f;
         MeshData sphere = GeometryGenerator::MakeSphere(radius, 100, 100);
-        sphere.textureFilename = "../Assets/Textures/earth.jpg";
+        sphere.textureFilename = "../../Assets/Textures/earth.jpg";
         m_mainSphere.Initialize(m_device, {sphere});
         m_mainSphere.m_diffuseResView = m_cubeMapping.m_diffuseResView;
         m_mainSphere.m_specularResView = m_cubeMapping.m_specularResView;
@@ -181,6 +181,7 @@ void ExampleApp::Update(float dt) {
                     //    Quaternion::FromToRotation(prevVector, currentVector);
                     q = Quaternion::CreateFromAxisAngle(RotateAxis,
                                                         rotateTheta);
+         
                     // TODO: Quaternion::FromToRotation() 사용
                   
                     //Matrix::CreateFromQuaternion(temp) * 
@@ -207,7 +208,6 @@ void ExampleApp::Update(float dt) {
     m_mainSphere.m_modelWorldRow.Translation(Vector3(0.0f));
     // 쿼터니언을 이용한 회전
     // TODO:
-
 
     m_mainSphere.UpdateModelWorld(
         m_mainSphere.m_modelWorldRow*

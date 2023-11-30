@@ -145,20 +145,20 @@ void ModelLoader::Load(std::string basePath, std::string filename,
         for (auto &i : m_aniData.boneNameToId)
             m_aniData.boneIdToName[i.second] = i.first;
 
-        // 디버깅용
-         cout << "Num boneNameToId : " << m_aniData.boneNameToId.size() <<
-         endl; 
-         
-         for (auto &i : m_aniData.boneNameToId) {
-            cout << "NameId pair : " << i.first << " " << i.second << endl;
-        }
-         cout << "Num boneIdToName : " << m_aniData.boneIdToName.size() <<
-         endl; 
-         
-         for (size_t i = 0; i < m_aniData.boneIdToName.size(); i++) {
-            cout << "BoneId: " << i << " " << m_aniData.boneIdToName[i] <<
-            endl;
-        }
+        //// 디버깅용
+        // cout << "Num boneNameToId : " << m_aniData.boneNameToId.size() <<
+        // endl; 
+        // 
+        // for (auto &i : m_aniData.boneNameToId) {
+        //    cout << "NameId pair : " << i.first << " " << i.second << endl;
+        //}
+        // cout << "Num boneIdToName : " << m_aniData.boneIdToName.size() <<
+        // endl; 
+        // 
+        // for (size_t i = 0; i < m_aniData.boneIdToName.size(); i++) {
+        //    cout << "BoneId: " << i << " " << m_aniData.boneIdToName[i] <<
+        //    endl;
+        //}
         // exit(-1);
 
         // 각 뼈의 부모 인덱스를 저장할 준비

@@ -30,7 +30,7 @@ bool ExampleApp::Initialize() {
         Vector3 center(0.0f, 0.3f, 3.0f);
         float radius = 1.3f;
         MeshData sphere = GeometryGenerator::MakeSphere(radius, 100, 100);
-        sphere.textureFilename = "../Assets/Textures/earth.jpg";
+        sphere.textureFilename = "../../Assets/Textures/earth.jpg";
         m_mainSphere.Initialize(m_device, {sphere});
         m_mainSphere.m_diffuseResView = m_cubeMapping.m_diffuseResView;
         m_mainSphere.m_specularResView = m_cubeMapping.m_specularResView;

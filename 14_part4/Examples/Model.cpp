@@ -217,7 +217,8 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
                 filesystem::exists(meshData.roughnessTextureFilenames[0])) {
 
                 D3D11Utils::CreateMetallicRoughnessTextureArray(
-                    device, context, meshData.metallicTextureFilenames,
+                    device, context, 
+                        meshData.metallicTextureFilenames,
                     meshData.roughnessTextureFilenames,
                     newMesh->metallicRoughnessTexture,
                     newMesh->metallicRoughnessSRV);
@@ -323,7 +324,9 @@ void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
 GraphicsPSO &Model::GetPSO(const bool wired) {
 
        renderState = ERenderState::basic;
-    return wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
+    return wired ? Graphics::defaultWirePSO
+                 : m_drawBackFace ? Graphics::defaultBothSolidPSO 
+                : Graphics::defaultSolidPSO;
 }
 
 GraphicsPSO &Model::GetDepthOnlyPSO() { 
@@ -468,9 +471,11 @@ void Model::RenderBVH(ComPtr<ID3D11DeviceContext> &context)
 }
 
 void Model::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) {
-    if (m_boundingBoxMesh == nullptr || m_boundingSphereMesh == nullptr)
+        if (m_boundingBoxMesh == nullptr || m_boundingSphereMesh == nullptr)
+        {
             return;
-
+    }
+        
 
     ID3D11Buffer *constBuffers[2] = {m_boundingBoxMesh->meshConstsGPU.Get(),
         m_boundingBoxMesh->materialConstsGPU.Get()};
@@ -514,6 +519,19 @@ void Model::AddYawOffset(float addYawOffset)
         Vector3 tempRotation = m_rotation;
     tempRotation.y += addYawOffset;
     UpdateWorldRow(m_scale, tempRotation, m_position); 
+}
+
+void Model::DestroyObject() {
+
+        if (this == nullptr || this->isObjectLock)
+            return;
+
+    isDestory = true;
+    m_isVisible = false;
+
+    for (auto temp : childModels) {
+            temp->DestroyObject();
+    }
 }
 
 void Model::SetChildModel(shared_ptr<Model> model) {
@@ -621,8 +639,8 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
     // 구(sphere)라서 회전은 고려할 필요 없음
     m_boundingSphere.Center = this->m_worldRow.Translation();
-    m_boundingSphere.Radius =
-        m_boundingSphereRadius * max(m_scale.x, max(m_scale.y, m_scale.z));
+    //m_boundingSphere.Radius =
+       // m_boundingSphereRadius * max(m_scale.x, max(m_scale.y, m_scale.z));
 
     /*m_boundingSphereMesh*/
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();
@@ -632,6 +650,36 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     for (auto model : childModels) {
         model->UpdateTranseform(m_scale, m_rotation, m_position);
     }
+}
+ 
+void Model::UpdateWorldRow(const Matrix &row, bool debug) {
+   
+         
+    this->m_worldRow = row;
+    if (debug)
+    {
+        tempInt = 1;
+
+    }
+     
+    //ExtractPositionFromMatrix(&row, m_position);
+    //ExtractEulerAnglesFromMatrix(&row, m_rotation);
+    //ExtractScaleFromMatrix(&row, m_scale);
+    m_worldITRow = m_worldRow;
+      
+    m_worldITRow.Translation(Vector3(0.0f));
+    m_worldITRow = m_worldITRow.Invert().Transpose(); 
+    
+    m_boundingSphere.Center = this->m_worldRow.Translation();
+
+    m_meshConsts.GetCpu().world = m_worldRow.Transpose();
+    m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
+    m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
+
+    for (auto model : childModels) {
+        model->UpdateTranseform(m_scale, m_rotation, m_position);
+    }
+
 }
 
 } // namespace hlab

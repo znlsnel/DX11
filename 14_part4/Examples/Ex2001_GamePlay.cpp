@@ -600,15 +600,30 @@ void Ex2001_GamePlay::UpdateGUI() {
 
                 if (m_pickedModel) {
 
+                   flag += ImGui::SliderFloat(
+                        "minMetallic",
+                        &m_pickedModel->m_materialConsts.GetCpu()
+                             .minMetallic,
+                        0.0f, 1.0f); 
+                    flag += ImGui::SliderFloat(
+                        "minRoughness",
+                        &m_pickedModel->m_materialConsts.GetCpu()
+                             .minRoughness,
+                        0.0f, 1.0f);
 
                     flag += ImGui::SliderFloat(
-                        "Metallic",
+                        "Metallic", 
                         &m_pickedModel->m_materialConsts.GetCpu().metallicFactor, 0.0f,
                         1.0f);
                     flag += ImGui::SliderFloat(
                         "Roughness",
                         &m_pickedModel->m_materialConsts.GetCpu().roughnessFactor, 0.0f,
                         1.0f);
+                    flag += ImGui::SliderInt(
+                        "invertNormalMapY",
+                        &m_pickedModel->m_materialConsts.GetCpu().invertNormalMapY, 
+                        0, 1);
+
                     flag += ImGui::CheckboxFlags(
                         "AlbedoTexture",
                         &m_pickedModel->m_materialConsts.GetCpu().useAlbedoMap, 1);
@@ -657,15 +672,16 @@ void Ex2001_GamePlay::UpdateGUI() {
         ImGui::NewLine();
     if (ImGui::TreeNode("Load Object")) {
 
-        //ImGui::BeginListBox("Object List", ImVec2(300, 300));
-        //for (auto object : m_JsonManager->objectInfo) {
-        //        if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
-        //            ObjectSaveInfo temp;
-        //            temp.meshID = (int)object.first;
-        //            m_JsonManager->CreateMesh(temp);
-        //        }
-        //}
-        //ImGui::EndListBox();
+        ImGui::BeginListBox("Object List", ImVec2(300, 300));
+        for (auto object : m_JsonManager->objectInfo) {
+                if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
+                    ObjectSaveInfo temp;
+                    temp.position = RayCasting(0.0f, 0.0f); 
+                    temp.meshID = (int)object.first;
+                    m_JsonManager->CreateMesh(temp);
+                }
+        }
+        ImGui::EndListBox();
         //ImGui::BeginListBox("GlTF List", ImVec2(300, 300));
         //for (auto object : m_JsonManager->meshPaths) {
         //        if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) 
@@ -690,9 +706,12 @@ void Ex2001_GamePlay::UpdateGUI() {
                     temp.meshID = -2;
                     temp.quicellPath = object.first;
                     temp.position = RayCasting(0.0f, 0.0f);
-                    temp.rotation = Vector3(90.f, 0.0f, 0.0f);
- 
-                    m_JsonManager->CreateMesh(temp);
+                    temp.rotation = Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
+                    temp.minMetallic = 1.0f;
+                    temp.minRoughness = 1.0f;
+                   
+                     
+                    m_JsonManager->CreateMesh(temp); 
                 }
         }
         ImGui::EndListBox();

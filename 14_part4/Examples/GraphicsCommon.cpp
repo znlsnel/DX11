@@ -89,6 +89,7 @@ ComPtr<ID3D11InputLayout> terrainIL;
 
 // Graphics Pipeline States
 GraphicsPSO defaultSolidPSO;
+GraphicsPSO defaultBothSolidPSO;
 GraphicsPSO skinnedSolidPSO;
 GraphicsPSO defaultWirePSO;
 GraphicsPSO skinnedWirePSO;
@@ -535,6 +536,8 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     defaultSolidPSO.m_rasterizerState = solidRS;
     defaultSolidPSO.m_primitiveTopology =  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
        
+    defaultBothSolidPSO = defaultSolidPSO;
+    defaultBothSolidPSO.m_rasterizerState = solidBothRS;
      
     terrainSolidPSO = defaultSolidPSO;
     terrainSolidPSO.m_vertexShader = terrainVS;

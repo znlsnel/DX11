@@ -134,14 +134,30 @@ class Model {
     void UpdateRotation(Vector3 ratation);
     void UpdateTranseform(Vector3 scale, Vector3 rotation, Vector3 position);
     void AddYawOffset(float addYawOffset);
+    void DestroyObject();
 
     Vector3 GetPosition() { return m_position; };
     Vector3 GetRotation() { return m_rotation; };
     Vector3 GetScale() { return m_scale; };
 
+    static void ExtractEulerAnglesFromQuaternion(const SimpleMath::Quaternion& q,
+            Vector3& angle) {
+        angle.x = std::asin(2.0f * (q.x * q.z + q.y * q.w));
+
+        //yaw = atan2(2 * (q1q2 + q0q3), q0 ^ 2 + q1 ^ 2 - q2 ^ 2 - q3 ^ 2)
+        angle.y = std::atan2(2.0f * (q.y * q.z + q.x * q.w),
+                             std::pow(q.x, 2.0f) + std::pow(q.y, 2.0f) -
+                                 std::pow(q.z, 2.0f) - std::pow(q.w, 2.0f));
+          
+        //roll = atan2(2 * (q0q1 + q2q3), q0 ^ 2 - q1 ^ 2 - q2 ^ 2 + q3 ^ 2)
+        angle.z = std::atan2(2.0f * (q.x * q.y + q.z * q.w),
+                             std::pow(q.x, 2.0f) - std::pow(q.y, 2.0f) -
+                                 std::pow(q.z, 2.0f) + std::pow(q.w, 2.0f)); 
+    }
+
     static void ExtractEulerAnglesFromMatrix(const Matrix *worldRow, Vector3 &angle) {
-        ExtractRollFromMatrix(worldRow, angle.z);
-        ExtractYawFromMatrix(worldRow, angle.y);
+        ExtractRollFromMatrix(worldRow, angle.z); 
+        ExtractYawFromMatrix(worldRow, angle.y); 
         ExtractPitchFromMatrix(worldRow, angle.x);
     };
     static void ExtractPositionFromMatrix(const Matrix *worldRow, Vector3 &pos){
@@ -152,18 +168,23 @@ class Model {
     static void ExtractScaleFromMatrix(const Matrix *worldRow,
                                           Vector3 &scale) {
         scale.x = worldRow->_11;
-        scale.y = worldRow->_22;
+        scale.y = worldRow->_22; 
         scale.z = worldRow->_33;
     };
     static void ExtractRollFromMatrix(const Matrix *worldRow, float &roll) {
-        roll = std::atan2(worldRow->_12, worldRow->_11);
-    };
+        //roll = std::atan2(worldRow->_12, worldRow->_11);
+        roll = std::atan2(worldRow->_32, worldRow->_33);
+    }; 
     static void ExtractYawFromMatrix(const Matrix *worldRow, float &Yaw) {
-        Yaw = std::atan2(worldRow->_23, worldRow->_33);
+        //Yaw = std::atan2(worldRow->_23, worldRow->_33);
+        Yaw = std::atan2(worldRow->_21, worldRow->_11);
     };
     static void ExtractPitchFromMatrix(const Matrix *worldRow, float &pitch) {
-        pitch = std::atan2(-worldRow->_13,
-                           std::sqrt(worldRow->_23 * worldRow->_23 +
+        //pitch = std::atan2(-worldRow->_13,
+        //                   std::sqrt(worldRow->_23 * worldRow->_23 +
+        //                             worldRow->_33 * worldRow->_33));
+        pitch = std::atan2(-worldRow->_31, 
+                           std::sqrt(worldRow->_32 * worldRow->_32 +
                                      worldRow->_33 * worldRow->_33));
     };
 
@@ -175,7 +196,8 @@ class Model {
   private:
     void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
 
-public:
+  public:
+    void UpdateWorldRow(const Matrix& row, bool debug = false);
          
 
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
@@ -185,16 +207,17 @@ public:
     bool m_isVisible = true;
     bool m_castShadow = true; 
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
-    bool isDestory = false;
     bool isChildModel = false; 
     bool isObjectLock = false;
     bool bRenderingBVH = false;
     bool m_saveable = false;
     bool m_editable = false;
     bool isPlane = false;
+    bool m_drawBackFace = false; 
+    bool isDestory = false;
 
     int maxRenderingBVHLevel = 0; 
-
+    int tempInt = 0;
       
     vector<shared_ptr<Mesh>> m_meshes;
 
@@ -228,6 +251,9 @@ public:
     Vector3 m_localPosition{0.f};
     Vector3 m_rotation{0.f};
     float m_boundingSphereRadius = 0.0f;
+
+
+
 };
 
 } // namespace hlab

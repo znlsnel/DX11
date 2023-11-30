@@ -36,7 +36,9 @@ class Camera {
     void SetLocation(Vector3 pos);
     void PrintView();
     void SetTarget(std::shared_ptr<class Character> target) { m_target = target; };
-     
+    Vector3 NdcToWorld(Vector3 ndc);
+    Vector3 GetNdcDir(Vector2 ndc);
+
     std::shared_ptr<class Character> GetTarget() { return m_target; };
     Vector3 GetForwardVector();
     Vector3 GetRightVector() { return m_rightDir; };

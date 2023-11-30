@@ -264,6 +264,15 @@ void hlab::JsonManager::LoadMesh() {
                 temp.scale.y = scale["y"].GetFloat();
                 temp.scale.z = scale["z"].GetFloat();
 
+                const rapidjson::Value &material = object["material"].GetObj();
+                if (material.IsNull() == false) {
+                        temp.metallic = material["metallic"].GetFloat();
+                        temp.roughness = material["roughness"].GetFloat();
+                        temp.minMetallic = material["minMetallic"].GetFloat();
+                        temp.minRoughness = material["minRoughness"].GetFloat();
+                }
+
+
                 CreateMesh(temp);
             }
     }
@@ -330,10 +339,24 @@ void hlab::JsonManager::SaveMesh() {
         rotation.AddMember("y", Value(meshInfo.rotation.y), allocator);
         rotation.AddMember("z", Value(meshInfo.rotation.z), allocator);
 
+        rapidjson::Value material(kObjectType);
+        material.AddMember("metallic", Value(object.second->m_materialConsts.GetCpu().metallicFactor), allocator);
+        material.AddMember("roughness",
+                           Value(object.second->m_materialConsts.GetCpu().roughnessFactor),
+                           allocator);
+        material.AddMember("minMetallic",
+                           Value(object.second->m_materialConsts.GetCpu().minMetallic),
+                           allocator);
+        material.AddMember("minRoughness",
+                           Value(object.second->m_materialConsts.GetCpu().minRoughness), 
+                           allocator);
+
         value.AddMember("filePath", filePath, allocator);
         value.AddMember("scale", scale, allocator);
         value.AddMember("position", position, allocator);
         value.AddMember("rotation", rotation, allocator);
+        value.AddMember("material", material, allocator);
+
 
         m_saveFile.PushBack(value, allocator);
     }
@@ -424,41 +447,23 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
                 break; 
     }
     
-    // 256 = 1
+    // 256 = 1 
     // 512 = 2 
-    if (tempMesh != nullptr) {
+    if (tempMesh != nullptr) { 
 
         m_appBase->AddBasicList(tempMesh, true, true);
         tempMesh->objectInfo.meshID = temp.meshID;
+        tempMesh->objectInfo.metallic = temp.metallic;
+        tempMesh->objectInfo.roughness = temp.roughness;
+        tempMesh->objectInfo.minMetallic = temp.minMetallic;
+        tempMesh->objectInfo.minRoughness = temp.minRoughness; 
 
-        //                tempMesh->SetObjectID(objectID);
-
-        //int id_R = 0, id_G = 0, id_B = 0, id_A = 0;
-        //// id_R = objectID % 256;
-
-        //// if (objectID > 255)
-        ////         id_G = (objectID / 256) % 256;
-
-        //// if (objectID > 65536)
-        ////         id_B = (objectID / 65536) % 256;
-        ////
-
-        //// tempMesh->objectInfo.objectID = objectID;
-        //// tempMesh->m_meshConsts.GetCpu().indexColor[0] =
-        ////(float)id_R / 255;
-        //// tempMesh->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
-        //// tempMesh->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
-
-        //tempMesh->objectInfo.meshID = temp.meshID;
-        ////        Vector4(objectID, 0.0f, 0.0f, 1.0f);
-
-        //std::cout << "Set [" << tempMesh->objectInfo.meshName
-        //          << "] Object ID : " << id_R << " " << id_G << " " << id_B
-        //          << endl;
-
-        //m_appBase->m_objects.insert(make_pair(objectID, tempMesh));
-        //objectID++;
-
+        tempMesh->m_materialConsts.GetCpu().metallicFactor = temp.metallic;
+        tempMesh->m_materialConsts.GetCpu().roughnessFactor = temp.roughness;
+        tempMesh->m_materialConsts.GetCpu().minMetallic = temp.minMetallic;
+        tempMesh->m_materialConsts.GetCpu().minRoughness = temp.minRoughness;
+        tempMesh->UpdateConstantBuffers(m_appBase->m_device, m_appBase->m_context);
+         
     }
 }
 
@@ -486,23 +491,21 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
                                                   temp->mesh, false, false);
 
     //auto meshes = GeometryGenerator::ReadFromFile(
-    //    "../Assets/Tier2/",
+    //    "../Assets/Tier2/", 
     //    "MI_White_Cloth_sbklx0p0_2K.uasset", false, false);
-    // 
+    //  
     meshes[0].albedoTextureFilenames.push_back(
         temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse);
 
     meshes[0].normalTextureFilenames.push_back(
         temp->Normal == "" ? "" : info.quicellPath + temp->Normal);
 
-    //meshes[0].heightTextureFilenames.push_back(
-    //    temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
+    meshes[0].heightTextureFilenames.push_back(
+        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
 
-    // meshes[0].aoTextureFilenames.push_back(
-    //        temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion);
+     meshes[0].aoTextureFilenames.push_back(
+            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion);
 
-          meshes[0].aoTextureFilenames.push_back(
-         temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
 
     meshes[0].roughnessTextureFilenames.push_back(
         temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness);
@@ -514,11 +517,11 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     shared_ptr<Model> tempModel =
         make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);
 
-
+       
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
-
-
+    tempModel->m_drawBackFace = true; 
+    tempModel->m_materialConsts.GetCpu().invertNormalMapY = true;
 
     return tempModel;
 

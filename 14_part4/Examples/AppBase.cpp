@@ -418,7 +418,9 @@ void AppBase::ObjectDrag() {
                 } 
                 
 
-        } else if (m_keyPressed['W']) {
+        } 
+        else if (m_keyPressed['W'] && false) {
+
                 Vector3 cursorNdcNear{m_mouseNdcX, m_mouseNdcY, 0.f};
                 Vector3 cursorNdcFar{m_mouseNdcX, m_mouseNdcY, 1.f};
 
@@ -458,6 +460,12 @@ void AppBase::ObjectDrag() {
                                     m_pickedModel->m_boundingSphere.Center;
                                 currentVector.Normalize();
 
+                               //m_cursorSphere[1]->UpdatePosition(
+                               //     m_pickedModel->m_boundingSphere.Center);
+                               // m_cursorSphere[2]->UpdatePosition(
+                               //     m_pickedModel->m_boundingSphere.Center +
+                               //     currentVector);
+
                                 float rotateTheta =
                                     acos(prevVector.Dot(currentVector));
 
@@ -465,21 +473,21 @@ void AppBase::ObjectDrag() {
                                 {
                                         Vector3 RotateAxis =
                                             prevVector.Cross(currentVector);
-                                        RotateAxis.Normalize();
+                                       RotateAxis.Normalize();
+                                        
+                                        Quaternion rotation =
+                                           Quaternion::CreateFromAxisAngle(
+                                               RotateAxis, rotateTheta);
+                                         
+                                        Vector3 currRot =
+                                            m_pickedModel->GetRotation();
 
-                                        q = Quaternion::FromToRotation(
-                                            prevVector, currentVector);
+                                        Vector3 RotResult = Vector3::Transform(currRot, rotation);
+                                    
+                                        m_pickedModel->UpdateRotation(
+                                            RotResult);
+
                                         prevVector = currentVector;
-
-                                        Matrix temp =
-                                            Matrix::CreateFromQuaternion(q);
-
-                                        Vector3 tempRot;
-                                        Model::ExtractEulerAnglesFromMatrix(
-                                            &temp, tempRot);
-
-                                        tempRot += m_pickedModel->GetRotation();
-                                        m_pickedModel->UpdateRotation(tempRot);
                                 }
                         }
                 }
@@ -487,21 +495,14 @@ void AppBase::ObjectDrag() {
 }
 
 void AppBase::DestroyObject(shared_ptr<class Model> object) {
-        if (object == nullptr || object->isObjectLock)
-                return;
+
+        object->DestroyObject();
 
     if (m_pickedModel == object)
         m_pickedModel = nullptr;
-   
-    object->isDestory = true;
-    object->m_isVisible = false;
-
-    for (auto temp : object->childModels) {
-        DestroyObject(temp);
-    }
 }
 int AppBase::Run() {
-
+         
     // Main message loop
     MSG msg = {0};
     while (WM_QUIT != msg.message) {
@@ -514,13 +515,13 @@ int AppBase::Run() {
 
             ImGui::NewFrame();
             ImGui::Begin("Scene Control");
-            // ImGui가 측정해주는 Framerate 출력
+            // ImGui가 측정해주는 Framerate 출력 
             ImGui::Text("Average %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate,
                         ImGui::GetIO().Framerate);
-
+             
             UpdateGUI(); // 추가적으로 사용할 GUI
-
+             
             Update(ImGui::GetIO().DeltaTime);
 
             Render(); // <- 중요: 우리가 구현한 렌더링
@@ -669,6 +670,7 @@ void AppBase::UpdateGUI() {
 
 void AppBase::Update(float dt) {
 
+        m_dt = dt;
         m_inputManager->Update(dt);
 
         for (auto sphere : m_cursorSphere) {
@@ -679,7 +681,7 @@ void AppBase::Update(float dt) {
 
                 sphere->UpdateScale(Vector3(length) * 2);
         }
-         
+          
 
         for (const auto &model : m_characters) {
                 model->Update(dt);
@@ -718,7 +720,6 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
-
 
 } 
 
@@ -867,7 +868,7 @@ void AppBase::RenderShadowMaps() {
 
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);
-        }
+        } 
     }
 
 } 
@@ -956,7 +957,7 @@ void AppBase::RenderOpaqueObjects() {
 
     m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock && m_camera->m_objectTargetCameraMode == false;
 
-    if (AppBase::m_drawBS) {
+    if (AppBase::m_drawBS  || true) {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingSphere(m_context);
         }
@@ -1721,6 +1722,12 @@ void AppBase::replicateObject()
         temp.scale = m_pickedModel->GetScale();
         temp.rotation = m_pickedModel->GetRotation();
         temp.position = m_pickedModel->GetPosition();
+        temp.metallic = m_pickedModel->m_materialConsts.GetCpu().metallicFactor;
+        temp.roughness = m_pickedModel->m_materialConsts.GetCpu().roughnessFactor;
+        temp.minMetallic = m_pickedModel->m_materialConsts.GetCpu().minMetallic;
+        temp.minRoughness =
+            m_pickedModel->m_materialConsts.GetCpu().minRoughness;
+
         m_JsonManager->CreateMesh(temp);
 }
 

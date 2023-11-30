@@ -23,9 +23,10 @@ using std::vector;
     string quicellPath = "";
     int objectID;
 
-    float metallic = 0.0f;
-    float roughness = 0.0f;
-    
+    float metallic = 1.0f; 
+    float roughness = 1.0f;
+    float minMetallic = 0.0f;
+    float minRoughness = 0.0f;
  };
 
  enum meshID : int {
@@ -41,7 +42,7 @@ using std::vector;
 	 ETree = 7,
 	 EBillboardTree = 8,
  };
-
+  
 struct MeshData {
     vector<Vertex> vertices;
     vector<SkinnedVertex> skinnedVertices;
@@ -49,7 +50,7 @@ struct MeshData {
     vector<string> albedoTextureFilenames;
     vector<string> emissiveTextureFilenames;
     vector<string> normalTextureFilenames;
-    vector<string> heightTextureFilenames;
+    vector<string> heightTextureFilenames; 
     vector<string> aoTextureFilenames; // Ambient Occlusion
     vector<string> metallicTextureFilenames;
     vector<string> roughnessTextureFilenames;

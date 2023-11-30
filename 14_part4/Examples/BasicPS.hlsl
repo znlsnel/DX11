@@ -32,18 +32,18 @@ float4 GetPixelFromTextureArray(Texture2DArray textures, SamplerState state, flo
     float3 txc = float3(texcoord, 0.0f);
     float4 result = textures.SampleLevel(linearWrapSampler, txc, lod);
     
-    if (length(result) > 0.0f)
-        return result;
-    
-    for (int i = 0; i < 5; i++)
-    {
-        txc.z += 1.0f;
-        result = textures.SampleLevel(linearWrapSampler, txc, lod);
 
-        if (length(result) > 0.0f)
-            break;
-    }
     return result;
+    
+    //for (int i = 0; i < 5; i++)
+    //{
+    //    txc.z += 1.0f;
+    //    result = textures.SampleLevel(linearWrapSampler, txc, lod);
+
+    //    if (length(result) > 0.0f)
+    //        break;
+    //}
+   // return result;
 }
 
 float3 GetNormal(PixelShaderInput input, float lod)
@@ -82,7 +82,7 @@ float3 DiffuseIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
     
     return kd * albedo * irradiance;
 }
-
+ 
 float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
                    float metallic, float roughness) 
 {
@@ -254,13 +254,12 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
         lightTexcoord += 1.0;
         lightTexcoord *= 0.5;
         
-        // 3. 쉐도우맵에서 값 가져오기
+       //  3. 쉐도우맵에서 값 가져오기
         float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
         bool usedOverallShadowMap = false;
         // 4. 가려져 있다면 그림자로 표시
         if (depth + 0.001 < lightScreen.z)
             shadowFactor = 0.0;
-        
         //else if (light.type & LIGHT_DIRECTIONAL)
         //{
         //    lightScreenOverall = mul(float4(posWorld, 1.0), lights[MAX_LIGHTS - 1].viewProj);
@@ -272,7 +271,7 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
         //    lightTexcoordOverall *= 0.5;
         //    depth = shadowMaps[MAX_LIGHTS - 1].Sample(shadowPointSampler, lightTexcoordOverall).r;
         //    if (depth + 0.001 < lightScreenOverall.z)
-        //    {
+        //    { 
         //        shadowFactor = 0.0;
         //        usedOverallShadowMap = true;
         //    }
@@ -381,9 +380,9 @@ PixelShaderOutput main(PixelShaderInput input)
     clip(albedo.a - 0.05); // Tree leaves
     
     float ao = useAOMap ? GetPixelFromTextureArray(aoTex, linearWrapSampler, lod).r : 1.0;
-    float metallic = useMetallicMap ? GetPixelFromTextureArray(metallicRoughnessTex, linearWrapSampler, lod).b * metallicFactor
+    float metallic = useMetallicMap ? clamp(GetPixelFromTextureArray(metallicRoughnessTex, linearWrapSampler, lod).b, minMetallic, 1.0) * metallicFactor
                                     : metallicFactor;
-    float roughness = useRoughnessMap ? GetPixelFromTextureArray(metallicRoughnessTex, linearWrapSampler, lodBias).g * roughnessFactor
+    float roughness = useRoughnessMap ? clamp(GetPixelFromTextureArray(metallicRoughnessTex, linearWrapSampler, lodBias).g, minRoughness, 1.0) * roughnessFactor
                                       : roughnessFactor;
     float3 emission = useEmissiveMap ? GetPixelFromTextureArray(emissiveTex, linearWrapSampler, lod).rgb
                                      : emissionFactor;

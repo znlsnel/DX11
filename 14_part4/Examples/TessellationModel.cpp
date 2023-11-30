@@ -89,6 +89,7 @@ TessellationModel::~TessellationModel() {
          
         if (true)
                 return;
+
     D3D11_TEXTURE2D_DESC desc;
 
     m_textureMapBuffer->GetDesc(&desc);

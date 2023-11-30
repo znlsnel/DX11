@@ -150,6 +150,22 @@ void Camera::PrintView() {
          << m_pitch << "f);" << endl;
 }
 
+Vector3 Camera::NdcToWorld(Vector3 ndc) { 
+        Matrix viewRow = GetViewRow();
+        Matrix projRow = GetProjRow();
+        Matrix inverseProjView = (viewRow * projRow).Invert();
+
+        return Vector3::Transform(ndc, inverseProjView);
+}
+
+Vector3 Camera::GetNdcDir(Vector2 ndc) { 
+        Vector3 a = NdcToWorld(Vector3(ndc.x, ndc.y, 0.0f));
+        Vector3 b = NdcToWorld(Vector3(ndc.x, ndc.y, 1.0f));
+        Vector3 c = b - a;
+        c.Normalize();
+        return c;
+}
+
 Vector3 Camera::GetForwardVector() { return m_forwardDir; }
 
 Vector3 Camera::GetPosision() { return m_position; }

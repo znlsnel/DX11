@@ -95,6 +95,7 @@ extern ComPtr<ID3D11BlendState> alphaBS;
 
 // Graphics Pipeline States
 extern GraphicsPSO defaultSolidPSO;
+extern GraphicsPSO defaultBothSolidPSO;
 extern GraphicsPSO skinnedSolidPSO;
 extern GraphicsPSO defaultWirePSO;
 extern GraphicsPSO skinnedWirePSO;

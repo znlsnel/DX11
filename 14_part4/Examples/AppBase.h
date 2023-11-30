@@ -161,7 +161,7 @@ class AppBase {
     ComPtr<ID3D11ShaderResourceView> m_prevSRV;
     ComPtr<ID3D11ShaderResourceView> m_billboardTreeSRV;
 
-
+    Matrix tempRotation;
 
     // Depth buffer 관련
     ComPtr<ID3D11Texture2D> m_depthOnlyBuffer; // No MSAA
@@ -187,6 +187,11 @@ class AppBase {
     bool m_keyPressed[256] = {
         false,
     };
+
+        float m_keyPressedTime[256] = {
+        0.0f,
+    };
+
     bool m_keyToggle[256] = {
         false,
     };
@@ -208,6 +213,7 @@ class AppBase {
     float cameraSpeed_max = 2.0f;
    
     double timeSeconds = 0.0;
+    float m_dt = 0.0f;
     // 렌더링 -> PostEffects -> PostProcess
     PostEffectsConstants m_postEffectsConstsCPU;
     ComPtr<ID3D11Buffer> m_postEffectsConstsGPU;
