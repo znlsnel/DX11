@@ -84,7 +84,7 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                             if (it != quicellPaths.end())
                                 temp = &it->second;
 
-                            temp->mesh = fileName.string();
+                            temp->mesh.push_back(fileName.string());
 
                             if (it == quicellPaths.end()) 
                             {
@@ -246,7 +246,9 @@ void hlab::JsonManager::LoadMesh() {
                         const rapidjson::Value &path =
                             object["filePath"].GetObj();
                         temp.quicellPath = path["quicellPath"].GetString();
+                        temp.quixelID = path["quixelID"].GetInt();
                 }
+                 
          //       temp.meshName = object["meshName"].GetString();
 
                 const rapidjson::Value & position = object["position"].GetObj();
@@ -322,7 +324,8 @@ void hlab::JsonManager::SaveMesh() {
                     "quicellPath",
                     rapidjson::Value().SetString(quicellPath, allocator),
                     allocator);
-            
+                filePath.AddMember(
+                    "quixelID", Value(meshInfo.quixelID), allocator);
 
         rapidjson::Value scale(kObjectType);
         scale.AddMember("x", Value(meshInfo.scale.x), allocator);
@@ -374,7 +377,7 @@ void hlab::JsonManager::SaveMesh() {
     /*std::string jsonString = JsonDocToString(m_saveFile, true);*/
 }
 
-void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
+shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     shared_ptr<Model> tempMesh = make_shared<Model>();
 
     switch ((meshID)temp.meshID) {
@@ -428,7 +431,7 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
                 tempMesh = CreateQuicellModel(temp);
                 auto it = quicellPaths.find(temp.quicellPath);
                 if (it != quicellPaths.end()) {
-                        tempMesh->objectInfo.meshName =   it->second.mesh;
+                        tempMesh->objectInfo.meshName =   it->second.mesh[temp.quixelID];  
                         tempMesh->objectInfo.quicellPath = it->first;
                 }
             } 
@@ -464,7 +467,9 @@ void hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
         tempMesh->m_materialConsts.GetCpu().minRoughness = temp.minRoughness;
         tempMesh->UpdateConstantBuffers(m_appBase->m_device, m_appBase->m_context);
          
-    }
+    } 
+     
+    return tempMesh;
 }
 
 shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
@@ -488,35 +493,35 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
 
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
     auto meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
-                                                  temp->mesh, false, false);
+                                                  temp->mesh[info.quixelID], false, false);
 
     //auto meshes = GeometryGenerator::ReadFromFile(
     //    "../Assets/Tier2/", 
     //    "MI_White_Cloth_sbklx0p0_2K.uasset", false, false);
-    //  
-    meshes[0].albedoTextureFilenames.push_back(
-        temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse);
+    //    
+    meshes[0].albedoTextureFilename =
+        temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+     
+    meshes[0].normalTextureFilename = 
+        temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
 
-    meshes[0].normalTextureFilenames.push_back(
-        temp->Normal == "" ? "" : info.quicellPath + temp->Normal);
+    meshes[0].heightTextureFilename =
+        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
 
-    meshes[0].heightTextureFilenames.push_back(
-        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement);
+     meshes[0].aoTextureFilename =
+            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
 
-     meshes[0].aoTextureFilenames.push_back(
-            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion);
+      
+    meshes[0].roughnessTextureFilename = 
+        temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
 
-
-    meshes[0].roughnessTextureFilenames.push_back(
-        temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness);
-
-    meshes[0].metallicTextureFilenames.push_back(
-        temp->metallic == "" ? "" : info.quicellPath + temp->metallic);
+    meshes[0].metallicTextureFilename =
+        temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
     
 
     shared_ptr<Model> tempModel =
         make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);
-
+    tempModel->objectInfo.quixelID = info.quixelID;      
        
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
@@ -568,8 +573,8 @@ shared_ptr<Model> JsonManager::CreateMountain(ObjectSaveInfo info) {
 
     for (auto &v : meshes[0].vertices)
         v.texcoord /= 1024.0f;
-    meshes[0].albedoTextureFilenames.push_back(
-        "../Assets/Terrain/Chalaadi/overlay.png");
+    meshes[0].albedoTextureFilename = 
+        "../Assets/Terrain/Chalaadi/overlay.png";
 
     Vector3 center(0.f, 0.02f, 0.f);
     shared_ptr<Model> tempModel =

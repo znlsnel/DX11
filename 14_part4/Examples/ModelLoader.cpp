@@ -158,7 +158,7 @@ void ModelLoader::Load(std::string basePath, std::string filename,
         // for (size_t i = 0; i < m_aniData.boneIdToName.size(); i++) {
         //    cout << "BoneId: " << i << " " << m_aniData.boneIdToName[i] <<
         //    endl;
-        //}
+        //} 
         // exit(-1);
 
         // 각 뼈의 부모 인덱스를 저장할 준비
@@ -177,12 +177,12 @@ void ModelLoader::Load(std::string basePath, std::string filename,
         //                 : m_aniData.boneIdToName[m_aniData.boneParents[i]])
         //         << endl;
         //}
-
+         
         // 애니메이션 정보 읽기
         if (pScene->HasAnimations())
             ReadAnimation(pScene);
-
-        // UpdateNormals(this->meshes); // Vertex Normal을 직접 계산 (참고용)
+         
+         //UpdateNormals(this->m_meshes); // Vertex Normal을 직접 계산 (참고용)
 
         UpdateTangents();
     } else {
@@ -362,6 +362,47 @@ void ModelLoader::ReadTextureFilename(const aiScene *scene,
 
 }
 
+void ModelLoader::ReadTextureFilename(const aiScene *scene,
+                                      aiMaterial *material, aiTextureType type,
+                                      string &textureFile) {
+
+        if (material->GetTextureCount(type) <= 0)
+                return;
+     
+        aiString filepath;
+        material->GetTexture(type, 0, &filepath);
+
+        string fullPath = m_basePath + string(filesystem::path(filepath.C_Str()).filename().string());
+
+        if (!filesystem::exists(fullPath)) {
+                // 2. 파일이 없을 경우 혹시 fbx 자체에 Embedded인지 확인
+                const aiTexture *texture =
+                        scene->GetEmbeddedTexture(filepath.C_Str());
+                if (texture) 
+                {
+                        // 3. Embedded texture가 존재하고 png일 경우 저장
+                        if (string(texture->achFormatHint).find("png") !=
+                        string::npos) {
+                                ofstream fs(fullPath.c_str(), ios::binary | ios::out);
+                                fs.write((char *)texture->pcData, texture->mWidth);
+                                fs.close();
+                        } 
+                } 
+                else 
+                {
+                        cout << fullPath
+                                << " doesn't exists. Return empty filename." << endl;
+                }
+        } 
+        
+        if (fullPath == "" || fullPath == m_basePath)
+                return;
+
+        textureFile = fullPath;
+        
+        return;
+}
+
 MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
     MeshData newMesh;
@@ -372,15 +413,18 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
     // Walk through each of the mesh's vertices
     for (UINT i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
-
+         
         vertex.position.x = mesh->mVertices[i].x;
         vertex.position.y = mesh->mVertices[i].y;
         vertex.position.z = mesh->mVertices[i].z;
-
+         
         vertex.normalModel.x = mesh->mNormals[i].x;
         if (m_isGLTF) {
-            vertex.normalModel.y = mesh->mNormals[i].z;
+            vertex.normalModel.y = mesh->mNormals[i].z; 
             vertex.normalModel.z = -mesh->mNormals[i].y;
+            //vertex.normalModel.y = mesh->mNormals[i].y; 
+            //vertex.normalModel.z = mesh->mNormals[i].z;
+
         } else {
             vertex.normalModel.y = mesh->mNormals[i].y;
             vertex.normalModel.z = mesh->mNormals[i].z;
@@ -481,32 +525,32 @@ MeshData ModelLoader::ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
         
             ReadTextureFilename(scene, material, aiTextureType_BASE_COLOR,
-                            newMesh.albedoTextureFilenames);
-        if (newMesh.albedoTextureFilenames.empty()) {
+                            newMesh.albedoTextureFilename);
+        if (newMesh.albedoTextureFilename.empty()) {
             ReadTextureFilename(scene, material, aiTextureType_DIFFUSE,
-                                newMesh.albedoTextureFilenames);
+                                newMesh.albedoTextureFilename);
         }
         ReadTextureFilename(scene, material, aiTextureType_EMISSIVE,
-                              newMesh.emissiveTextureFilenames);
+                              newMesh.emissiveTextureFilename);
         ReadTextureFilename(scene, material, aiTextureType_HEIGHT,
-                            newMesh.heightTextureFilenames);
+                            newMesh.heightTextureFilename);
         ReadTextureFilename(scene, material, aiTextureType_NORMALS,
-                            newMesh.normalTextureFilenames);
+                            newMesh.normalTextureFilename);
         ReadTextureFilename(scene, material, aiTextureType_METALNESS,
-                            newMesh.metallicTextureFilenames);
-         ReadTextureFilename(scene, material, aiTextureType_DIFFUSE_ROUGHNESS, newMesh.roughnessTextureFilenames);
+                            newMesh.metallicTextureFilename);
+         ReadTextureFilename(scene, material, aiTextureType_DIFFUSE_ROUGHNESS, newMesh.roughnessTextureFilename);
          ReadTextureFilename(scene, material, aiTextureType_AMBIENT_OCCLUSION,
-                             newMesh.aoTextureFilenames);
-        if (newMesh.aoTextureFilenames.empty()) {
+                             newMesh.aoTextureFilename);
+        if (newMesh.aoTextureFilename.empty()) {
             ReadTextureFilename(scene, material, aiTextureType_LIGHTMAP,
-                                newMesh.aoTextureFilenames);
+                                newMesh.aoTextureFilename);
         }
          ReadTextureFilename(scene, material, aiTextureType_OPACITY,
-                              newMesh.opacityTextureFilenames);
+                              newMesh.opacityTextureFilename);
 
-        if (!newMesh.opacityTextureFilenames.empty()) {
-            cout << newMesh.albedoTextureFilenames[0] << endl;
-            cout << "Opacity " << newMesh.opacityTextureFilenames[0] << endl;
+        if (!newMesh.opacityTextureFilename.empty()) {
+            cout << newMesh.albedoTextureFilename << endl;
+            cout << "Opacity " << newMesh.opacityTextureFilename << endl;
         }
 
         // 디버깅용

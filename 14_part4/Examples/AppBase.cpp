@@ -734,10 +734,12 @@ void AppBase::UpdateLights(float dt) {
      
     static float updateTimer = 0.0f;
     if (updateTimer > 0.0f) {
-        Vector3 tempCamPos = m_camera->m_objectTargetCameraMode == false
+
+        Vector3 tempCamPos =
+            m_camera->m_objectTargetCameraMode == false || m_camera->GetTarget() == nullptr
             ? RayCasting(0.0f, -0.25f)
                 :  m_camera->GetTarget()->GetMesh()->GetPosition();
-
+          
         //Vector3 tempCamPos = m_camera->GetPosision();
          
         //Vector3 tempCamPos = RayCasting(0.0f, -0.25f); 
@@ -1915,33 +1917,33 @@ void AppBase::CreateBuffers() {
     descTemp = desc;
     descTemp.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     // desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    // backBuffer->GetDesc(&desc); 
+    // backBuffer->GetDesc(&desc);  
     ThrowIfFailed(m_device->CreateTexture2D(&descTemp, NULL,
-                                            m_indexTexture.GetAddressOf()));
+                                                  m_indexTexture.GetAddressOf())); 
     ThrowIfFailed(m_device->CreateRenderTargetView(
         m_indexTexture.Get(), NULL, m_indexRenderTargetView.GetAddressOf()));
     //desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
       
     //D3D11_TEXTURE2D_DESC desc3;
-    //backBuffer->GetDesc(&desc3);
+    //backBuffer->GetDesc(&desc3); 
     //cout << "cpuAccesccFlag" << desc3.CPUAccessFlags << endl; 
 
-    // FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
-    desc.SampleDesc.Count = 1;
+    // FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV 
+    desc.SampleDesc.Count = 1; 
     desc.SampleDesc.Quality = 0;
     desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE |
                      D3D11_BIND_UNORDERED_ACCESS;
     ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL,
                                             m_resolvedBuffer.GetAddressOf()));
-    ThrowIfFailed(m_device->CreateTexture2D(
+    ThrowIfFailed(m_device->CreateTexture2D( 
         &desc, NULL, m_postEffectsBuffer.GetAddressOf()));
 
     desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     desc.MiscFlags = 0;
 
-
-
+       
+    // HDR
     {
         D3D11_TEXTURE2D_DESC desc2;
         backBuffer->GetDesc(&desc2);

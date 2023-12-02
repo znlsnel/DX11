@@ -22,6 +22,7 @@ using std::vector;
     string previewPath = "";
     string quicellPath = "";
     int objectID;
+    int quixelID = 0;
 
     float metallic = 1.0f; 
     float roughness = 1.0f;
@@ -47,14 +48,14 @@ struct MeshData {
     vector<Vertex> vertices;
     vector<SkinnedVertex> skinnedVertices;
     vector<uint32_t> indices;
-    vector<string> albedoTextureFilenames;
-    vector<string> emissiveTextureFilenames;
-    vector<string> normalTextureFilenames;
-    vector<string> heightTextureFilenames; 
-    vector<string> aoTextureFilenames; // Ambient Occlusion
-    vector<string> metallicTextureFilenames;
-    vector<string> roughnessTextureFilenames;
-    vector<string> opacityTextureFilenames;
+    string albedoTextureFilename;
+    string emissiveTextureFilename;
+    string normalTextureFilename;
+    string heightTextureFilename; 
+    string aoTextureFilename; // Ambient Occlusion
+    string metallicTextureFilename;
+    string roughnessTextureFilename;
+    string opacityTextureFilename;
 
 };
 

@@ -40,6 +40,9 @@ void ReadTextureFilename(const aiScene *scene, aiMaterial *material,
                                     aiTextureType type,
                                     vector<string> &textureFiles);
 
+void ReadTextureFilename(const aiScene *scene, aiMaterial *material,
+                         aiTextureType type, string &textureFile);
+
     void UpdateTangents();
 
     // 버텍스의 변형에 직접적으로 참여하는 뼈들의 목록을 만듭니다.

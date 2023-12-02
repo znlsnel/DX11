@@ -72,6 +72,7 @@ cbuffer GlobalConstants : register(b0)
     float globalTime;
         
     Light lights[MAX_LIGHTS];
+    float directionalLightPow = 1.0f; 
 };
 
 cbuffer MeshConstants : register(b1)

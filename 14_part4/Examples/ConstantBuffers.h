@@ -85,11 +85,11 @@ struct Light {
     Vector3 radiance = Vector3(5.0f); // strength
     float fallOffStart = 0.0f;
     Vector3 direction = Vector3(0.0f, 0.0f, 1.0f);
-    float fallOffEnd = 20.0f;
+    float fallOffEnd = 20.0f; 
     Vector3 position = Vector3(0.0f, 0.0f, -2.0f);
     float spotPower = 6.0f;
 
-    // Light type bitmasking
+    // Light type bitmasking 
     // ex) LIGHT_SPOT | LIGHT_SHADOW
     uint32_t type = LIGHT_OFF;
     float radius = 0.035f; // 반지름
@@ -104,7 +104,7 @@ struct Light {
 // register(b1) 사용
 __declspec(align(256)) struct GlobalConstants {
     Matrix view;
-    Matrix proj;
+    Matrix proj; 
     Matrix invProj; // 역프로젝션행렬 
     Matrix viewProj;
     Matrix invViewProj; // Proj -> World
@@ -119,6 +119,7 @@ __declspec(align(256)) struct GlobalConstants {
     float globalTime = 0.0f;
 
     Light lights[MAX_LIGHTS];
+    float directionalLightPow = 1.0f;
 };
 
 // register(b5) 사용, PostEffectsPS.hlsl

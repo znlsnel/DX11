@@ -109,7 +109,6 @@ class AppBase {
     bool ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
                              ComPtr<ID3D11DeviceContext> &context);
 
-    
   public:
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
     // 변수 이름을 줄이기 위해 d3d는 생략했습니다.

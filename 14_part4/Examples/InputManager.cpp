@@ -158,8 +158,10 @@ void hlab::InputManager::InputCtrl(bool isPress, char key) {
         if (m_appBase->m_keyPressed['F']) {
                 m_appBase->m_camera->m_objectTargetCameraMode =
                     !m_appBase->m_camera->m_objectTargetCameraMode;
+                if (m_appBase->m_camera->GetTarget() == nullptr)
+                        m_appBase->m_camera->m_objectTargetCameraMode = false;
         }
-
+         
         if (m_appBase->m_keyPressed['S']) {
                 m_appBase->m_JsonManager->SaveMesh();
                 m_appBase->m_keyPressed['S'] = false;

@@ -62,13 +62,13 @@ bool Ex2001_GamePlay::InitScene() {
         auto mesh = GeometryGenerator::MakeTessellationPlane(
                 200, 200, 30.0f, Vector2(30.0f, 30.0f), heightMapImage); 
         string path = "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
-        mesh.albedoTextureFilenames.push_back( path + "Ground037_4K-PNG_Color.png");
-        mesh.aoTextureFilenames.push_back(
-            path + "Ground037_4K-PNG_AmbientOcclusion.png");
-        mesh.normalTextureFilenames.push_back( path + "Ground037_d4K-PNG_NormalDX.png");
+        mesh.albedoTextureFilename =  path + "Ground037_4K-PNG_Color.png";
+        mesh.aoTextureFilename=
+            path + "Ground037_4K-PNG_AmbientOcclusion.png";
+        mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
         // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-        mesh.heightTextureFilenames.push_back(
-            path + "Ground037_4K-PNG_Displacement.png");
+        mesh.heightTextureFilename = 
+            path + "Ground037_4K-PNG_Displacement.png";
                  
             m_groundPlane = 
                 make_shared<TessellationModel>(
@@ -85,6 +85,7 @@ bool Ex2001_GamePlay::InitScene() {
             m_groundPlane->UpdateRotation(
                 Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
             shared_ptr<Model> temp = m_groundPlane;
+            temp->isObjectLock = true;
             AddBasicList(temp);
     }
 
@@ -354,14 +355,15 @@ void Ex2001_GamePlay::InitAudio() {
 
 
 
-
+ 
 void Ex2001_GamePlay::UpdateGUI() {
     AppBase::UpdateGUI();
  //   ImGui::SetNextItemOpen(false, ImGuiCond_Once); 
     Vector3 tempPos = m_camera->GetEyePos();
     float camera[3] = {tempPos.x, tempPos.y, tempPos.z};
     ImGui::DragFloat3("Camera Pos", camera, 1.0f, -1000.f, 1000.f);
-
+    ImGui::DragFloat("DirectionalLightPow",
+                     &m_globalConstsCPU.directionalLightPow, 0.01f, 0.0f, 1.0f);
     if (ImGui::TreeNode("Shadow")) 
     {
         static int i = 0;
@@ -670,57 +672,129 @@ void Ex2001_GamePlay::UpdateGUI() {
     }
 
         ImGui::NewLine();
+         
+        bool show_dialog = true;
+        ImGui::SetNextWindowSize(ImVec2(400, 500));
+        ImGui::SetNextWindowPos(
+            ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, 0.0f));
+        ImGui::Begin("Dialogx1", &show_dialog, ImGuiWindowFlags_NoCollapse);
+        
+
     if (ImGui::TreeNode("Load Object")) {
 
-        ImGui::BeginListBox("Object List", ImVec2(300, 300));
-        for (auto object : m_JsonManager->objectInfo) {
-                if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
-                    ObjectSaveInfo temp;
-                    temp.position = RayCasting(0.0f, 0.0f); 
-                    temp.meshID = (int)object.first;
-                    m_JsonManager->CreateMesh(temp);
-                }
-        }
-        ImGui::EndListBox();
-        //ImGui::BeginListBox("GlTF List", ImVec2(300, 300));
-        //for (auto object : m_JsonManager->meshPaths) {
-        //        if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) 
-        //        {
+        if (ImGui::TreeNode("Object List")) {
+                for (auto object : m_JsonManager->objectInfo) {
+                    if (ImGui::Button(object.second.c_str(), ImVec2(300, 30))) {
+                        ObjectSaveInfo temp;
+                        temp.meshID = (int)object.first;
+                        temp.position = RayCasting(0.0f, 0.0f);
 
-        //            ObjectSaveInfo temp;
-        //            temp.meshID = -1;
-        //            temp.meshName = object.first;
-        //            temp.meshPath = object.second.first;
-        //            temp.previewPath = object.second.second;
-        //            m_JsonManager->CreateMesh(temp); 
-        //        }
-        //}
-        //ImGui::EndListBox();
-        ImGui::BeginListBox("Quicell List", ImVec2(300, 1000));
-        for (auto object : m_JsonManager->quicellPaths) {
-                //if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300, 30))) 
-                if (ImGui::ImageButton(object.second.objectImageSRV.Get(),
-                                       ImVec2(100, 100)))
-                {  
-                    ObjectSaveInfo temp;
-                    temp.meshID = -2;
-                    temp.quicellPath = object.first;
-                    temp.position = RayCasting(0.0f, 0.0f);
-                    temp.rotation = Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
-                    temp.minMetallic = 1.0f;
-                    temp.minRoughness = 1.0f;
-                   
-                     
-                    m_JsonManager->CreateMesh(temp); 
-                }
-        }
-        ImGui::EndListBox();
+                        float dist = 0.0f;
+                        SetHeightPosition(temp.position +
+                                              Vector3(0.0f, 5.0f, 0.0f),
+                                          Vector3(0.0f, -1.0f, 0.0f), dist);
+                        if (dist > 0.0f)
+                            temp.position = temp.position +
+                                            Vector3(0.0f, 5.0f, 0.0f) +
+                                            Vector3(0.0f, -1.0f, 0.0f) * dist;
 
+                        shared_ptr<Model> tempModel =
+                            m_JsonManager->CreateMesh(temp);
+
+                        Vector3 tempExtents =
+                            Vector3::Transform(tempModel->m_boundingBox.Extents,
+                                               tempModel->m_worldRow);
+                        tempModel->UpdatePosition(
+                            tempModel->GetPosition() +
+                            Vector3(0.0f, tempExtents.y, 0.0f));
+                    }
+                }
+                ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("GlTF List")) {
+
+                for (auto object : m_JsonManager->meshPaths) {
+                    if (ImGui::Button(object.first.c_str(), ImVec2(300, 30))) {
+                             
+                        ObjectSaveInfo temp;
+                        temp.meshID = -1;
+                        temp.meshName = object.first;
+                        temp.meshPath = object.second.first;
+                        temp.previewPath = object.second.second;
+                        temp.position = RayCasting(0.0f, 0.0f);
+                        float dist = 0.0f;
+                        SetHeightPosition(temp.position +
+                                              Vector3(0.0f, 5.0f, 0.0f),
+                                          Vector3(0.0f, -1.0f, 0.0f), dist);
+                        if (dist > 0.0f)
+                            temp.position = temp.position +
+                                            Vector3(0.0f, 5.0f, 0.0f) +
+                                            Vector3(0.0f, -1.0f, 0.0f) * dist;
+                        shared_ptr<Model> tempModel =
+                            m_JsonManager->CreateMesh(temp);
+                        Vector3 tempExtents =
+                            Vector3::Transform(tempModel->m_boundingBox.Extents,
+                                               tempModel->m_worldRow);
+                        tempModel->UpdatePosition(
+                            tempModel->GetPosition() +
+                            Vector3(0.0f, tempExtents.y, 0.0f));
+                    }
+                } 
+                ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Quicell List")) {
+
+                static vector<int> idV(m_JsonManager->quicellPaths.size());
+                int i = 0;
+                for (auto object : m_JsonManager->quicellPaths) {
+                    // if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300,
+                    // 30)))
+                    ImGui::NewLine();  
+                      ObjectSaveInfo temp;
+                    if (object.second.mesh.size() > 1) { 
+                        ImGui::SliderInt(object.first.c_str(), &idV[i],
+                                         0,
+                                         object.second.mesh.size() - 1); 
+                        temp.quixelID = idV[i++]; 
+                    }    
+                    if (ImGui::ImageButton(object.second.objectImageSRV.Get(),
+                                           ImVec2(100, 100))) {
+
+                        temp.meshID = -2;
+                        temp.quicellPath = object.first;
+                        temp.rotation =
+                            Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
+                        temp.minMetallic = 1.0f;
+                        temp.minRoughness = 1.0f;
+                        temp.position = RayCasting(0.0f, 0.0f);
+
+                        float dist = 0.0f;
+                        SetHeightPosition(temp.position +
+                                              Vector3(0.0f, 5.0f, 0.0f),
+                                          Vector3(0.0f, -1.0f, 0.0f), dist);
+                        if (dist > 0.0f)
+                            temp.position = temp.position +
+                                            Vector3(0.0f, 5.0f, 0.0f) +
+                                            Vector3(0.0f, -1.0f, 0.0f) * dist;
+
+                        shared_ptr<Model> tempModel =
+                            m_JsonManager->CreateMesh(temp);
+
+                        Vector3 tempExtents =
+                            Vector3::Transform(tempModel->m_boundingBox.Extents,
+                                               tempModel->m_worldRow);
+                        tempModel->UpdatePosition(
+                            tempModel->GetPosition() +
+                            Vector3(0.0f, tempExtents.y, 0.0f));
+                    }
+                }
+                ImGui::TreePop();
+        }
             /*if (ImGui::Button("Test", ImVec2(100, 100)))*/
                 
-
+         
     }
-
+    ImGui::End();
 }
 
 } // namespace hlab
