@@ -42,7 +42,7 @@ AppBase::AppBase()
 {
 
     g_appBase = this;
-
+     
             m_camera = make_shared<Camera>(g_appBase);
     m_inputManager = make_shared<InputManager>(this);
     // m_JsonManager->TestJson_Parse();
@@ -125,16 +125,14 @@ Vector3 AppBase::RayCasting(float mouseNdcX, float mouseNdcY)
         Vector3 tempPos;
        float fDist = FLT_MAX;
         int fLevel = 0;
+          
          
-
         for (auto &BVH : m_groundPlane->m_BVHs) {
-
-                   
                 std::queue<pair<int, int>> queue;
                 queue.push(make_pair(0,0));
 
                 while (queue.empty() == false) {
-                    int level = queue.front().second;
+                    int level = queue.front().second; 
                 int index = queue.front().first;
                 queue.pop();
 
@@ -288,9 +286,9 @@ void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) {
         float dv = 1024.f / 200.f * 0.5f;
         float a = 1024.f / 60.f;
         float rv = 60.f / 200.f * 0.5f;
-
+         
         // up down left right pos; 
-
+        origin -= m_groundPlane->GetPosition(); 
         int currPos[2] = {int(a * (origin.x + 30.0f)),
                           int(a * (origin.z + 30.0f))
         }; 
@@ -318,8 +316,9 @@ void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) {
                  idxPos[1] = clamp(idxPos[1], 0.0f, 1024.f);
 
                  int idx = int(idxPos[1]) * 1024 * 4 + int(idxPos[0]) * 4;
+                 idx = clamp(idx, 0, int(heightMapImage.size() - 1));
                  float h = heightMapImage[idx] / 255.f * 8.0f;
-                 
+                  
                  pos.x = roundf(pos.x / (rv * 2)) * (rv * 2);
                  pos.z = roundf(pos.z / (rv * 2)) * (rv * 2);
                  pos.y = h;
@@ -624,28 +623,29 @@ bool AppBase::InitScene() {
             m_lightSphere[i]->m_name = "LightSphere" + std::to_string(i);
             m_lightSphere[i]->m_isPickable = false;
 
-            AddBasicList(m_lightSphere[i]);
+            AddBasicList(m_lightSphere[i], false);
 
         }
     }
-
+     
     // 커서 표시 (Main sphere와의 충돌이 감지되면 월드 공간에 작게 그려지는 구)
-    for (int i = 0; i < 10; i++)
-    {
+    for (int i = 0; i < 400; i++)
+    { 
         MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
         shared_ptr<Model>cursorSphere =
             make_shared<Model>(m_device, m_context, vector{sphere});
         cursorSphere->m_isVisible = true; // 마우스가 눌렸을 때만 보임
-        cursorSphere->m_castShadow = true; // 그림자 X
+        cursorSphere->m_castShadow = false; // 그림자 X
         cursorSphere->m_materialConsts.GetCpu().albedoFactor = Vector3(0.0f);
         cursorSphere->m_materialConsts.GetCpu().emissionFactor =
             Vector3(1.0f, 0.0f, 0.0f);
-
+        
         cursorSphere->UpdateScale(Vector3(30.f, 30.f, 30.f));
+        cursorSphere->isCursorShpere = true;
         m_cursorSphere.push_back(cursorSphere);
-        AddBasicList(cursorSphere);
+        
+        AddBasicList(cursorSphere, false);
     }
-
     return true;
 }
 
@@ -675,13 +675,19 @@ void AppBase::Update(float dt) {
 
         for (auto sphere : m_cursorSphere) {
                 float length =
-            (sphere->GetPosition() - m_camera->GetPosision())
+            (sphere->GetPosition() - m_camera->GetPosition())
                         .Length() * 5;
                 length = max(length, 5.0f);
 
                 sphere->UpdateScale(Vector3(length) * 2);
         }
           
+        static float frustumTimer = 0.0f;
+        if (frustumTimer > 1.0f / 30.f) {
+                GetObjectsInFrustum();
+                frustumTimer = 0.0f;
+        }
+        frustumTimer += dt;
 
         for (const auto &model : m_characters) {
                 model->Update(dt);
@@ -720,6 +726,10 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
+    for (auto &i : m_NoneBVHList) {
+        i->UpdateConstantBuffers(m_device, m_context);
+    }
+     
 
 } 
 
@@ -830,7 +840,7 @@ void AppBase::RenderDepthOnly(){
  
     AppBase::SetGlobalConsts(m_globalConstsGPU);
 
-    for (const auto &model : m_basicList) {
+    for (const auto &model : m_foundModelList) {
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
@@ -842,15 +852,17 @@ void AppBase::RenderDepthOnly(){
     if (m_mirror)
         m_mirror->Render(m_context);
 
-}
-
-void AppBase::RenderShadowMaps() {
+}   
+  
+void AppBase::RenderShadowMaps() { 
 
     // 쉐도우 맵을 다른 쉐이더에서 SRV 해제
     ID3D11ShaderResourceView *nulls[2] = {0, 0};
     m_context->PSSetShaderResources(15, 2, nulls);
-
+     
     AppBase::SetShadowViewport(); // 그림자맵 해상도
+      
+
     for (int i = 0; i < MAX_LIGHTS; i++) {
         if (m_globalConstsCPU.lights[i].type & LIGHT_SHADOW) {
             m_context->OMSetRenderTargets(0, NULL, 
@@ -861,12 +873,22 @@ void AppBase::RenderShadowMaps() {
 
             AppBase::SetGlobalConsts(m_shadowGlobalConstsGPU[i]);
 
+
             for (const auto &model : m_basicList) {
                 if (model->m_castShadow && model->m_isVisible) {
                     AppBase::SetPipelineState(model->GetDepthOnlyPSO());
                     model->Render(m_context);
                 }
             }
+            for (const auto &model : m_NoneBVHList) {
+                if (model->m_castShadow && model->m_isVisible) {
+                    AppBase::SetPipelineState(model->GetDepthOnlyPSO());
+                    model->Render(m_context);
+                }
+            }
+
+
+
 
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);
@@ -914,11 +936,19 @@ void AppBase::RenderOpaqueObjects() {
     AppBase::SetPipelineState(m_drawAsWire ? Graphics::skyboxWirePSO
                                            : Graphics::skyboxSolidPSO);
     m_skybox->Render(m_context);
+     
+        for (const auto &model : m_foundModelList) {
+                AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
+                model->Render(m_context); 
+        }
+     
+        for (const auto &model : m_NoneBVHList) {
+                AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
+                model->Render(m_context);
+                
+        } 
 
-    for (const auto &model : m_basicList) {
-        AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
-        model->Render(m_context);
-    }
+    
     //AppBase::SetPipelineState(m_groundPlane->GetPSO(m_drawAsWire));
     //m_groundPlane->RenderTessellation(m_context);
 
@@ -945,25 +975,33 @@ void AppBase::RenderOpaqueObjects() {
     }
 
 
+
+
     AppBase::SetPipelineState(Graphics::boundingBoxPSO);
     if (AppBase::m_drawOBB) {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingBox(m_context);
         }
     }
+    if (m_bRenderingBVH)
+        RenderBVH(); 
+
+
     if (m_pickedModel && m_pickedModel->bRenderingBVH) {
         m_pickedModel->RenderBVH(m_context);
     }
 
+     
 
+    //m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock && m_camera->m_objectTargetCameraMode == false;
 
-    m_drawBS = m_keyPressed['W'] && m_camera->m_isCameraLock && m_camera->m_objectTargetCameraMode == false;
-
-    if (AppBase::m_drawBS  || true) {
+    if (AppBase::m_drawBS ) {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingSphere(m_context);
         }
     }
+
+
 
 }
 
@@ -1053,7 +1091,45 @@ void AppBase::OnMouseMove(int mouseX, int mouseY) {
     // 카메라 시점 회전
     ObjectDrag();
 }
+ 
+void AppBase::RenderBVH() {
 
+    int startIndex = 0;
+    int maxIndex = 0;
+    for (int i = 0; i < maxBVHRenderLevel - 1; i++) {
+        //startIndex = startIndex * 2 + 2;
+        // if (i == maxRenderingBVHLevel - 3)
+        //     startIndex = maxIndex;
+        maxIndex = startIndex * 2 + 2;
+
+    }  
+    //maxIndex = startIndex * 2 + 2;
+    startIndex++;
+    //    cout << "maxIndex : " << maxIndex << endl;
+    cout << "RenderBVH! !\n";
+
+        for (int i = startIndex; i < m_BVNMeshs.size(); i++) {
+
+                if (i > maxIndex)
+                break;
+                
+                // cout << "rendering BVH level : " << i << "\n";
+                ID3D11Buffer *constBuffers[2] = {
+                    m_BVNMeshs[i]->meshConstsGPU.Get(),
+                    m_BVNMeshs[i]->materialConstsGPU.Get()};
+                
+                m_context->VSSetConstantBuffers(1, 2, constBuffers);
+
+                m_context->IASetVertexBuffers(
+                    0, 1, m_BVNMeshs[i]->vertexBuffer.GetAddressOf(),
+                    &m_BVNMeshs[i]->stride, &m_BVNMeshs[i]->offset);
+                m_context->IASetIndexBuffer(m_BVNMeshs[i]->indexBuffer.Get(),
+                                        DXGI_FORMAT_R32_UINT, 0);
+                m_context->DrawIndexed(m_BVNMeshs[i]->indexCount, 0, 0);
+        } 
+    
+}
+  
 void AppBase::OnMouseClick(int mouseX, int mouseY) {
 
     m_mouseX = mouseX;
@@ -1062,6 +1138,139 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
     m_mouseNdcX = mouseX * 2.0f / m_screenWidth - 1.0f;
     m_mouseNdcY = -mouseY * 2.0f / m_screenHeight + 1.0f;
 }
+  
+void AppBase::GetObjectsInFrustum() {
+             
+       vector<shared_ptr<Model>> &result = m_foundModelList;
+        result.clear();
+       result.resize(0); 
+
+    static Matrix viewProjRow = (m_camera->GetViewRow() * m_camera->GetProjRow(true)).Transpose();
+      
+    MyFrustum frustum;
+    frustum.InitFrustum(this);
+
+    std::queue<pair<BVNode, int>> queue;   
+          
+    auto CheckFrustumIntersection = [&](BoundingBox &box){
+      //  return frustum.Intersects(box.Center, box.Extents); 
+            //return f.Intersects(box);    
+             
+    //BoundingFrustum frustum(viewProjRow, /*true*/);
+             
+             
+        testPos = Vector3::Transform(box.Center, viewProjRow);
+        //Vector3 CenterProjPos = Vector3::Transform(box.Center, viewProjRow);
+        Vector3 CenterProjPos = testPos;
+        Vector3 ExtentsProjPos = Vector3::Transform(box.Center + box.Extents, viewProjRow);
+           
+        float distX_centerToExtents =
+            std::abs(ExtentsProjPos.x - CenterProjPos.x);
+        float distY_centerToExtents =
+            std::abs(ExtentsProjPos.y - CenterProjPos.y); 
+           
+       // float dist = 1.0f + dist_centerToExtents;
+        float distX = 1.0f + distX_centerToExtents * frustumSize;
+        float distY = 1.0f + distY_centerToExtents * frustumSize;
+              
+        if (CenterProjPos.x >= -distX + 1.0f && CenterProjPos.x <= distX &&
+            CenterProjPos.y >= -distY + 1.0f && CenterProjPos.y <= distY) 
+            return true;  
+            
+        return false;
+    };
+
+    if (m_BVNodes.size() == 0)
+                UpdateBVH();
+    if (m_BVNodes.size() == 0)
+                return;
+       
+    static int id = 0; 
+    queue.push(make_pair(m_BVNodes[0], 0)); 
+      
+    while (!queue.empty()) {
+                BVNode &node = queue.front().first;
+                int index = queue.front().second;
+                queue.pop();
+                  
+                  
+                Vector3 center = node.boundingBox.Center;
+                Vector3 Extents = node.boundingBox.Extents;  
+                  Matrix t; 
+                if (node.objectID >= 0) { 
+                        center =
+                            m_basicList[node.objectID]->m_boundingBox.Center;
+                        Extents =
+                            m_basicList[node.objectID]->m_boundingBox.Extents;
+                        t = m_basicList[node.objectID]->m_worldRow;
+                } 
+                 
+                bool check = frustum.Intersects(center, Extents, t);
+                 
+                if (check) 
+                { 
+                        if (node.objectID >= 0) {
+                                result.push_back(m_basicList[node.objectID]); 
+                        }   
+                          
+                        int leftID = m_BVNodes[index].leftChildID;
+                        int rightID = m_BVNodes[index].rightChildID;
+                        if (leftID < m_BVNodes.size())
+                                queue.push(make_pair(m_BVNodes[leftID], leftID));
+                        if (rightID < m_BVNodes.size())
+                                queue.push(make_pair(m_BVNodes[rightID], rightID));
+                } 
+    }  
+    // 
+    //    if (id < m_cursorSphere.size()) {
+
+    //            // m_cursorSphere[id++]->UpdatePosition(result.back()->GetPosition());
+
+    //            BVNode &node = m_BVNodes[m_BVHNodeID];
+    //            vector<Vector3> positions;
+    //             
+    //            // 앞면
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(-1.0f, -1.0f, -1.0f) *
+    //                                    node.boundingBox.Extents);
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(-1.0f, 1.0f, -1.0f) *
+    //                                    node.boundingBox.Extents);
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(1.0f, 1.0f, -1.0f) *
+    //                                    node.boundingBox.Extents);
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(1.0f, -1.0f, -1.0f) *
+    //                                    node.boundingBox.Extents);
+
+    //            // 뒷면
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(-1.0f, -1.0f, 1.0f) *
+    //                                    node.boundingBox.Extents);
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(-1.0f, 1.0f, 1.0f) *
+    //                                    node.boundingBox.Extents);
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(1.0f, 1.0f, 1.0f) *
+    //                                    node.boundingBox.Extents);
+    //            positions.push_back(node.boundingBox.Center +
+    //                                Vector3(1.0f, -1.0f, 1.0f) *
+    //                                    node.boundingBox.Extents);
+
+    //            for (int i = 0; i < positions.size(); i++) {
+    //                    m_cursorSphere[id++]->UpdatePosition(positions[i]);
+    //                    if (id >= m_cursorSphere.size())
+    //                            id = 0;
+    //            }
+    //}  
+     
+    static int temp = 0;
+    //system("cls");
+    if (temp % 10 == 0) 
+        cout << "ObjectsCountInFrustum : " << result.size() << "\n";
+    temp++;
+}
+
 
 
 LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -1697,23 +1906,166 @@ void AppBase::SetShadowViewport() {
 
     m_context->RSSetViewports(1, &shadowViewport);
 }
-
+ 
 void AppBase::ComputeShaderBarrier() {
 
     // 참고: BreadcrumbsDirectX-Graphics-Samples (DX12)
     // void CommandContext::InsertUAVBarrier(GpuResource & Resource, bool
     // FlushImmediate) 
-
+          
     // 예제들에서 최대 사용하는 SRV, UAV 갯수가 6개
     ID3D11ShaderResourceView *nullSRV[6] = {
         0, 
     }; 
     m_context->CSSetShaderResources(0, 6, nullSRV);
-    ID3D11UnorderedAccessView *nullUAV[6] = {
-        0,
+    ID3D11UnorderedAccessView *nullUAV[6] = { 
+        0, 
     };
     m_context->CSSetUnorderedAccessViews(0, 6, nullUAV, NULL);
 }
+ 
+void AppBase::UpdateBVH() {
+        m_BVNodes.clear();
+        if (m_basicList.size() == 0) 
+                return; 
+         //              0                      9  
+        //        0            4          4          9 
+        //    0     2     2    4   4     6    6     9
+        //  0 1  12   23  34 45  56  67    79
+        //                                                 7889 
+        auto CreateBVNode = [&](int min, int max) 
+        { 
+                 
+                BoundingBox enclosingBox = m_basicList[min]->m_boundingBox;
+                    Matrix& Box1Row = m_basicList[min]->m_worldRow;
+                    Vector3 box1center = enclosingBox.Center;
+                    Vector3 box1Extents = enclosingBox.Extents;
+
+                    vector<Vector3> box1Corners = {
+                        box1center + Vector3(-1.0f, -1.0f, -1.0f) * box1Extents,
+                        box1center + Vector3(-1.0f, 1.0f, -1.0f) * box1Extents,
+                        box1center + Vector3(1.0f, 1.0f, -1.0f) * box1Extents,
+                        box1center + Vector3(1.0f, -1.0f, -1.0f) * box1Extents,
+                        box1center + Vector3(-1.0f, -1.0f, 1.0f) * box1Extents,
+                        box1center + Vector3(-1.0f, 1.0f, 1.0f) * box1Extents,
+                        box1center + Vector3(1.0f, 1.0f, 1.0f) * box1Extents,
+                        box1center + Vector3(1.0f, -1.0f, 1.0f) * box1Extents};
+                    for (int i = 0; i < box1Corners.size(); i++) {
+                        box1Corners[i] = Vector3::Transform(box1Corners[i], Box1Row);
+                    }
+                     
+                    Vector3 minCorner = box1Corners[0];
+                    Vector3 maxCorner = box1Corners[0];
+                    for (int i = 1; i < box1Corners.size(); i++) 
+                    {
+                        minCorner = Vector3::Min(minCorner, box1Corners[i]);
+                        maxCorner = Vector3::Max(maxCorner, box1Corners[i]);
+
+                    }   
+                      
+                for (int i = min + 1; i < max; i++) 
+                {
+                        Matrix& Box2Row = m_basicList[i]->m_worldRow;
+            
+                        Vector3 box2center =
+                            m_basicList[i]->m_boundingBox.Center;
+                        Vector3 box2Extents =
+                            m_basicList[i]->m_boundingBox.Extents;
+                                  
+                        vector<Vector3> box2Corners = {
+                                box2center + Vector3(-1.0f, -1.0f, -1.0f) *
+                                                box2Extents,
+                                box2center + Vector3(-1.0f, 1.0f, -1.0f) *
+                                                box2Extents,
+                                box2center + Vector3(1.0f, 1.0f, -1.0f) *
+                                                box2Extents, 
+                                box2center + Vector3(1.0f, -1.0f, -1.0f) *
+                                                box2Extents,
+                                box2center + Vector3(-1.0f, -1.0f, 1.0f) *
+                                                box2Extents,
+                                box2center + Vector3(-1.0f, 1.0f, 1.0f) *
+                                                box2Extents,
+                                box2center + Vector3(1.0f, 1.0f, 1.0f) * 
+                                                box2Extents,
+                                box2center + Vector3(1.0f, -1.0f, 1.0f) *
+                                                box2Extents
+                        }; 
+                        for (int j = 0; j < box2Corners.size(); j++) {
+                                box2Corners[j] = Vector3::Transform(
+                                box2Corners[j], Box2Row); 
+                        } 
+                                  
+                        for (int j = 0; j < box2Corners.size(); j++) {
+                               minCorner = Vector3::Min(minCorner, box2Corners[j]);
+                                maxCorner = Vector3::Max(maxCorner, box2Corners[j]);
+
+                        } 
+                           
+                }  
+                enclosingBox.Center = (minCorner + maxCorner) * 0.5f;
+                enclosingBox.Extents = (maxCorner - minCorner) * 0.5f;
+
+                BVNode result = BVNode(enclosingBox);
+                if (max - min == 1) {
+                        result.objectID = min;  
+                }
+                cout << "minMax : " << min << ", " << max << "\n"; 
+                    
+                /*auto meshData = GeometryGenerator::MakeWireBox(
+                    enclosingBox.Center, enclosingBox.Extents + Vector3(1e-3f));
+
+                m_BVNMeshs.push_back(std::make_shared<Mesh>());
+                D3D11Utils::CreateVertexBuffer(m_device, meshData.vertices,
+                                               m_BVNMeshs.back()->vertexBuffer);
+                m_BVNMeshs.back()->indexCount = UINT(meshData.indices.size());
+                m_BVNMeshs.back()->vertexCount = UINT(meshData.vertices.size());
+                m_BVNMeshs.back()->stride = UINT(sizeof(Vertex));
+                  
+                ConstantBuffer<MeshConstants> tempMeshCst;
+                tempMeshCst.GetCpu().world = Matrix();
+                tempMeshCst.GetCpu().world.Transpose();  
+                tempMeshCst.Initialize(m_device);
+                ConstantBuffer<MaterialConstants> tempMaterialCst;
+                tempMaterialCst.Initialize(m_device);*/
+                 
+
+                //m_BVNMeshs.back()->meshConstsGPU = tempMeshCst.Get();
+                //m_BVNMeshs.back()->materialConstsGPU = tempMaterialCst.Get();
+                  
+                return result;
+        };
+          
+        std::queue<std::pair<int, int>> queue;
+        queue.push(make_pair(0, m_basicList.size()));
+           
+        int index = 0;
+        while (!queue.empty()) 
+        { 
+                int min = queue.front().first;
+                int max = queue.front().second;
+                queue.pop();  
+                m_BVNodes.push_back(CreateBVNode(min, max)); 
+                
+                int midValue = (max + min) / 2; 
+                int nextMin = min;
+                int nextMax = midValue;
+                if (nextMax - nextMin > 0 && nextMax != max) {
+                        queue.push(make_pair(nextMin, nextMax));
+                        m_BVNodes.back().leftChildID = ++index;
+                }
+                  
+                nextMin = midValue;  
+                nextMax = max; 
+                if (nextMax - nextMin > 0 && nextMin != min) {
+                        queue.push(make_pair(nextMin, nextMax)); 
+                        m_BVNodes.back().rightChildID = ++index;
+                } 
+        }
+         
+          
+        cout << "m_basicList Size : " << m_basicList.size() << "\n";
+}
+
 
 void AppBase::replicateObject()
 { 
@@ -1733,7 +2085,7 @@ void AppBase::replicateObject()
         m_JsonManager->CreateMesh(temp);
 }
 
-void AppBase::AddBasicList(shared_ptr<Model>& object, bool editable, bool saveable) {
+void AppBase::AddBasicList(shared_ptr<Model>& object, bool isBasicList, bool editable, bool saveable) {
 
         if (object == nullptr)
                 return;
@@ -1755,7 +2107,11 @@ void AppBase::AddBasicList(shared_ptr<Model>& object, bool editable, bool saveab
         object->m_meshConsts.GetCpu().indexColor[1] = (float)id_G / 255;
         object->m_meshConsts.GetCpu().indexColor[2] = (float)id_B / 255;
 
-        m_basicList.push_back(object);
+        if (isBasicList)
+                m_basicList.push_back(object);
+        else 
+                m_NoneBVHList.push_back(object);
+
         m_objects.insert(make_pair(indexID, object));
 
         indexID++;

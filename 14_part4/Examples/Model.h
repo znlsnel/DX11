@@ -207,14 +207,15 @@ class Model {
     bool m_isVisible = true;
     bool m_castShadow = true; 
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
+    bool m_saveable = false;
+    bool m_editable = false;
+    bool m_drawBackFace = false; 
+     int m_BVHMaxLevel = 1;
     bool isChildModel = false; 
     bool isObjectLock = false;
     bool bRenderingBVH = false;
-    bool m_saveable = false;
-    bool m_editable = false;
-    bool isPlane = false;
-    bool m_drawBackFace = false; 
     bool isDestory = false;
+    bool isCursorShpere = false;
 
     int maxRenderingBVHLevel = 0; 
     int tempInt = 0;

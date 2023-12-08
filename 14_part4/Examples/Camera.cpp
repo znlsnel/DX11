@@ -19,9 +19,22 @@ Matrix Camera::GetViewRow() {
            Matrix::CreateRotationY(-m_yaw) *
            Matrix::CreateRotationX(-m_pitch); 
 
-
-    // m_pitch가 양수이면 고개를 드는 방향
-}
+    
+    // m_pitch가 양수이면 고개를 드는 방향 
+}  
+          
+Matrix Camera::GetCharacterViewRow() {  
+         
+        Vector4 tempDir = Vector4::Transform(Vector4(0.0f, 0.0f, -1.0f, 0.0f),
+                                     GetTarget()->GetMesh()->m_worldRow);  
+        Vector3 dir = Vector3(tempDir.x, tempDir.y, tempDir.z);
+        Vector3 pos = GetTarget()->GetMesh()->GetPosition()  - dir * 0.5f;
+         
+        return Matrix::CreateTranslation(-pos) *
+           Matrix::CreateRotationY(-GetTarget()->GetMesh()->GetRotation().y + 3.141592) *
+           Matrix::CreateRotationX(-GetTarget()->GetMesh()->GetRotation().x);
+           Matrix::CreateRotationZ(-GetTarget()->GetMesh()->GetRotation().z);
+} 
 
 Vector3 Camera::GetEyePos() { return m_position; }
 void Camera::UpdatePos() {
@@ -151,7 +164,14 @@ void Camera::PrintView() {
 }
 
 Vector3 Camera::NdcToWorld(Vector3 ndc) { 
+
+
+
         Matrix viewRow = GetViewRow();
+
+        if (m_UsingCharacterView && GetTarget() != nullptr)
+                viewRow = GetCharacterViewRow();
+         
         Matrix projRow = GetProjRow();
         Matrix inverseProjView = (viewRow * projRow).Invert();
 
@@ -168,13 +188,20 @@ Vector3 Camera::GetNdcDir(Vector2 ndc) {
 
 Vector3 Camera::GetForwardVector() { return m_forwardDir; }
 
-Vector3 Camera::GetPosision() { return m_position; }
+Vector3 Camera::GetPosition() { return m_position; }
 
-Matrix Camera::GetProjRow() {
-
-    //  std::cout << "aspect :" << m_aspect << std::endl;
-    return XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
+Matrix Camera::GetProjRow(bool frustumProj) {
+          
+        if (frustumProj == false) 
+                return XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
                                     m_aspect, m_nearZ, m_farZ);
+        else 
+                return XMMatrixPerspectiveFovLH(
+                    XMConvertToRadians(m_projFrustumAngleY),
+                    m_projFrustumAspect,
+                    m_nearZ,
+                    m_farZ);
+
 }
 Matrix Camera::GetShadowProjRow(Vector2 aspect, float farZ) {
     return XMMatrixOrthographicOffCenterLH(aspect.x, aspect.y, aspect.x,

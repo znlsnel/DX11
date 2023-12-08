@@ -105,10 +105,6 @@ BoundingCollision GetBoundingBox(const vector<hlab::Vertex> &vertices,
 }
 
 
-BoundingOrientedBox GetBoundingOrientedBox(const vector<hlab::Vertex> &vertices, const vector<uint32_t> &indices, int min, int max) {
-
-}
-
  
 void ExtendBoundingBox(const BoundingBox &inBox, BoundingBox &outBox) {
 
@@ -279,10 +275,10 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         SetBVH(device, m_BVHs[i], m_BVHMesh[i], meshes[i], 0,
                meshes[i].indices.size(), 0);
     }
-
+     
 
     // Initialize Bounding Sphere
-    {
+    { 
         float maxRadius = 0.0f;
         for (auto &mesh : meshes) {
             for (auto &v : mesh.vertices) {
@@ -561,7 +557,7 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
     while (!queue.empty()) {
         auto curr = queue.front(); 
         queue.pop();
-          
+           
         int minID = std::get<0>(curr);
         int maxID = std::get<1>(curr);  
         int currLevel = std::get<2>(curr);
@@ -586,12 +582,9 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
 
         BVBMeshs.back()->meshConstsGPU = m_meshConsts.Get();
         BVBMeshs.back()->materialConstsGPU = m_materialConsts.Get();
-
-        int maxLevel = 20;
-        if (isPlane)
-                maxLevel = 20;
-
-        if (currLevel > maxLevel) 
+         
+         
+        if (currLevel > m_BVHMaxLevel) 
             break;
 
         BoundingCollision &currBox = BVHBoxs.back();

@@ -290,7 +290,7 @@ void hlab::InputManager::UpdateObjectTransform(EEditTransformMode mode, bool x, 
         if (mode == EEditTransformMode::position) 
         {
                 Vector3 addPos;
-                Vector3 point; 
+                Vector3 point;  
 
                 if (x) 
                 {  

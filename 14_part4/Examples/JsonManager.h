@@ -25,6 +25,9 @@ struct QuicellMeshPathInfo {
     string Roughness; // R
     string Displacement; // dp
     string metallic; // F
+     
+    vector<vector<MeshData>> meshs;
+    vector<bool> hasMeshs;
 
     ComPtr<ID3D11Texture2D> objectImage;
     ComPtr<ID3D11ShaderResourceView> objectImageSRV;

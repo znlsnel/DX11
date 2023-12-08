@@ -389,9 +389,9 @@ class AppBase {
     // shadow 0.3 -> 1.0 -> 3.0 -> 5.0 -> (10.0 * 10.0) 
     Vector3 m_shadowAspects[5] =   
     {
-            Vector3(0.8f, -0.8f, 6.f),   
-            Vector3(2.0f, -2.0f, 6.5f),  
-            Vector3(3.5f, -3.5f, 8.f),   
+            Vector3(0.8f, -0.8f, 20.f),   
+            Vector3(2.0f, -2.0f, 50.f),  
+            Vector3(3.5f, -3.5f, 100.f),   
             Vector3(7.0f, -7.0f, 100.f),  
             Vector3(20.0f, -20.0f, 200.f),  
     };   

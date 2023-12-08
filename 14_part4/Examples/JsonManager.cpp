@@ -453,8 +453,14 @@ shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
     // 256 = 1 
     // 512 = 2 
     if (tempMesh != nullptr) { 
+               
+            if ((meshID)temp.meshID == meshID::ECharacter)
+                m_appBase->AddBasicList(tempMesh, false, true, true);
+            else
+                 m_appBase->AddBasicList(tempMesh, true, true, true);
 
-        m_appBase->AddBasicList(tempMesh, true, true);
+
+
         tempMesh->objectInfo.meshID = temp.meshID;
         tempMesh->objectInfo.metallic = temp.metallic;
         tempMesh->objectInfo.roughness = temp.roughness;
@@ -487,47 +493,61 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
 
     return tempModel;
 }
-
+ 
 shared_ptr<class Model>
 JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
-
+         
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
-    auto meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
-                                                  temp->mesh[info.quixelID], false, false);
+    vector<MeshData> *meshes = new vector<MeshData>();
 
-    //auto meshes = GeometryGenerator::ReadFromFile(
-    //    "../Assets/Tier2/", 
-    //    "MI_White_Cloth_sbklx0p0_2K.uasset", false, false);
-    //    
-    meshes[0].albedoTextureFilename =
-        temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
-     
-    meshes[0].normalTextureFilename = 
-        temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
-
-    meshes[0].heightTextureFilename =
-        temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
-
-     meshes[0].aoTextureFilename =
-            temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
-
-      
-    meshes[0].roughnessTextureFilename = 
-        temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
-
-    meshes[0].metallicTextureFilename =
-        temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
     
+    if (temp->hasMeshs.size() > 0 && temp->hasMeshs[info.quixelID]) {
+           meshes = &temp->meshs[info.quixelID];
+    } 
+    else {
+           *meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
+                                                    temp->mesh[info.quixelID],
+                                                    false, false);
+            
+
+
+           if (temp->hasMeshs.size() == 0) {
+                 temp->meshs.resize(temp->mesh.size());
+                 temp->hasMeshs.resize(temp->mesh.size());
+           }
+           temp->meshs[info.quixelID] = *meshes;
+           temp->hasMeshs[info.quixelID] = true; 
+    }
+    
+            (*meshes)[0].albedoTextureFilename =
+               temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+
+           (*meshes)[0].normalTextureFilename =
+               temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
+
+           (*meshes)[0].heightTextureFilename =
+               temp->Displacement == "" ? ""
+                                        : info.quicellPath + temp->Displacement;
+
+           (*meshes)[0].aoTextureFilename =
+               temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
+
+           (*meshes)[0].roughnessTextureFilename =
+               temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
+
+           (*meshes)[0].metallicTextureFilename =
+               temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
 
     shared_ptr<Model> tempModel =
-        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, meshes);
+        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, *meshes);
     tempModel->objectInfo.quixelID = info.quixelID;      
        
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
     tempModel->m_drawBackFace = true; 
     tempModel->m_materialConsts.GetCpu().invertNormalMapY = true;
-
+    tempModel->m_materialConsts.GetCpu().useMetallicMap = true;
+     
     return tempModel;
 
 }

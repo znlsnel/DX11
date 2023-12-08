@@ -8,11 +8,11 @@ namespace hlab {
 hlab::TessellationModel::TessellationModel(ComPtr<ID3D11Device> &device,
                                            ComPtr<ID3D11DeviceContext> &context,
     const vector<MeshData> &meshes, AppBase* appBase, bool Plane) {
-    isPlane = Plane;
+    m_BVHMaxLevel = 20;
     m_appBase = appBase;
     Model::Initialize(device, context, meshes);
 
-    bool hasTextureMap = false;
+    bool hasTextureMap = false; 
     auto filePath = std::filesystem::current_path();
     string heightMapPath;
     for (const auto file : std::filesystem::directory_iterator(filePath)) {

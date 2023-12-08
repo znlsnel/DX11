@@ -9,7 +9,7 @@ Texture2D albedoTex : register(t0);
 Texture2D normalTex : register(t1);
 Texture2D aoTex : register(t2);
 Texture2D metallicRoughnessTex : register(t3);
-Texture2D emissiveTex : register(t4);
+Texture2D emissiveTex : register(t4); 
 
 static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
 static float lod = 0.0f;
@@ -347,8 +347,11 @@ PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
     lod = length(input.posWorld - eyeWorld);
-    lod -= 3;
-    lod = clamp(lod, 0.0, 5.0);
+    lod -= 5;
+    lod = clamp(lod, 0.0, 10.0);
+    lod /= 5;
+    
+    
     texcoord = input.texcoord;
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);

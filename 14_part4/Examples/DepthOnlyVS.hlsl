@@ -1,7 +1,12 @@
 #include "Common.hlsli" // 쉐이더에서도 include 사용 가능
 
+struct DepthOnlyPixelShaderInput
+{
+    float4 posProj : SV_POSITION;
+    float2 texcoord : TEXCOORD;
+};
 
-float4 main(VertexShaderInput input) : SV_POSITION
+DepthOnlyPixelShaderInput main(VertexShaderInput input) 
 {
 
 #ifdef SKINNED
@@ -67,8 +72,10 @@ float4 main(VertexShaderInput input) : SV_POSITION
         
         input.posModel.xyz += coeff;
     } 
+    DepthOnlyPixelShaderInput result;
     
     float4 pos = mul(float4(input.posModel, 1.0f), world);
-    return mul(pos, viewProj);
-
+    result.posProj = mul(pos, viewProj);
+    result.texcoord = input.texcoord;
+    return result;
 }

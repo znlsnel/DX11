@@ -50,7 +50,7 @@ bool Ex1803_Landscape::InitScene() {
         //     "../Assets/Terrain/Chalaadi/overlay.png";
 
         Vector3 center(5.0f, 0.02f, -5.0f);
-        m_terrain = make_shared<Model>(m_device, m_context, meshes);
+        shared_ptr<Model>m_terrain = make_shared<Model>(m_device, m_context, meshes);
         m_terrain->m_materialConsts.GetCpu().invertNormalMapY =
             true; // GLTF는 true로
         m_terrain->m_materialConsts.GetCpu().roughnessFactor = 0.97f;

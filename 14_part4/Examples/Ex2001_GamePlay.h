@@ -40,6 +40,7 @@ class Ex2001_GamePlay : public AppBase {
         PX_RELEASE(gFoundation);
     }
 
+    virtual bool Initialize()override;
     bool InitScene() override;
 
     PxRigidDynamic *CreateDynamic(const PxTransform &t,
