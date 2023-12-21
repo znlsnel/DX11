@@ -3,7 +3,7 @@
 
 
 Texture2D g_textureMap : register(t0);
-Texture2DArray g_heightTextures : register(t1);
+Texture2DArray ORDp : register(t1);
 
 struct HullShaderOutput
 {
@@ -72,7 +72,7 @@ PixelShaderInput main(PatchConstOutput patchConst,
     {
         float temp = g_textureMap.SampleLevel(linearWrapSampler, output.texcoord / 30, 0).r;
         int currTexture = round(temp * 255);
-        float height = g_heightTextures.SampleLevel(linearWrapSampler, float3(output.texcoord, currTexture), 0).r;
+        float height = ORDp.SampleLevel(linearWrapSampler, float3(output.texcoord, currTexture), 0).b;
         height = height * 2.0 - 1.0;
         output.posWorld += output.normalWorld * height * heightScale;
         output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
@@ -80,3 +80,4 @@ PixelShaderInput main(PatchConstOutput patchConst,
     return output;
     
 }
+ 

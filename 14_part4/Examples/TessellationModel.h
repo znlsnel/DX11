@@ -19,8 +19,12 @@ class TessellationModel : public Model{
         //virtual GraphicsPSO &GetReflectPSO(const bool wired) override;
         float editRadius = 100.0f;
         void UpdateTextureMap(ComPtr<ID3D11DeviceContext>& context, Vector3 pos, int type);
-         
-private:
+
+        Vector2 texScale;
+        float mapScale;
+        int mapArea[2] = {0, 0};
+          
+      private:
         class AppBase *m_appBase = nullptr;
 
         ComPtr<ID3D11UnorderedAccessView> m_textureMapUAV;
@@ -29,12 +33,14 @@ private:
         ComPtr<ID3D11ShaderResourceView> m_aoTexturesSRV;
         ComPtr<ID3D11ShaderResourceView> m_normalTexturesSRV;
         ComPtr<ID3D11ShaderResourceView> m_heightTexturesSRV;
+        ComPtr<ID3D11ShaderResourceView> m_ORDpTexturesSRV;
 
         ComPtr<ID3D11Texture2D> m_textureMapBuffer;
         ComPtr<ID3D11Texture2D> m_albedoTexturesBuffer;
         ComPtr<ID3D11Texture2D> m_aoTexturesBuffer;
         ComPtr<ID3D11Texture2D> m_normalTexturesBuffer;
         ComPtr<ID3D11Texture2D> m_heightTexturesBuffer;
+        ComPtr<ID3D11Texture2D> m_ORDpTexturesBuffer;
 
        ConstantBuffer<EditTextureConsts> m_csConsts;
 };

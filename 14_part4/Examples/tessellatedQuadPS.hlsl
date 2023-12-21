@@ -5,9 +5,9 @@
 // https://github.com/Nadrin/PBR/blob/master/data/shaders/hlsl/pbr.hlsl
 
 // 메쉬 재질 텍스춰들 t0 부터 시작
-Texture2DArray albedoTex : register(t0);
+Texture2DArray albedoTex : register(t0); 
 Texture2DArray normalTex : register(t1);
-Texture2DArray aoTex : register(t2);
+Texture2DArray ORDpTex : register(t2);
 
 Texture2D textureMap : register(t3);
 
@@ -340,31 +340,81 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
 
     return directLighting;
 }
-
+ 
 PixelShaderOutput main(PixelShaderInput input)
 { 
     PixelShaderOutput output;
-    float temp = textureMap.SampleLevel(linearWrapSampler, input.texcoord / 30.0, 0.0).r;
+     
+    float texDx = 1.0 / 1024;
+    float2 originTexc = input.texcoord / 100;
+    float2 texc = input.texcoord;
+    { // 0 ~ 1024 -> 0 ~ 1
+        texc *= 10.24;    
+        texc.x = round(texc.x); 
+        texc.y = round(texc.y);
+        texc /= 1024;    
+    }   
+    float2 texDir = originTexc - texc; 
+  // float2 texDir = texc - originTexc;
+    {
+        texDir.x = texDir.x > 0 ? texDx : -texDx; 
+        texDir.y = texDir.y > 0 ? texDx : -texDx;
+    }   
+     
+    currTexture = int(textureMap.Sample(pointWrapSampler, texc).r * 255);
     
-    currTexture = round(temp * 255); 
+    float tempLength = length(originTexc - texc);
+    
+    float2 texUp = texc + float2(0, texDir.y * 0.5);
+    float2 texRight = texc + float2(texDir.x * 0.5, 0); 
+    float2 lineCenter = texUp + (texRight - texUp) / 2.0;  
+    float2 lineNormal = normalize(texc - lineCenter); 
+    float eyeToPixelLength = length(input.posWorld - eyeWorld);
+    if (dot(lineNormal, normalize(originTexc - lineCenter)) < 0) 
+    {    
+            int textureCount[4] = { 0, 0, 0, 0 }; 
+            textureCount[currTexture]++;
+        
+            int RightTex = int(textureMap.Sample(pointWrapSampler, texc + float2(texDir.x, 0)).r * 255);
+            textureCount[RightTex]++;
+        
+            int UpTex = int(textureMap.Sample(pointWrapSampler, texc + float2(0, texDir.y)).r * 255);
+            textureCount[UpTex]++;
+        
+            int UpRightTex = int(textureMap.Sample(pointWrapSampler, texc + float2(texDir.x, texDir.y)).r * 255);
+            textureCount[UpRightTex]++;
+        
+            if (RightTex == UpTex && UpTex == UpRightTex)
+            {
+                    currTexture = RightTex; 
+            }  
+            //else if (tempLength > texDx / 2)
+            //{
+            //    for (int i = 0; i < 4; i++)
+            //    {
+            //        if (textureCount[currTexture] < textureCount[i])
+            //            currTexture = i;
+            //    }
+            //}        
+    } 
     float lod = length(input.posWorld - eyeWorld);
-    lod -= 5;
-    lod = clamp(lod, 0.0, 10.0);
-    lod /= 2;
+   // lod -= 3;
+   // lod /= 3; 
+    lod = clamp(lod, 0.0, 5.0);
+    
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);
     
     float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod) * float4(albedoFactor, 1)
                                  : float4(albedoFactor, 1);
 
-    
     clip(albedo.a - 0.5); // Tree leaves
     
-    float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).r : 1.0;
+    float ao = useAOMap ? ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).r : 1.0;
     float metallic = metallicFactor;
-    float roughness =  roughnessFactor;
+    float roughness = useRoughnessMap ? clamp(ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).g, minRoughness, 1.0) : roughnessFactor;
     float3 emission = emissionFactor;
-
+     
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
     
     float3 directLighting = float3(0, 0, 0);
@@ -425,29 +475,11 @@ PixelShaderOutput main(PixelShaderInput input)
         directLighting = tempDL[0] * (1.0 - rt) + tempDL[1] * rt;
     }
       
-    
-    //[unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
-    //for (int j = MAX_DIRECTIONALLIGHT; j < MAX_LIGHTS; j++)
-    //{
-    //    directLighting += DrawLight(input, lights[j], shadowMaps[j],
-    //     normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
-    //}
-   
-
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
-     
-        
-    //if (isSelected)
-    //{
-    //    output.pixelColor = albedo;
-    //    output.indexColor = indexColor;
-    //    return output;
-    //}
-    
     output.indexColor = indexColor;
-    //output.indexColor = float4(0.1, 0.0, 200.0, 1.0);
+
     
     
     return output;

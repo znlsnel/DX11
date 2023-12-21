@@ -115,10 +115,13 @@ bool Ex2001_GamePlay::InitScene() {
         if (hasHeightMap) {
             D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
         } 
-
-
+         
+        Vector2 mapTexScale = Vector2(100.f, 100.f);
+         int mapArea = 200;
+        float mapScale = 30.f;
         auto mesh = GeometryGenerator::MakeTessellationPlane(
-                200, 200, 30.0f, Vector2(30.0f, 30.0f), heightMapImage); 
+            mapArea, mapArea, mapScale, Vector2(100.0f, 100.0f),
+             heightMapImage); 
         string path = "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
         mesh.albedoTextureFilename =  path + "Ground037_4K-PNG_Color.png";
         mesh.aoTextureFilename=
@@ -127,10 +130,14 @@ bool Ex2001_GamePlay::InitScene() {
         // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
         mesh.heightTextureFilename = 
             path + "Ground037_4K-PNG_Displacement.png";
-                  
+                   
             m_groundPlane = 
                 make_shared<TessellationModel>(
                 m_device, m_context,  vector{mesh}, this, true);
+        m_groundPlane->mapScale = mapScale;
+            m_groundPlane->texScale = mapTexScale;
+        m_groundPlane->mapArea[0] = mapArea; 
+        m_groundPlane->mapArea[1] = mapArea; 
 
             m_groundPlane->m_materialConsts.GetCpu().albedoFactor =
                 Vector3(0.2f);
@@ -147,7 +154,7 @@ bool Ex2001_GamePlay::InitScene() {
     }
        
          //Grass object  
-    if (false) 
+    if (true)  
     {
             shared_ptr<GrassModel> grass = make_shared<GrassModel>();
             shared_ptr<Model> temp = static_pointer_cast<Model>(grass);

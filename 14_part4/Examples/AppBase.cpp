@@ -95,8 +95,7 @@ bool AppBase::MouseObjectPicking() {
     return ReadPixelOfMousePos<UINT8>(m_device, m_context);
 }
 
-Vector3 AppBase::RayCasting(float mouseNdcX, float mouseNdcY)
-{ 
+Vector3 AppBase::RayCasting(bool editTexture, float mouseNdcX, float mouseNdcY) { 
        mouseNdcX = mouseNdcX == -10.f ? m_mouseNdcX : mouseNdcX;
         mouseNdcY = mouseNdcY == -10.f ? m_mouseNdcY : mouseNdcY;
 
@@ -108,7 +107,7 @@ Vector3 AppBase::RayCasting(float mouseNdcX, float mouseNdcY)
         Matrix viewRow = m_camera->GetViewRow();
         Matrix projRow = m_camera->GetProjRow();
         Vector3 eyeWorld = m_camera->GetEyePos();
-
+         
 
         Vector3 cursorNdcNear = Vector3(mouseNdcX, mouseNdcY, 0.0f);
         Vector3 cursorNdcFar = Vector3(mouseNdcX, mouseNdcY, 1.0f);
@@ -181,7 +180,11 @@ Vector3 AppBase::RayCasting(float mouseNdcX, float mouseNdcY)
         
        if (fDist < FLT_MAX) { 
                        Vector3 pos = cursorWorldNear + dir * fDist;
+                if (editTexture)
+                        m_groundPlane->UpdateTextureMap(m_context, pos,
+                                                        m_textureType);  
                 return pos;
+
        }
        return Vector3(0.0f, 0.0f, 0.0f);
 }
@@ -740,14 +743,14 @@ void AppBase::UpdateLights(float dt) {
     if (m_lightRotate) {
         lightDev = Vector3::Transform(
             lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
-    }  
-     
+    }    
+       
     static float updateTimer = 0.0f;
     if (updateTimer > 0.0f) {
 
         Vector3 tempCamPos =
             m_camera->m_objectTargetCameraMode == false || m_camera->GetTarget() == nullptr
-            ? RayCasting(0.0f, -0.25f)
+            ? RayCasting(false, 0.0f, -1.f)  
                 :  m_camera->GetTarget()->GetMesh()->GetPosition();
           
         //Vector3 tempCamPos = m_camera->GetPosision();

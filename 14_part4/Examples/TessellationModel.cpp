@@ -45,18 +45,24 @@ hlab::TessellationModel::TessellationModel(ComPtr<ID3D11Device> &device,
     //    m_textureMapBuffer.Get(), NULL,
     //        m_textureMapUAV.GetAddressOf())); 
     // 
-    string BasePath = "../Assets/Textures/PBR/TerrainTextures/";
-    string Ground37 =  "Ground037_2K-PNG";
-    string Ground64 =   "Ground063_2K-PNG";
-    string PavingStones070 =   "PavingStones070_2K-PNG";
-    string Rock030 =   "Rock030_2K-PNG";
-     
+    //string BasePath = "../Assets/Textures/PBR/TerrainTextures/";
+    //string Ground37 =  "Ground037_2K-PNG";
+    //string Ground64 =   "Ground063_2K-PNG";
+    //string PavingStones070 =   "PavingStones070_2K-PNG";
+    //string Rock030 =   "Rock030_2K-PNG";
+    string BasePath = "../../Assets/Surfaces/"; 
+    string Ground37 = "s1/T_Forest_Ground_Dried_Leaves_xeukeip_2K";
+    string Ground64 = "s2/T_Fine_Asphalt_vlzobiady_2K";
+    string PavingStones070 = "s5/T_Rocky_Ground_vl0fdfho_2K";
+    string Rock030 = "s6/T_Thai_Rippled_Sand_td1hcimn_2K";
+       
     vector<string> albedoTextureFilenames;
     vector<string> aoTextureFilename;
     vector<string> normalTextureFilename;
     vector<string> heightTextureFilename;
-
-
+    vector<string> ORDpTextureFilename;
+     
+     
     auto CraeteTextureArray = [&](string &name) {
         string path = BasePath + name + "/";
         albedoTextureFilenames.push_back(path + name + "_Color.png");
@@ -64,21 +70,33 @@ hlab::TessellationModel::TessellationModel(ComPtr<ID3D11Device> &device,
         normalTextureFilename.push_back(path + name + "_NormalDX.png");
         heightTextureFilename.push_back(path + name + "_Displacement.png");
     };
-     
-    CraeteTextureArray(Ground37);
-    CraeteTextureArray(Ground64);
-    CraeteTextureArray(PavingStones070);
-    CraeteTextureArray(Rock030);
+    //  
 
+   //string surfaceBasePath = "C:\\DEVELOPMENT\\GIT\\DX11_HongLab\\Assets\\Surfaces\\";
+    auto CraeteSurfaceTextureArray = [&](string &name) {
+       albedoTextureFilenames.push_back(BasePath + name + "_D.HDR");
+       normalTextureFilename.push_back(BasePath + name + "_N.HDR");
+       ORDpTextureFilename.push_back(BasePath + name + "_ORDp.HDR");
+    };     
+      
+    CraeteSurfaceTextureArray(Ground37);
+    CraeteSurfaceTextureArray(Ground64);
+    CraeteSurfaceTextureArray(PavingStones070);
+    CraeteSurfaceTextureArray(Rock030);
+     
     D3D11Utils::CreateTextureArray(device, context, albedoTextureFilenames,
                                    m_albedoTexturesBuffer, m_albedoTexturesSRV);
-    D3D11Utils::CreateTextureArray(device, context, aoTextureFilename,
-                                   m_aoTexturesBuffer, m_aoTexturesSRV);
+
     D3D11Utils::CreateTextureArray(device, context, normalTextureFilename,
                                    m_normalTexturesBuffer, m_normalTexturesSRV);
+    //D3D11Utils::CreateTextureArray(device, context, aoTextureFilename,
+    //                               m_aoTexturesBuffer, m_aoTexturesSRV);
+    //D3D11Utils::CreateTextureArray(device, context, heightTextureFilename,
+    //                               m_heightTexturesBuffer, m_heightTexturesSRV);
     D3D11Utils::CreateTextureArray(device, context, heightTextureFilename,
-                                   m_heightTexturesBuffer, m_heightTexturesSRV);
-     
+                                   m_ORDpTexturesBuffer, m_ORDpTexturesSRV); 
+
+
     m_csConsts.GetCpu().pos = {0.0f, 0.0f}; 
     m_csConsts.GetCpu().radius = 100.0f;
     m_csConsts.GetCpu().type = 3.0f / 255.f; 
@@ -87,7 +105,7 @@ hlab::TessellationModel::TessellationModel(ComPtr<ID3D11Device> &device,
 
 TessellationModel::~TessellationModel() {
          
-        if (true)
+        if (false) 
                 return;
 
     D3D11_TEXTURE2D_DESC desc;
@@ -134,8 +152,8 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
             // 물체 렌더링할 때 여러가지 텍스춰 사용 (t0 부터시작)
             vector<ID3D11ShaderResourceView *> resViews = {
                 m_albedoTexturesSRV.Get(), m_normalTexturesSRV.Get(),
-                m_aoTexturesSRV.Get(), m_textureMapSRV.Get()};
-               
+                m_ORDpTexturesSRV.Get(), m_textureMapSRV.Get()};
+                
             context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(),
                                         &mesh->stride, &mesh->offset);
             context->VSSetConstantBuffers(1, 2, constBuffers);
@@ -145,7 +163,7 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
                    
             ID3D11ShaderResourceView *temp[2] = { 
                     m_textureMapSRV.Get(),
-                m_heightTexturesSRV.Get(),
+                m_ORDpTexturesSRV.Get(),
             };
             
             context->DSSetShaderResources(0, 2, temp);
@@ -180,34 +198,36 @@ GraphicsPSO &hlab::TessellationModel::GetPSO(const bool wired) {
     renderState = ERenderState::basic;
 
     return wired ? Graphics::terrainWirePSO : Graphics::terrainSolidPSO;
-    // TODO: 여기에 return 문을 삽입합니다.
-}
-
-GraphicsPSO &TessellationModel::GetDepthOnlyPSO() {
-    renderState = ERenderState::depth;
-    return Graphics::terrainDepthPSO;
+    // TODO: 여기에 return 문을 삽입합니다.   
+}   
    
-}
- 
+GraphicsPSO &TessellationModel::GetDepthOnlyPSO() { 
+    renderState = ERenderState::depth;   
+    return Graphics::terrainDepthPSO;
+      
+} 
+    
 void TessellationModel::UpdateTextureMap(
-    ComPtr<ID3D11DeviceContext> &context, Vector3 pos, int type) {
-                if (type == -1)  
-                return; 
-                 
-        pos -= GetPosition();
+    ComPtr<ID3D11DeviceContext> &context, Vector3 pos, int type) { 
+                if (type == -1)     
+                return;         
+        pos -= GetPosition();      
+       // 0 ~ 60 -> 0 ~ 1024     
+        // 0 1       
+        // 2 3   
         float x = std::clamp((pos.x + 30.f) * (1024 / 60.f), 0.0f, 1024.0f);
         float y = std::clamp((pos.z + 30.f) * (1024 / 60.f), 0.0f, 1024.0f); 
-         
-        m_csConsts.GetCpu().radius = editRadius;
-        m_csConsts.GetCpu().type = (float)type / 255.0f;
-        m_csConsts.GetCpu().pos = Vector2(x, y);
-           
-        m_csConsts.Upload(context);  
-          
-        m_appBase->SetPipelineState(Graphics::editTexturePSO);
             
-        int width = 1024;   
-        int height = 1024;    
+        m_csConsts.GetCpu().radius = editRadius; 
+        m_csConsts.GetCpu().type = (float)type / 255.0f;
+        m_csConsts.GetCpu().pos = Vector2(x, y); 
+                 
+        m_csConsts.Upload(context);      
+                  
+        m_appBase->SetPipelineState(Graphics::editTexturePSO);
+     
+        int width = 1024;    
+        int height = 1024;     
         UINT X = UINT(ceil(width / 32));  
         UINT Y = UINT(ceil(height / 32));   
         context->CSSetConstantBuffers(0, 1, m_csConsts.m_gpu.GetAddressOf());

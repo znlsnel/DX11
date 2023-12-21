@@ -12,7 +12,7 @@ void hlab::InputManager::Update(float dt)
     static float rayTime = 0.0f;
     if (usingRayCasting && rayTime > 1.0f / 60.f){
         if (m_appBase->m_mouseMode == EMouseMode::TextureMapEditMode)
-                m_appBase->RayCasting(); 
+                m_appBase->RayCasting(true); 
 
         rayTime = 0.0f;        
 

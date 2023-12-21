@@ -232,8 +232,8 @@ class AppBase {
     void ProcessMouseControl();
     void DestroyObject(shared_ptr<class Model> object);
     bool MouseObjectPicking();
-    virtual Vector3 RayCasting(float mouseNdcX = -10.f,
-                               float mouseNdcY = -10.0f);
+     
+    virtual Vector3 RayCasting(bool editTexture = false, float mouseNdcX = -10.f, float mouseNdcY = -10.0f);
     virtual void RayCasting(Vector3 origin, Vector3 dir, float& dist);
      
     void replicateObject();
@@ -392,8 +392,8 @@ class AppBase {
             Vector3(0.8f, -0.8f, 6.f),   
             Vector3(2.0f, -2.0f, 6.5f),  
             Vector3(3.5f, -3.5f, 8.f),   
-            Vector3(7.0f, -7.0f, 100.f),  
-            Vector3(20.0f, -20.0f, 200.f),  
+            Vector3(7.0f, -7.0f, 10.f),  
+            Vector3(10.0f, -10.0f, 200.f),  
     };   
          
     // 여러 예제들 공용     
