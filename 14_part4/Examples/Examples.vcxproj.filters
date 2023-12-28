@@ -171,6 +171,7 @@
     <ClCompile Include="JsonManager.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="TessellationModel.cpp" />
+    <ClCompile Include="FoliageModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h" />
@@ -318,6 +319,7 @@
     <ClInclude Include="JsonManager.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="TessellationModel.h" />
+    <ClInclude Include="FoliageModel.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

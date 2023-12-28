@@ -193,8 +193,8 @@ class AppBase {
     virtual void Update(float dt);  
     virtual void UpdateLights(float dt);
     void UpdateLightInfo(ComPtr<ID3D11Buffer>& shadowGlobalConstsGPU, GlobalConstants& shadowGlobalConstants, Light &light, Vector3& aspect);
-    void UpdateBVH();
-
+    void UpdateBVH(); 
+     
      
     virtual void RenderDepthOnly();
     virtual void RenderShadowMaps();
@@ -423,8 +423,10 @@ class AppBase {
     vector<shared_ptr<Model>> m_NoneBVHList; 
     vector<shared_ptr<Model>> m_foundModelList;
     vector<shared_ptr<class Character>> m_characters;
-
+     
     shared_ptr<class JsonManager> m_JsonManager;
-};
+    map < string, tuple<ComPtr<ID3D11Texture2D>,
+            ComPtr<ID3D11ShaderResourceView>>> m_textureStorage; 
+}; 
 
 } // namespace hlab

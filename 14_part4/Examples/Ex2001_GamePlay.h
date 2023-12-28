@@ -90,7 +90,7 @@ class Ex2001_GamePlay : public AppBase {
     int useAlbedoMap = 0.0f;
     int useEmissiveMap = 0.0f;
     int useNormalMap = 0.0f;
-
+     
     int useAOMap = 0.0f;
     int useHeightMap = 0.0f;
     float heightScale = 0.0f;

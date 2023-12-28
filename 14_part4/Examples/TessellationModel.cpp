@@ -40,50 +40,50 @@ hlab::TessellationModel::TessellationModel(ComPtr<ID3D11Device> &device,
     ThrowIfFailed(device->CreateUnorderedAccessView(
         m_textureMapBuffer.Get(), &uavDesc, m_textureMapUAV.GetAddressOf()));
 
-
+     
     //ThrowIfFailed(device->CreateUnorderedAccessView(
-    //    m_textureMapBuffer.Get(), NULL,
+    //    m_textureMapBuffer.Get(), NULL, 
     //        m_textureMapUAV.GetAddressOf())); 
-    // 
+    //   
     //string BasePath = "../Assets/Textures/PBR/TerrainTextures/";
     //string Ground37 =  "Ground037_2K-PNG";
-    //string Ground64 =   "Ground063_2K-PNG";
-    //string PavingStones070 =   "PavingStones070_2K-PNG";
-    //string Rock030 =   "Rock030_2K-PNG";
-    string BasePath = "../../Assets/Surfaces/"; 
-    string Ground37 = "s1/T_Forest_Ground_Dried_Leaves_xeukeip_2K";
-    string Ground64 = "s2/T_Fine_Asphalt_vlzobiady_2K";
+    //string Ground64 =   "Ground063_2K-PNG"; 
+    //string PavingStones070 =   "PavingStones070_2K-PNG"; 
+    //string Rock030 =   "Rock030_2K-PNG"; 
+    string BasePath = "../../Assets/Surfaces/";    
+    string Ground37 = "s1/T_Forest_Ground_Dried_Leaves_xeukeip_2K"; 
+  //  string Ground64 = "s2/T_Fine_Asphalt_vlzobiady_2K";   
+    string Ground64 = "s7/T_Herringbone_Pavers_ukvleiiew_2K";
     string PavingStones070 = "s5/T_Rocky_Ground_vl0fdfho_2K";
     string Rock030 = "s6/T_Thai_Rippled_Sand_td1hcimn_2K";
-       
-    vector<string> albedoTextureFilenames;
+           
+    vector<string> albedoTextureFilenames; 
     vector<string> aoTextureFilename;
     vector<string> normalTextureFilename;
-    vector<string> heightTextureFilename;
-    vector<string> ORDpTextureFilename;
-     
-     
+    vector<string> heightTextureFilename; 
+    vector<string> ORDpTextureFilename;   
+                 
     auto CraeteTextureArray = [&](string &name) {
         string path = BasePath + name + "/";
         albedoTextureFilenames.push_back(path + name + "_Color.png");
         aoTextureFilename.push_back(path + name + "_AmbientOcclusion.png");
         normalTextureFilename.push_back(path + name + "_NormalDX.png");
         heightTextureFilename.push_back(path + name + "_Displacement.png");
-    };
-    //  
-
+    };   
+    //                
    //string surfaceBasePath = "C:\\DEVELOPMENT\\GIT\\DX11_HongLab\\Assets\\Surfaces\\";
     auto CraeteSurfaceTextureArray = [&](string &name) {
        albedoTextureFilenames.push_back(BasePath + name + "_D.HDR");
-       normalTextureFilename.push_back(BasePath + name + "_N.HDR");
+       normalTextureFilename.push_back(BasePath + name + "_N.HDR"); 
        ORDpTextureFilename.push_back(BasePath + name + "_ORDp.HDR");
-    };     
-      
+    };              
+                              
+    // 0.25 * 4   
     CraeteSurfaceTextureArray(Ground37);
     CraeteSurfaceTextureArray(Ground64);
     CraeteSurfaceTextureArray(PavingStones070);
     CraeteSurfaceTextureArray(Rock030);
-     
+      
     D3D11Utils::CreateTextureArray(device, context, albedoTextureFilenames,
                                    m_albedoTexturesBuffer, m_albedoTexturesSRV);
 
@@ -222,10 +222,10 @@ void TessellationModel::UpdateTextureMap(
         m_csConsts.GetCpu().type = (float)type / 255.0f;
         m_csConsts.GetCpu().pos = Vector2(x, y); 
                  
-        m_csConsts.Upload(context);      
+        m_csConsts.Upload(context);       
                   
         m_appBase->SetPipelineState(Graphics::editTexturePSO);
-     
+      
         int width = 1024;    
         int height = 1024;     
         UINT X = UINT(ceil(width / 32));  

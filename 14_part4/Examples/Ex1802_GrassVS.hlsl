@@ -15,7 +15,6 @@ struct GrassPixelInput
     float3 posWorld : POSITION;
     float3 normalWorld : NORMAL;
     float2 texcoord : TEXCOORD;
-    float3 baseColor : COLOR;
 };
 
 static float3 debugColors[3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
@@ -143,7 +142,6 @@ GrassPixelInput main(uint instanceID : SV_InstanceID, // 참고/디버깅용
     output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
     output.texcoord = input.texcoord;
 
-    output.baseColor = float3(0, 1, 0) * pow(saturate(input.texcoord.y), 3.0);
     // output.baseColor = debugColors[instanceID % 3] * pow(saturate(input.texcoord.y), 3.0);
     
     return output;

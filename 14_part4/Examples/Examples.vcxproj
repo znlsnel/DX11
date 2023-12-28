@@ -179,6 +179,7 @@
     <ClCompile Include="Ex1403_MatVecMult.cpp" />
     <ClCompile Include="Example_TEMPLATE.cpp" />
     <ClCompile Include="FluidSimulationCPU.cpp" />
+    <ClCompile Include="FoliageModel.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="GraphicsCommon.cpp" />
     <ClCompile Include="GraphicsPSO.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="Example_TEMPLATE.h" />
     <ClInclude Include="FireballActor.h" />
     <ClInclude Include="FluidSimulationCPU.h" />
+    <ClInclude Include="FoliageModel.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="GraphicsPSO.h" />

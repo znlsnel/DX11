@@ -13,6 +13,8 @@
 #include <iostream>
 #include <string>
 
+#include "AppBase.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
@@ -224,6 +226,8 @@ void D3D11Utils::CreateComputeShader(
 void ReadEXRImage(const std::string filename, std::vector<uint8_t> &image,
                   int &width, int &height, DXGI_FORMAT &pixelFormat) {
 
+
+
     const std::wstring wFilename(filename.begin(), filename.end());
 
     TexMetadata metadata;
@@ -306,8 +310,7 @@ void ReadImage(const std::string filename, std::vector<uint8_t> &image,
         }
     } else {
         std::cout << "Cannot read " << channels << " channels" << endl;
-    }
-
+    } 
     delete[] img;
 }
 
@@ -580,7 +583,8 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context,
                                const std::string filename, const bool usSRGB,
                                ComPtr<ID3D11Texture2D> &tex,
-                               ComPtr<ID3D11ShaderResourceView> &srv) {
+                               ComPtr<ID3D11ShaderResourceView> &srv
+       ) {
 
     int width = 0, height = 0;
     std::vector<uint8_t> image;
@@ -589,16 +593,19 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
 
     string ext(filename.end() - 3, filename.end());
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    
 
-    if (ext == "exr") {
+        if (ext == "exr") {
         ReadEXRImage(filename, image, width, height, pixelFormat);
-    } else {
-        ReadImage(filename, image, width, height);
-    }
+        } else {
+        ReadImage(filename, image, width, height); 
+        }
+
+    
 
     CreateTextureHelper(device, context, width, height, image, pixelFormat, tex,
                         srv);
-}
+} 
 
 void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context,
@@ -606,7 +613,7 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                const std::string opacityFilename,
                                const bool usSRGB,
                                ComPtr<ID3D11Texture2D> &texture,
-                               ComPtr<ID3D11ShaderResourceView> &srv) {
+                               ComPtr<ID3D11ShaderResourceView> &srv ) {
 
     int width = 0, height = 0;
     std::vector<uint8_t> image;

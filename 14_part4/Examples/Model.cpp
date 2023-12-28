@@ -1,22 +1,24 @@
 
 #include "Model.h"
 #include "GeometryGenerator.h"
+#include "AppBase.h"
 #include <filesystem>
 #include <DirectXMath.h>
 #include <queue>
 
-namespace hlab {
+namespace hlab { 
 
 using namespace std;
 using namespace DirectX;
 
-Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-             const std::string &basePath, const std::string &filename) {
+Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context, const std::string &basePath, const std::string &filename,
+             class AppBase *appBase) {
+    m_appBase = appBase;
     Initialize(device, context, basePath, filename);
 }
  
-Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-             const std::vector<MeshData> &meshes) {
+Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context, const std::vector<MeshData> &meshes, class AppBase *appBase) {
+    m_appBase = appBase;
     Initialize(device, context, meshes); 
 }
    
@@ -126,27 +128,100 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
     // 일반적으로는 Mesh들이 m_mesh/materialConsts를 각자 소유 가능
     // 여기서는 한 Model 안의 여러 Mesh들이 Consts를 모두 공유
-
+    cout << "Mode :: Initialize \n";
     m_meshConsts.GetCpu().world = Matrix();
     m_meshConsts.Initialize(device);
     m_materialConsts.Initialize(device);
+
+    cout << "Mode :: meshData Setting \n";
+
+    auto CreateOrFindTexture = [&](string textureFile1Name, 
+            string textureFile2Name, ComPtr<ID3D11Texture2D> &texture,
+                                   ComPtr<ID3D11ShaderResourceView> &srv,
+                                   bool MetallicRoughnessTexture = false) {
+        if (m_appBase == nullptr) {
+            if (MetallicRoughnessTexture) {
+                 D3D11Utils::CreateMetallicRoughnessTexture(
+                    device, context, textureFile1Name, textureFile2Name,
+                    texture, srv);
+                return;
+            }
+
+            if (textureFile2Name != "")
+                D3D11Utils::CreateTexture(device, context, textureFile1Name,
+                                          textureFile2Name, true, texture, srv);
+            else
+                D3D11Utils::CreateTexture(device, context, textureFile1Name,
+                                          true, texture, srv);
+
+            return;
+        }
+
+        auto it = m_appBase->m_textureStorage.find(textureFile1Name);
+        if (it == m_appBase->m_textureStorage.end())
+        {
+            if (MetallicRoughnessTexture) 
+                D3D11Utils::CreateMetallicRoughnessTexture(
+                    device, context, textureFile1Name, textureFile2Name,
+                    texture, srv);
+            else if (textureFile2Name != "")
+                D3D11Utils::CreateTexture(device, context, textureFile1Name,
+                                      textureFile2Name, true, texture, srv);
+            else
+                D3D11Utils::CreateTexture(device, context, textureFile1Name,
+                                           true, texture, srv);
+
+            m_appBase->m_textureStorage.insert(make_pair(textureFile1Name, make_tuple(texture, srv)));
+        }   
+        else {
+            /*ID3D11Resource *tempSrvResource= nullptr;
+            ID3D11Resource *tempTextureResource = nullptr;
+
+        ID3D11Resource *dstSrvTexture = nullptr;
+        ID3D11Resource *srcSrvTexture = nullptr;
+            srv->GetResource(&dstSrvTexture);
+            std::get<1>(it->second)->GetResource(&srcSrvTexture);
+             
+            context->CopyResource(texture.Get(), std::get<0>(it->second).Get());
+            context->CopyResource(dstSrvTexture, srcSrvTexture);*/
+            texture = std::get<0>(it->second);
+            srv = std::get<1>(it->second);
+             
+
+        }
+    };
 
     for (const auto &meshData : meshes) {
         auto newMesh = std::make_shared<Mesh>();
 
         InitMeshBuffers(device, meshData, newMesh);
+        cout << "Mode :: InitMeshBuffers \n";
+
+        
 
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
                 if (!meshData.opacityTextureFilename.empty()) {
-                    D3D11Utils::CreateTexture(
+                    
+                        CreateOrFindTexture(meshData.albedoTextureFilename,
+                                        meshData.opacityTextureFilename,
+                                        newMesh->albedoTexture,
+                                        newMesh->albedoSRV);
+
+       /*             D3D11Utils::CreateTexture(
                         device, context, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, true,
-                        newMesh->albedoTexture, newMesh->albedoSRV);
+                        newMesh->albedoTexture, newMesh->albedoSRV);*/
+
+
                 } else {
-                    D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename, true,
-                        newMesh->albedoTexture, newMesh->albedoSRV);
+                        CreateOrFindTexture(meshData.albedoTextureFilename,
+                                            "",  newMesh->albedoTexture,
+                                            newMesh->albedoSRV);
+
+                    //D3D11Utils::CreateTexture(
+                    //    device, context, meshData.albedoTextureFilename, true,
+                    //    newMesh->albedoTexture, newMesh->albedoSRV);
                 }
 
                 m_materialConsts.GetCpu().useAlbedoMap = true;
@@ -158,9 +233,13 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         if (!meshData.emissiveTextureFilename.empty()) {
             if (filesystem::exists(meshData.emissiveTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.emissiveTextureFilename, true,
-                    newMesh->emissiveTexture, newMesh->emissiveSRV);
+                CreateOrFindTexture(meshData.emissiveTextureFilename, "",
+                                    newMesh->emissiveTexture,
+                                    newMesh->emissiveSRV);
+
+                //D3D11Utils::CreateTexture(
+                //    device, context, meshData.emissiveTextureFilename, true,
+                //    newMesh->emissiveTexture, newMesh->emissiveSRV);
                 m_materialConsts.GetCpu().useEmissiveMap = true;
             } else {
                 cout << meshData.emissiveTextureFilename
@@ -170,9 +249,13 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         if (!meshData.normalTextureFilename.empty()) {
             if (filesystem::exists(meshData.normalTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.normalTextureFilename, true,
-                    newMesh->normalTexture, newMesh->normalSRV);
+
+                CreateOrFindTexture(meshData.normalTextureFilename, "",
+                                    newMesh->normalTexture, newMesh->normalSRV);
+
+                //D3D11Utils::CreateTexture(
+                //    device, context, meshData.normalTextureFilename, true,
+                //    newMesh->normalTexture, newMesh->normalSRV);
                 m_materialConsts.GetCpu().useNormalMap = true;
             } else {
                 cout << meshData.normalTextureFilename
@@ -182,9 +265,13 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         if (!meshData.heightTextureFilename.empty()) {
             if (filesystem::exists(meshData.heightTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.heightTextureFilename, true,
-                    newMesh->heightTexture, newMesh->heightSRV);
+
+                CreateOrFindTexture(meshData.heightTextureFilename, "",
+                                newMesh->heightTexture, newMesh->heightSRV);
+
+                //D3D11Utils::CreateTexture(
+                //    device, context, meshData.heightTextureFilename, true,
+                //    newMesh->heightTexture, newMesh->heightSRV);
                 m_meshConsts.GetCpu().useHeightMap = true;
             } else {
                 cout << meshData.heightTextureFilename
@@ -194,9 +281,14 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         if (!meshData.aoTextureFilename.empty()) {
             if (filesystem::exists(meshData.aoTextureFilename)) {
-                D3D11Utils::CreateTexture(device, context, 
-                                          meshData.aoTextureFilename, true,
-                                          newMesh->aoTexture, newMesh->aoSRV);
+
+                    
+                CreateOrFindTexture(meshData.aoTextureFilename, "",
+                                    newMesh->aoTexture, newMesh->aoSRV);
+
+                //D3D11Utils::CreateTexture(device, context, 
+                //                          meshData.aoTextureFilename, true,
+                //                          newMesh->aoTexture, newMesh->aoSRV);
                 m_materialConsts.GetCpu().useAOMap = true;
             } else {
                 cout << meshData.aoTextureFilename
@@ -212,12 +304,18 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
             if (filesystem::exists(meshData.metallicTextureFilename) &&
                 filesystem::exists(meshData.roughnessTextureFilename)) {
 
-                D3D11Utils::CreateMetallicRoughnessTexture(
-                    device, context, 
-                        meshData.metallicTextureFilename,
-                    meshData.roughnessTextureFilename,
-                    newMesh->metallicRoughnessTexture,
-                    newMesh->metallicRoughnessSRV);
+                CreateOrFindTexture(meshData.metallicTextureFilename,
+                                    meshData.roughnessTextureFilename,
+                                    newMesh->metallicRoughnessTexture, 
+                                    newMesh->metallicRoughnessSRV, true);
+
+
+                //D3D11Utils::CreateMetallicRoughnessTexture(
+                //    device, context, 
+                //        meshData.metallicTextureFilename,
+                //    meshData.roughnessTextureFilename,
+                //    newMesh->metallicRoughnessTexture,
+                //    newMesh->metallicRoughnessSRV);
             } else {
                 cout << meshData.metallicTextureFilename << " or "
                      << meshData.roughnessTextureFilename
@@ -557,7 +655,7 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
     while (!queue.empty()) {
         auto curr = queue.front(); 
         queue.pop();
-           
+            
         int minID = std::get<0>(curr);
         int maxID = std::get<1>(curr);  
         int currLevel = std::get<2>(curr);

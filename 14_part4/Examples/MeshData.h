@@ -23,14 +23,19 @@ using std::vector;
     string quicellPath = "";
     int objectID;
     int quixelID = 0;
-
+     
     float metallic = 1.0f; 
     float roughness = 1.0f;
     float minMetallic = 0.0f;
     float minRoughness = 0.0f;
- };
 
+    bool isFolige = false;
+    float foliageRange = 0.0f;
+    float foliageDensity = 0.0f;
+ }; 
+  
  enum meshID : int {
+	 EQuicellFoliage = -3,
 	 EQuicellPath = -2,
 	ELoadToPath = -1,
 	 ECharacter = 0,

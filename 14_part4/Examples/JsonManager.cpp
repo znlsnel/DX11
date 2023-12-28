@@ -24,11 +24,11 @@ bool hlab::JsonManager::ParseJson(rapidjson::Document &doc,
     if (doc.Parse(jsonData.c_str()).HasParseError()) {
         return false;
     }
-
+    
     
     return doc.IsObject();
 }
-
+ 
 std::string hlab::JsonManager::JsonDocToString(rapidjson::Document &doc,
                                                bool isPretty) {
 
@@ -62,6 +62,47 @@ void JsonManager::LoadObjectPathInFolder() {
         int a = 5;
 }
 
+vector<int> makeKMPTable(string Pattern) {
+        vector<int> table(Pattern.size(), 0);
+
+        for (int tail = 1, head = 0; tail < Pattern.length(); tail++) {
+        while (head > 0 && Pattern[tail] != Pattern[head])
+            head = table[head - 1];
+
+        if (Pattern[tail] == Pattern[head])
+            table[tail] = ++head;
+        }
+
+        return table;
+}
+
+bool KMP(string str, string pattern) {
+        vector<int> table = makeKMPTable(pattern);
+        int parentSize = str.size();      // abcaabcabb [ 10 ]
+        int patternSize = pattern.size(); // abca [ 4 ]
+
+        int j = 0;
+        for (int i = 0; i < parentSize; i++) {
+                while (j > 0 && str[i] != pattern[j]) {
+                    j = table[j - 1];
+                }
+                if (str[i] == pattern[j]) {
+                    if (j == patternSize - 1) {
+                        //cout << i - patternSize + 2 << "에서 패턴을 찾았습니다."
+                        //     << endl;
+                        j = table[j];
+                        return true;
+                    } else {
+                        j++;
+                    }
+                }
+        }
+         
+        return false;
+
+}
+
+
 void JsonManager::SearchQuicellModels(const filesystem::path &directory, int count) {
 
         if (count > 2)
@@ -91,7 +132,7 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                 quicellPaths.insert(
                                     make_pair(filePath.string() + "\\", *temp));
                             }
-
+                             
                         }
                         
                         else if (entry.path().extension() == ".HDR") {
@@ -108,12 +149,29 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
 
                                 // DpRF , ORDp, DpR, DpRA
                                 char format = fileName.string()[formatIndex];
+                                 
+                                bool isBillboardTexture =
+                                    KMP(fileName.string(), "Billboard");
+                                   
+                                if (isBillboardTexture)
+                                    temp->isFolige = true;
+                                   
+                                if (format == 'D') { 
+                                    if (isBillboardTexture)
+                                        temp->billboardDiffuse =
+                                            fileName.string();
+                                    else
+                                        temp->Diffuse = fileName.string();
+                                } 
+                                else if (format == 'N' ) { 
+                                    if (isBillboardTexture)
+                                        temp->billboardDiffuse =
+                                            fileName.string();
+                                    else
+                                        temp->Normal = fileName.string();
+                                } 
 
-                                if (format == 'D')
-                                    temp->Diffuse = fileName.string();
-                                else if (format == 'N')
-                                    temp->Normal = fileName.string();
-
+                                 
                                 else if (format == 'F') {
                                     temp->Displacement = fileName.string();
                                     temp->Roughness = fileName.string();
@@ -130,7 +188,7 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                     temp->Roughness = fileName.string();
                                     temp->Displacement = fileName.string();
                                 }
-
+                                  
                                 if (it == quicellPaths.end()) {
                                     quicellPaths.insert(make_pair(
                                         filePath.string() + "\\", *temp));
@@ -241,8 +299,8 @@ void hlab::JsonManager::LoadMesh() {
                         temp.meshPath = path["objectPath"].GetString();
                         temp.previewPath =
                                 path["screenshotPath"].GetString();
-                }
-                if (temp.meshID == -2) {
+                } 
+                if (temp.meshID <= -2 ) {
                         const rapidjson::Value &path =
                             object["filePath"].GetObj();
                         temp.quicellPath = path["quicellPath"].GetString();
@@ -274,7 +332,15 @@ void hlab::JsonManager::LoadMesh() {
                         temp.minRoughness = material["minRoughness"].GetFloat();
                 }
 
-
+                const rapidjson::Value &foliage = object["foliage"].GetObj();
+                if (foliage.IsNull() == false)
+                {  
+                        temp.isFolige = true;
+                        temp.foliageRange = foliage["CreateRange"].GetFloat();
+                        temp.foliageDensity =
+                            foliage["CreateDensity"].GetFloat();
+                } 
+                 
                 CreateMesh(temp);
             }
     }
@@ -353,12 +419,24 @@ void hlab::JsonManager::SaveMesh() {
         material.AddMember("minRoughness",
                            Value(object.second->m_materialConsts.GetCpu().minRoughness), 
                            allocator);
+          
+        rapidjson::Value foliage(kObjectType);
+        foliage.AddMember("isFoliage",
+                          Value(object.second->objectInfo.isFolige), allocator);
+        foliage.AddMember("CreateRange",
+                          Value(object.second->objectInfo.foliageRange), allocator);
+        foliage.AddMember("CreateDensity",
+                          Value(object.second->objectInfo.foliageDensity), allocator);
+         
 
         value.AddMember("filePath", filePath, allocator);
         value.AddMember("scale", scale, allocator);
         value.AddMember("position", position, allocator);
         value.AddMember("rotation", rotation, allocator);
         value.AddMember("material", material, allocator);
+        if (object.second->objectInfo.isFolige)
+                value.AddMember("foliage", foliage, allocator);
+
 
 
         m_saveFile.PushBack(value, allocator);
@@ -426,7 +504,7 @@ shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
                 tempMesh->objectInfo.meshName = "Box";
             }
                 break;
-            case meshID::EQuicellPath: 
+            case meshID::EQuicellPath:  
             {
                 tempMesh = CreateQuicellModel(temp);
                 auto it = quicellPaths.find(temp.quicellPath);
@@ -435,7 +513,21 @@ shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
                         tempMesh->objectInfo.quicellPath = it->first;
                 }
             } 
-                break;
+                break; 
+            case meshID::EQuicellFoliage: {
+                tempMesh = CreateQuicellFoliageModel(temp);
+                auto it = quicellPaths.find(temp.quicellPath);
+                if (it != quicellPaths.end()) {
+                        tempMesh->objectInfo.meshName =
+                            it->second.mesh[temp.quixelID];
+                        tempMesh->objectInfo.quicellPath = it->first; 
+                        tempMesh->objectInfo.isFolige = true;
+                        tempMesh->objectInfo.foliageDensity = temp.foliageDensity;
+                        tempMesh->objectInfo.foliageRange = temp.foliageRange;
+
+
+                }
+            } break;
             case meshID::ETree:
             {
                 tempMesh = CreateTree(temp);
@@ -475,8 +567,8 @@ shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
          
     } 
      
-    return tempMesh;
-}
+    return tempMesh; 
+} 
 
 shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
 
@@ -500,16 +592,14 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
     vector<MeshData> *meshes = new vector<MeshData>();
 
-    
+     
     if (temp->hasMeshs.size() > 0 && temp->hasMeshs[info.quixelID]) {
            meshes = &temp->meshs[info.quixelID];
     } 
-    else {
+    else { 
            *meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
                                                     temp->mesh[info.quixelID],
                                                     false, false);
-            
-
 
            if (temp->hasMeshs.size() == 0) {
                  temp->meshs.resize(temp->mesh.size());
@@ -528,7 +618,7 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
            (*meshes)[0].heightTextureFilename =
                temp->Displacement == "" ? ""
                                         : info.quicellPath + temp->Displacement;
-
+             
            (*meshes)[0].aoTextureFilename =
                temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
 
@@ -538,10 +628,10 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
            (*meshes)[0].metallicTextureFilename =
                temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
 
-    shared_ptr<Model> tempModel =
-        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, *meshes);
-    tempModel->objectInfo.quixelID = info.quixelID;      
-       
+    shared_ptr<Model> tempModel = make_shared<Model>(
+               m_appBase->m_device, m_appBase->m_context, *meshes, m_appBase);
+    tempModel->objectInfo.quixelID = info.quixelID;
+         
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
     tempModel->m_castShadow = true;
     tempModel->m_drawBackFace = true; 
@@ -550,6 +640,114 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
      
     return tempModel;
 
+}
+
+shared_ptr<class Model>
+JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
+    QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
+    vector<MeshData> *meshes = new vector<MeshData>();
+    vector<int> mesheStartID;
+    // density = 0 ~ 1
+    float range =   info.foliageRange;
+    float density = 1.1f - info.foliageDensity;
+       
+    std::random_device rd;
+    std::mt19937 gen(rd()); 
+    std::uniform_real_distribution<float> randId(0.f, float(temp->mesh.size()) - 1.f);
+    std::uniform_real_distribution<float> randRange(-1.0f, 1.0f);
+
+    int CreateNum = max(int(range / density), 1);
+    //CreateNum = 1;
+     
+    while (CreateNum--) { 
+           int quixelNum = int(round(randId(gen))); 
+           quixelNum = std::clamp(quixelNum, 0, int(temp->mesh.size()) - 1);
+           cout << "quixelNum : "<< quixelNum << "\n"; 
+                cout << "meshes Size : " << CreateNum << "\n";
+                   
+            Vector2 pos; 
+            Vector3 GenPos = Vector3(pos.x, 0.0f, pos.y);
+            {  
+                    do { 
+                        const float posX = randRange(gen);
+                        const float posY= randRange(gen);
+                        pos = Vector2(posX, posY);
+                    } while (pos.Length() > range);
+     
+                    float dist = 0.0f;
+                    m_appBase->SetHeightPosition(
+                        info.position + Vector3(pos.x, 0.0f, pos.y) + Vector3(0.0f, 10.0f, 0.0f),
+                                                 Vector3(0.0f, -1.0f, 0.0f), dist);
+                    GenPos = Vector3(pos.x, pos.y, 10.0f - dist);   
+            } 
+  
+            cout << "temp->hasMeshes Size : " << temp->hasMeshs.size()
+                 << " quixelNum : " << quixelNum << "\n";
+
+            if (temp->hasMeshs.size() > 0 && temp->hasMeshs[quixelNum]) {
+                   vector<MeshData> &tempMD = temp->meshs[quixelNum];
+
+                   for (int id = 0; id < tempMD.size(); id++) {
+                         for (auto &vtx : tempMD[id].vertices)
+                                vtx.position += GenPos; 
+                   }
+                   mesheStartID.push_back(meshes->size());
+                   meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
+           
+            } 
+            else {
+         
+                   vector<MeshData> tempMD = GeometryGenerator::ReadFromFile(
+                       info.quicellPath + "\\", temp->mesh[quixelNum], false, false);
+
+                        for (int id = 0; id < tempMD.size(); id++) {
+                                for (auto &vtx : tempMD[id].vertices)
+                                        vtx.position += GenPos; 
+                        }
+
+                   mesheStartID.push_back(meshes->size());
+                   meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
+            
+                   if (temp->hasMeshs.size() == 0) {
+                         temp->meshs.resize(temp->mesh.size());
+                         temp->hasMeshs.resize(temp->mesh.size());
+                   }
+                   temp->meshs[quixelNum] = *meshes;
+                   temp->hasMeshs[quixelNum] = true;
+            } 
+    } 
+
+    for (int i : mesheStartID) { 
+                (*meshes)[i].albedoTextureFilename =
+                temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+
+                (*meshes)[i].normalTextureFilename =
+                temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
+
+                (*meshes)[i].heightTextureFilename =
+                temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
+
+                (*meshes)[i].aoTextureFilename =
+                temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
+                
+                (*meshes)[i].roughnessTextureFilename =
+                temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
+                 
+                (*meshes)[i].metallicTextureFilename =
+                temp->metallic == "" ? "" : info.quicellPath + temp->metallic;    
+    }  
+       
+    shared_ptr<Model> tempModel =
+        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, *meshes, m_appBase);
+    tempModel->objectInfo.quixelID = info.quixelID;
+
+    tempModel->UpdateTranseform(info.scale, info.rotation, info.position);
+    tempModel->m_castShadow = true;
+    tempModel->m_drawBackFace = true;
+    tempModel->m_materialConsts.GetCpu().invertNormalMapY = true;
+    tempModel->m_materialConsts.GetCpu().useMetallicMap = true;
+
+    return tempModel;
 }
 
 std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {

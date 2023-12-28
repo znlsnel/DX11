@@ -654,7 +654,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     postEffectsPSO.m_inputLayout = samplingIL;
     postEffectsPSO.m_rasterizerState = postProcessingRS;
 
-    // postProcessingPSO
+    // postProcessingPSO 
     postProcessingPSO.m_vertexShader = samplingVS;
     postProcessingPSO.m_pixelShader = depthOnlyPS; // dummy
     postProcessingPSO.m_inputLayout = samplingIL;

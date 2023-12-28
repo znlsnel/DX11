@@ -12,7 +12,11 @@ Texture2DArray ORDpTex : register(t2);
 Texture2D textureMap : register(t3);
 
 static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
-static int currTexture = 0;
+static float2 currTexture = { 0, 0 };
+static float2 rightTexture = { 0, 0 };
+static float2 upTexture = { 0, 0 };
+static float2 upRightTexture = { 0,0};
+ 
 
 float3 SchlickFresnel(float3 F0, float NdotH)
 {
@@ -26,13 +30,27 @@ struct PixelShaderOutput
     float4 indexColor : SV_Target1;
 };
 
+float4 GetTexture(Texture2DArray textureArray, SamplerState ss, float2 texc, float lod)
+{
+    float4 curT = textureArray.SampleLevel(linearWrapSampler, float3(texc, currTexture.x), lod);
+    float4 rightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, rightTexture.x), lod);
+    float4 upT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upTexture.x), lod);
+    float4 upRightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upRightTexture.x), lod);
+    float4 result = curT * (currTexture.y) + rightT * (rightTexture.y)
+                     + upT * (upTexture.y) + upRightT * (upRightTexture.y);
+    //result *= 0.5; 
+    return result;  
+}
+
 float3 GetNormal(PixelShaderInput input, float lod)
 {
     float3 normalWorld = normalize(input.normalWorld);
     
     if (useNormalMap) // NormalWorld를 교체
     {
-        float3 normal = normalTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).rgb;
+         //float3 normal = normalTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).rgb;
+        float3 normal = GetTexture(normalTex, linearWrapSampler, input.texcoord, lod);
+         
         normal = 2.0 * normal - 1.0; // 범위 조절 [-1.0, 1.0]
 
         // OpenGL 용 노멀맵일 경우에는 y 방향을 뒤집어줍니다.
@@ -342,61 +360,59 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
 }
  
 PixelShaderOutput main(PixelShaderInput input)
-{ 
+{
     PixelShaderOutput output;
      
     float texDx = 1.0 / 1024;
     float2 originTexc = input.texcoord / 100;
     float2 texc = input.texcoord;
     { // 0 ~ 1024 -> 0 ~ 1
-        texc *= 10.24;    
-        texc.x = round(texc.x); 
+        texc *= 10.24;
+        texc.x = round(texc.x);
         texc.y = round(texc.y);
-        texc /= 1024;    
-    }   
-    float2 texDir = originTexc - texc; 
+        texc /= 1024;
+    }
+    float2 texDir = originTexc - texc;
   // float2 texDir = texc - originTexc;
     {
-        texDir.x = texDir.x > 0 ? texDx : -texDx; 
+        texDir.x = texDir.x > 0 ? texDx : -texDx;
         texDir.y = texDir.y > 0 ? texDx : -texDx;
-    }   
+    }
      
-    currTexture = int(textureMap.Sample(pointWrapSampler, texc).r * 255);
+    currTexture.x = int(textureMap.Sample(pointWrapSampler, texc).r * 255);
+    float2 rightTexc = texc + float2(texDir.x, 0);
+    rightTexture.x = int(textureMap.Sample(pointWrapSampler, rightTexc).r * 255);
+    float2 upTexc = texc + float2(0, texDir.y);
+    upTexture.x = int(textureMap.Sample(pointWrapSampler, upTexc).r * 255);
+    float2 upRightTexc = texc + float2(texDir.x, texDir.y);
+    upRightTexture.x = int(textureMap.Sample(pointWrapSampler, upRightTexc).r * 255);
     
-    float tempLength = length(originTexc - texc);
-    
-    float2 texUp = texc + float2(0, texDir.y * 0.5);
-    float2 texRight = texc + float2(texDir.x * 0.5, 0); 
-    float2 lineCenter = texUp + (texRight - texUp) / 2.0;  
-    float2 lineNormal = normalize(texc - lineCenter); 
     float eyeToPixelLength = length(input.posWorld - eyeWorld);
-    if (dot(lineNormal, normalize(originTexc - lineCenter)) < 0) 
-    {    
-            int textureCount[4] = { 0, 0, 0, 0 }; 
-            textureCount[currTexture]++;
-        
-            int RightTex = int(textureMap.Sample(pointWrapSampler, texc + float2(texDir.x, 0)).r * 255);
-            textureCount[RightTex]++;
-        
-            int UpTex = int(textureMap.Sample(pointWrapSampler, texc + float2(0, texDir.y)).r * 255);
-            textureCount[UpTex]++;
-        
-            int UpRightTex = int(textureMap.Sample(pointWrapSampler, texc + float2(texDir.x, texDir.y)).r * 255);
-            textureCount[UpRightTex]++;
-        
-            if (RightTex == UpTex && UpTex == UpRightTex)
-            {
-                    currTexture = RightTex; 
-            }  
-            //else if (tempLength > texDx / 2)
-            //{
-            //    for (int i = 0; i < 4; i++)
-            //    {
-            //        if (textureCount[currTexture] < textureCount[i])
-            //            currTexture = i;
-            //    }
-            //}        
-    } 
+      
+    float originToTexLength = length(originTexc - texc);
+    float originToRightTexLength = length(originTexc - rightTexc);
+    float originToUpTexLength = length(originTexc - upTexc);
+    float originToUpRightTexLength =   length(originTexc - upRightTexc); 
+         
+    float totalLength = originToTexLength + originToRightTexLength + 
+                                        originToUpTexLength + originToUpRightTexLength;
+     
+    //currTexture.y = (originToTexLength / totalLength);
+    //rightTexture.y = (originToRightTexLength / totalLength);
+    //upTexture.y = (originToUpTexLength / totalLength);
+    //upRightTexture.y = (originToUpRightTexLength / totalLength);
+     
+    currTexture.y = (totalLength / originToTexLength);
+    rightTexture.y = (totalLength / originToRightTexLength);
+    upTexture.y = (totalLength / originToUpTexLength);
+    upRightTexture.y = (totalLength / originToUpRightTexLength);
+              
+    totalLength = currTexture.y + rightTexture.y + upTexture.y + upRightTexture.y;
+    currTexture.y /= totalLength;
+    rightTexture.y /= totalLength;
+    upTexture.y /= totalLength;
+    upRightTexture.y /= totalLength;
+      
     float lod = length(input.posWorld - eyeWorld);
    // lod -= 3;
    // lod /= 3; 
@@ -405,14 +421,20 @@ PixelShaderOutput main(PixelShaderInput input)
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);
     
-    float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod) * float4(albedoFactor, 1)
-                                 : float4(albedoFactor, 1);
-
+    //float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod) * float4(albedoFactor, 1)
+    //                             : float4(albedoFactor, 1);
+    float4 albedo = float4(albedoFactor, 1);
+    if (useAlbedoMap)
+    {
+        //albedo = albedoTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod) * float4(albedoFactor, 1);
+        albedo = GetTexture(albedoTex, linearWrapSampler, input.texcoord, lod) * float4(albedoFactor, 1);
+    }
+    
     clip(albedo.a - 0.5); // Tree leaves
     
-    float ao = useAOMap ? ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).r : 1.0;
+    float ao = useAOMap ? ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture.x), lod).r : 1.0;
     float metallic = metallicFactor;
-    float roughness = useRoughnessMap ? clamp(ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture), lod).g, minRoughness, 1.0) : roughnessFactor;
+    float roughness = useRoughnessMap ? clamp(ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture.x), lod).g, minRoughness, 1.0) : roughnessFactor;
     float3 emission = emissionFactor;
      
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;

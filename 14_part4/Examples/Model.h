@@ -83,13 +83,12 @@ struct BoundingCollision {
 
 
 class Model {
-  public:
+  public: 
 
     Model(){};
+    Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,const string &basePath, const string &filename, class AppBase* appBase = nullptr);
     Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-          const string &basePath, const string &filename);
-    Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-          const vector<MeshData> &meshes);
+          const vector<MeshData> &meshes, class AppBase *appBase = nullptr);
 
     virtual void Initialize(ComPtr<ID3D11Device> &device,
                             ComPtr<ID3D11DeviceContext> &context);
@@ -210,7 +209,7 @@ class Model {
     bool m_saveable = false;
     bool m_editable = false;
     bool m_drawBackFace = false; 
-     int m_BVHMaxLevel = 1;
+     int m_BVHMaxLevel = 0;
     bool isChildModel = false; 
     bool isObjectLock = false;
     bool bRenderingBVH = false;
@@ -252,7 +251,7 @@ class Model {
     Vector3 m_localPosition{0.f};
     Vector3 m_rotation{0.f};
     float m_boundingSphereRadius = 0.0f;
-
+    class AppBase *m_appBase = nullptr; 
 
 
 };

@@ -49,7 +49,7 @@ class GrassModel : public Model {
         m_meshConsts.Initialize(device);
         m_materialConsts.Initialize(device);
     };
-
+     
     void Render(ComPtr<ID3D11DeviceContext> &context) override {
         if (m_isVisible) {
 

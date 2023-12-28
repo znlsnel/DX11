@@ -167,7 +167,7 @@ Vector3 AppBase::RayCasting(bool editTexture, float mouseNdcX, float mouseNdcY) 
 
                                 bool hasLeftChild = left < BVH.size();
                                 bool hasRightChild = right < BVH.size();
-
+                                 
                                 if (hasLeftChild)
                                         queue.push(make_pair(left, level+1));
                                 if (hasRightChild)
@@ -186,7 +186,7 @@ Vector3 AppBase::RayCasting(bool editTexture, float mouseNdcX, float mouseNdcY) 
                 return pos;
 
        }
-       return Vector3(0.0f, 0.0f, 0.0f);
+       return Vector3(0.0f, 0.0f, 0.0f); 
 }
 
 void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
@@ -284,12 +284,12 @@ void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
                  }
        } 
 }
-
+ 
 void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) { 
-        float dv = 1024.f / 200.f * 0.5f;
+        float dv = 1024.f / 400.f * 0.5f;
         float a = 1024.f / 60.f;
-        float rv = 60.f / 200.f * 0.5f;
-         
+        float rv = 60.f / 400.f * 0.5f;
+          
         // up down left right pos; 
         origin -= m_groundPlane->GetPosition(); 
         int currPos[2] = {int(a * (origin.x + 30.0f)),
@@ -312,7 +312,7 @@ void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) {
         float rightPos[2] = {round((a * (origin.x + 30.0f) + dv) / (dv * 2)) *
                                  (dv * 2),
             round((a * (origin.z + 30.0f) - dv) / (dv * 2)) * (dv * 2)
-        }; 
+        };  
 
          auto changePos = [&](float idxPos[2], Vector3& pos) { 
                  idxPos[0] = clamp(idxPos[0], 0.0f, 1024.f);
@@ -1266,12 +1266,12 @@ void AppBase::GetObjectsInFrustum() {
     //                            id = 0;
     //            }
     //}  
-     
-    static int temp = 0;
-    //system("cls");
-    if (temp % 10 == 0) 
-        cout << "ObjectsCountInFrustum : " << result.size() << "\n";
-    temp++;
+      
+    //static int temp = 0;
+    ////system("cls");
+    //if (temp % 10 == 0) 
+    //    cout << "ObjectsCountInFrustum : " << result.size() << "\n";
+    //temp++;
 }
 
 
@@ -1927,7 +1927,7 @@ void AppBase::ComputeShaderBarrier() {
     m_context->CSSetUnorderedAccessViews(0, 6, nullUAV, NULL);
 }
  
-void AppBase::UpdateBVH() {
+void AppBase::UpdateBVH() { 
         m_BVNodes.clear();
         if (m_basicList.size() == 0) 
                 return; 
@@ -2012,7 +2012,7 @@ void AppBase::UpdateBVH() {
                 if (max - min == 1) {
                         result.objectID = min;  
                 }
-                cout << "minMax : " << min << ", " << max << "\n"; 
+         //       cout << "minMax : " << min << ", " << max << "\n";  
                     
                 /*auto meshData = GeometryGenerator::MakeWireBox(
                     enclosingBox.Center, enclosingBox.Extents + Vector3(1e-3f));
@@ -2089,7 +2089,7 @@ void AppBase::replicateObject()
 }
 
 void AppBase::AddBasicList(shared_ptr<Model>& object, bool isBasicList, bool editable, bool saveable) {
-
+         
         if (object == nullptr)
                 return;
         object->m_editable = editable;

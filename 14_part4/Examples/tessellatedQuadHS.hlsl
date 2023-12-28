@@ -45,18 +45,18 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     float len3 = 0.5 * (length(eyeWorld - posWorld3) + length(eyeWorld - posWorld4));
     float len4 = 0.5 * (length(eyeWorld - posWorld4) + length(eyeWorld - posWorld1));
     float len5 = length(eyeWorld - posCenter);
-  //  len5 = 1.0;
+  //  len5 = 1.0; 
     float distMin = 1.0;
     float distMax = 10.0;
     
-
+    
     len1 = 1.0 -  saturate((distMax - len1) / (distMax - distMin));
     len2= 1.0 - saturate((distMax - len2) / (distMax - distMin));
     len3 = 1.0 - saturate((distMax - len3) / (distMax - distMin));
     len4 = 1.0 - saturate((distMax - len4) / (distMax - distMin));
     len5 = 1.0 - saturate((distMax - len5) / (distMax - distMin));
 
-    float maxSize = 10.0;
+    float maxSize = 1.0;
     //pt.edges[0] = lerp(1.0, maxSize, len2);
     //pt.edges[1] = lerp(1.0, maxSize, len1);
     //pt.edges[2] = lerp(1.0, maxSize, len4);

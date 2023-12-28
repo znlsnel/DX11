@@ -114,10 +114,10 @@ bool Ex2001_GamePlay::InitScene() {
         }
         if (hasHeightMap) {
             D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
-        } 
-         
+        }  
+          
         Vector2 mapTexScale = Vector2(100.f, 100.f);
-         int mapArea = 200;
+         int mapArea = 100;
         float mapScale = 30.f;
         auto mesh = GeometryGenerator::MakeTessellationPlane(
             mapArea, mapArea, mapScale, Vector2(100.0f, 100.0f),
@@ -146,7 +146,8 @@ bool Ex2001_GamePlay::InitScene() {
             m_groundPlane->m_materialConsts.GetCpu().metallicFactor = 0.f;
             m_groundPlane->m_materialConsts.GetCpu().roughnessFactor = 1.0f;
             m_groundPlane->m_materialConsts.GetCpu().useNormalMap = 1;
-            m_groundPlane->UpdateRotation(
+            m_groundPlane->m_materialConsts.GetCpu().useAOMap = 0;
+            m_groundPlane->UpdateRotation( 
                 Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f)); 
             shared_ptr<Model> temp = m_groundPlane;
             temp->isObjectLock = true;  
@@ -181,9 +182,10 @@ bool Ex2001_GamePlay::InitScene() {
             }
             // 쉐이더로 보내기 위해 transpose
             for (auto &i : grassInstances) {
-            i.instanceWorld = i.instanceWorld.Transpose();
+            i.instanceWorld = i.instanceWorld.Transpose(); 
             }
             grass->Initialize(m_device, m_context);
+            grass->m_castShadow = true;
             // m_grass->UpdateWorldRow(Matrix::CreateScale(0.5f) *
             //                         Matrix::CreateTranslation(0.0f,
             //                         0.0f, 2.0f));
@@ -307,9 +309,8 @@ void Ex2001_GamePlay::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 
 void Ex2001_GamePlay::Update(float dt) {
     timeSeconds += dt;
-
+    
     AppBase::Update(dt);
-
      
     // 이하 물리엔진 관련
     if (false)
@@ -743,7 +744,7 @@ void Ex2001_GamePlay::UpdateGUI() {
 
          
     if (ImGui::TreeNode("Load Object")) {
-
+             
             bool show_dialog = true;
             ImGui::SetNextWindowSize(ImVec2(400, 500));
             ImGui::SetNextWindowPos(ImVec2(
@@ -810,25 +811,27 @@ void Ex2001_GamePlay::UpdateGUI() {
                 } 
                 ImGui::TreePop();
         }
-        if (ImGui::TreeNode("Quicell List")) {
-
+        if (ImGui::TreeNode("Quicell List")) { 
+                
                 static vector<int> idV(m_JsonManager->quicellPaths.size());
                 int i = 0;
                 for (auto object : m_JsonManager->quicellPaths) {
                     // if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300,
-                    // 30)))
+                    // 30)))   
+                        if (object.second.isFolige == true)
+                        continue; 
                     ImGui::NewLine();  
                       ObjectSaveInfo temp;
                     if (object.second.mesh.size() > 1) { 
                         ImGui::SliderInt(object.first.c_str(), &idV[i],
                                          0,
                                          object.second.mesh.size() - 1); 
-                        temp.quixelID = idV[i++]; 
+                        temp.quixelID = idV[i++];   
                     }    
                     if (ImGui::ImageButton(object.second.objectImageSRV.Get(),
                                            ImVec2(100, 100))) {
 
-                        temp.meshID = -2;
+                        temp.meshID = -2;  
                         temp.quicellPath = object.first;
                         temp.rotation =
                             Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
@@ -858,9 +861,67 @@ void Ex2001_GamePlay::UpdateGUI() {
                         UpdateBVH(); 
                     }
                 }
-                ImGui::TreePop();
+                ImGui::TreePop(); 
         }
             /*if (ImGui::Button("Test", ImVec2(100, 100)))*/
+        if (ImGui::TreeNode("Quicell Folige List")) {
+
+                static float createRange = 1.f;
+                static float createDensity = 0.1f;
+
+                 ImGui::DragFloat("Range", &createRange, 0.1f, 0.1f,
+                                     1.0f);
+                ImGui::DragFloat("foliageDensity", &createDensity,
+                                     0.1f, 0.1f, 1.0f);
+                     
+                for (auto object : m_JsonManager->quicellPaths) {
+                    if (object.second.isFolige == false)
+                        continue;
+
+                    // if (ImGui::Button(object.second.mesh.c_str(), ImVec2(300,
+                    // 30)))
+                    ImGui::NewLine();
+
+                    if (ImGui::ImageButton(object.second.objectImageSRV.Get(),
+                                           ImVec2(100, 100))) {
+                        ObjectSaveInfo temp;
+                        temp.foliageRange = createRange; 
+                        temp.foliageDensity = createDensity;
+                        temp.meshID = -3; 
+                        temp.quicellPath = object.first;
+                        temp.rotation =
+                            Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
+                        temp.minMetallic = 0.5f;
+                        temp.minRoughness = 1.0f;
+                        temp.position = RayCasting(0.0f, 0.0f);
+                        temp.isFolige = object.second.isFolige;
+                         
+                        float dist = 0.0f;
+                        SetHeightPosition(temp.position +
+                                              Vector3(0.0f, 5.0f, 0.0f),
+                                          Vector3(0.0f, -1.0f, 0.0f), dist);
+                        if (dist > 0.0f)  
+                            temp.position = temp.position +
+                                            Vector3(0.0f, 5.0f, 0.0f) + 
+                                            Vector3(0.0f, -1.0f, 0.0f) * dist;
+                        temp.scale = Vector3(0.2f, 0.2f, 0.2f);
+                        shared_ptr<Model> tempModel =
+                            m_JsonManager->CreateMesh(temp);
+
+                        Matrix tempRow = tempModel->m_worldRow;
+                        tempRow.Translation(Vector3(0.0f));
+                        Vector3 tempExtents = Vector3::Transform(
+                            tempModel->m_boundingBox.Extents, tempRow);
+
+                        tempModel->UpdatePosition(
+                            tempModel->GetPosition() +
+                            Vector3(0.0f, std::abs(tempExtents.y), 0.0f));
+
+                        UpdateBVH();
+                    }
+                }
+                ImGui::TreePop(); 
+        }
                 
           ImGui::TreePop();
         ImGui::End();

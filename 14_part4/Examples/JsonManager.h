@@ -25,12 +25,16 @@ struct QuicellMeshPathInfo {
     string Roughness; // R
     string Displacement; // dp
     string metallic; // F
-     
+    string billboardDiffuse;
+    string billboardNormal; 
+
     vector<vector<MeshData>> meshs;
     vector<bool> hasMeshs;
 
     ComPtr<ID3D11Texture2D> objectImage;
     ComPtr<ID3D11ShaderResourceView> objectImageSRV;
+     
+    bool isFolige = false; 
         };
 
 class JsonManager {
@@ -55,6 +59,7 @@ class JsonManager {
 
     shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateQuicellModel(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateQuicellFoliageModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 
@@ -74,7 +79,7 @@ class JsonManager {
 
     map < string, pair<string, string>> meshPaths;
     map<string, QuicellMeshPathInfo> quicellPaths;
-    
+ 
 
     string modelsPath;
     string quicellPath;
