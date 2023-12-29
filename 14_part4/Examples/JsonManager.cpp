@@ -6,12 +6,15 @@
 #include "BillboardModel.h"
 #include "D3D11Utils.h"
 #include "Character.h"
+#include <DirectXMath.h>
 
 
 using namespace std;
 using namespace rapidjson;
+
 namespace fs = std::filesystem;
 namespace hlab {
+        using namespace DirectX;
 
 hlab::JsonManager::JsonManager(AppBase *appBase) {
     m_appBase = appBase;
@@ -586,7 +589,7 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
     return tempModel;
 }
  
-shared_ptr<class Model>
+shared_ptr<class Model> 
 JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
          
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
@@ -647,63 +650,92 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
     vector<MeshData> *meshes = new vector<MeshData>();
     vector<int> mesheStartID;
-    // density = 0 ~ 1
+
+    // density = 0 ~ 1 
     float range =   info.foliageRange;
     float density = 1.1f - info.foliageDensity;
        
     std::random_device rd;
     std::mt19937 gen(rd()); 
     std::uniform_real_distribution<float> randId(0.f, float(temp->mesh.size()) - 1.f);
-    std::uniform_real_distribution<float> randRange(-1.0f, 1.0f);
-
+    std::uniform_real_distribution<float> randRange(-range, range);
+        
     int CreateNum = max(int(range / density), 1);
     //CreateNum = 1;
-     
+      
     while (CreateNum--) { 
            int quixelNum = int(round(randId(gen))); 
            quixelNum = std::clamp(quixelNum, 0, int(temp->mesh.size()) - 1);
            cout << "quixelNum : "<< quixelNum << "\n"; 
                 cout << "meshes Size : " << CreateNum << "\n";
-                   
+                    
             Vector2 pos; 
             Vector3 GenPos = Vector3(pos.x, 0.0f, pos.y);
             {  
                     do { 
                         const float posX = randRange(gen);
                         const float posY= randRange(gen);
+                         
                         pos = Vector2(posX, posY);
-                    } while (pos.Length() > range);
-     
+
+                    } while (pos.Length() > range); 
+       
                     float dist = 0.0f;
                     m_appBase->SetHeightPosition(
-                        info.position + Vector3(pos.x, 0.0f, pos.y) + Vector3(0.0f, 10.0f, 0.0f),
+                        info.position + Vector3(pos.x, 3.0f, pos.y),
                                                  Vector3(0.0f, -1.0f, 0.0f), dist);
-                    GenPos = Vector3(pos.x, pos.y, 10.0f - dist);   
+                    Vector3 resultPos =
+                        info.position + Vector3(pos.x, 3.0f - dist, pos.y);
+
+
+                    Vector3 dir = resultPos - info.position;
+                      
+                    if (dist > 0.f)  
+                        GenPos = Vector3(dir.x, dir.z, -dir.y);   
+                    else
+                        GenPos = Vector3(pos.x,pos.y , 0.0f);    
+                    GenPos *= 5.0f;
+                    cout << "GenPos.Y : " << GenPos.z << "\n";
             } 
-  
-            cout << "temp->hasMeshes Size : " << temp->hasMeshs.size()
-                 << " quixelNum : " << quixelNum << "\n";
 
             if (temp->hasMeshs.size() > 0 && temp->hasMeshs[quixelNum]) {
                    vector<MeshData> &tempMD = temp->meshs[quixelNum];
+                    for (int id = 0; id < tempMD.size(); id++) {
+                        for (auto &vtx : tempMD[id].vertices) { 
+                                 vtx.position =  (vtx.position - temp->yOffset[quixelNum]) + GenPos; 
+                        }  
+                    }     
+                    temp->yOffset[quixelNum] = GenPos;
 
-                   for (int id = 0; id < tempMD.size(); id++) {
-                         for (auto &vtx : tempMD[id].vertices)
-                                vtx.position += GenPos; 
-                   }
                    mesheStartID.push_back(meshes->size());
                    meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
-           
-            } 
-            else {
-         
+            }  
+            else { 
                    vector<MeshData> tempMD = GeometryGenerator::ReadFromFile(
                        info.quicellPath + "\\", temp->mesh[quixelNum], false, false);
 
+                        Vector3 minCorner(1000.f); 
+                        Vector3 maxCorner(-1000.f);
                         for (int id = 0; id < tempMD.size(); id++) {
-                                for (auto &vtx : tempMD[id].vertices)
-                                        vtx.position += GenPos; 
-                        }
+                                 for (auto &vtx : tempMD[id].vertices) {
+                                        vtx.position += GenPos;           
+                                        if (id == 0) {
+                                                minCorner = Vector3::Min(minCorner,
+                                                                                vtx.position);
+                                                maxCorner = Vector3::Max(maxCorner,
+                                                                                vtx.position);
+                                        }  
+                                 }
+                        }     
+                        float tempOffset = -(maxCorner.z - minCorner.z) / 2; 
+                         //tempOffset = 0;
+                         
+                        for (int id = 0; id < tempMD.size(); id++) {
+                                 for (auto &vtx : tempMD[id].vertices) {
+                                        vtx.position += Vector3(0.0f, 0.0f, tempOffset);
+                                 }
+                        }   
+                         
 
                    mesheStartID.push_back(meshes->size());
                    meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
@@ -711,9 +743,11 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                    if (temp->hasMeshs.size() == 0) {
                          temp->meshs.resize(temp->mesh.size());
                          temp->hasMeshs.resize(temp->mesh.size());
-                   }
-                   temp->meshs[quixelNum] = *meshes;
+                         temp->yOffset.resize(temp->mesh.size());
+                   }  
+                   temp->meshs[quixelNum] = tempMD;
                    temp->hasMeshs[quixelNum] = true;
+                   temp->yOffset[quixelNum] = GenPos;
             } 
     } 
 

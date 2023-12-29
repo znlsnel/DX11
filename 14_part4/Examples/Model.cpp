@@ -346,11 +346,9 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         m_boundingBox = 
             GetBoundingBox(meshes[0].vertices, 0, meshes[0].vertices.size());
         for (size_t i = 1; i < meshes.size(); i++) {
-
             auto bb =
                 GetBoundingBox(meshes[i].vertices, 0, meshes[i].vertices.size());
             ExtendBoundingBox(bb, m_boundingBox);
-
         }
 
         auto meshData = GeometryGenerator::MakeWireBox(
@@ -512,7 +510,7 @@ void Model::RenderNormals(ComPtr<ID3D11DeviceContext> &context) {
         context->Draw(mesh->vertexCount, 0);
     }
 }
-
+ 
 void Model::RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context) {
 
 

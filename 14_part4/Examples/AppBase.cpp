@@ -286,10 +286,10 @@ void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
 }
  
 void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) { 
-        float dv = 1024.f / 400.f * 0.5f;
+        float dv = 1024.f / 100.f * 0.5f;
         float a = 1024.f / 60.f;
-        float rv = 60.f / 400.f * 0.5f;
-          
+        float rv = 60.f / 100.f * 0.5f;
+           
         // up down left right pos; 
         origin -= m_groundPlane->GetPosition(); 
         int currPos[2] = {int(a * (origin.x + 30.0f)),
@@ -581,6 +581,60 @@ bool AppBase::Initialize() {
 
     // 콘솔창이 렌더링 창을 덮는 것을 방지
     SetForegroundWindow(m_mainWindow); 
+
+        // Plane
+    if (true) {
+        string heightMapPath;
+        bool hasHeightMap = false;
+
+        auto filePath = std::filesystem::current_path();
+        for (const auto file : std::filesystem::directory_iterator(filePath)) {
+            if (file.path().stem() == "heightMap") {
+                                hasHeightMap = true;
+                                heightMapPath = file.path().string();
+                                break;
+            }
+        }
+        if (hasHeightMap) {
+            D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
+        }
+
+        Vector2 mapTexScale = Vector2(100.f, 100.f);
+        int mapArea = 100;
+        float mapScale = 30.f;
+        auto mesh = GeometryGenerator::MakeTessellationPlane(
+            mapArea, mapArea, mapScale, Vector2(100.0f, 100.0f),
+            heightMapImage);
+        string path =
+            "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
+        mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
+        mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
+        mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
+        // mesh.roughnessTextureFilename = path +
+        // "Ground037_4K-PNG_Roughness.png";
+        mesh.heightTextureFilename = path + "Ground037_4K-PNG_Displacement.png";
+
+        m_groundPlane = make_shared<TessellationModel>(
+            m_device, m_context, vector{mesh}, this, true);
+        m_groundPlane->mapScale = mapScale;
+        m_groundPlane->texScale = mapTexScale;
+        m_groundPlane->mapArea[0] = mapArea;
+        m_groundPlane->mapArea[1] = mapArea;
+
+        m_groundPlane->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+        m_groundPlane->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
+        m_groundPlane->m_materialConsts.GetCpu().metallicFactor = 0.f;
+        m_groundPlane->m_materialConsts.GetCpu().roughnessFactor = 1.0f;
+        m_groundPlane->m_materialConsts.GetCpu().useNormalMap = 1;
+        m_groundPlane->m_materialConsts.GetCpu().useAOMap = 0;
+        m_groundPlane->UpdateRotation(
+            Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f));
+        shared_ptr<Model> temp = m_groundPlane;
+        temp->isObjectLock = true;
+        AddBasicList(temp, false);
+    }
+ 
+
     m_JsonManager->LoadMesh();
     return true;
 }

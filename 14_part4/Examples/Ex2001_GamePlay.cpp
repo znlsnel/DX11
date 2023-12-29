@@ -98,61 +98,7 @@ bool Ex2001_GamePlay::InitScene() {
      
     InitAudio();  
            
-    // Plane    
-    if (true)
-    {    
-        string heightMapPath;
-        bool hasHeightMap = false;
 
-        auto filePath = std::filesystem::current_path();
-        for (const auto file : std::filesystem::directory_iterator(filePath)) {
-            if (file.path().stem() == "heightMap") {
-                hasHeightMap = true;
-                heightMapPath = file.path().string();
-                break;
-            }
-        }
-        if (hasHeightMap) {
-            D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
-        }  
-          
-        Vector2 mapTexScale = Vector2(100.f, 100.f);
-         int mapArea = 100;
-        float mapScale = 30.f;
-        auto mesh = GeometryGenerator::MakeTessellationPlane(
-            mapArea, mapArea, mapScale, Vector2(100.0f, 100.0f),
-             heightMapImage); 
-        string path = "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
-        mesh.albedoTextureFilename =  path + "Ground037_4K-PNG_Color.png";
-        mesh.aoTextureFilename=
-            path + "Ground037_4K-PNG_AmbientOcclusion.png";
-        mesh.normalTextureFilename = path + "Ground037_d4K-PNG_NormalDX.png";
-        // mesh.roughnessTextureFilename = path + "Ground037_4K-PNG_Roughness.png";
-        mesh.heightTextureFilename = 
-            path + "Ground037_4K-PNG_Displacement.png";
-                   
-            m_groundPlane = 
-                make_shared<TessellationModel>(
-                m_device, m_context,  vector{mesh}, this, true);
-        m_groundPlane->mapScale = mapScale;
-            m_groundPlane->texScale = mapTexScale;
-        m_groundPlane->mapArea[0] = mapArea; 
-        m_groundPlane->mapArea[1] = mapArea; 
-
-            m_groundPlane->m_materialConsts.GetCpu().albedoFactor =
-                Vector3(0.2f);
-            m_groundPlane->m_materialConsts.GetCpu().emissionFactor =
-                Vector3(0.0f);
-            m_groundPlane->m_materialConsts.GetCpu().metallicFactor = 0.f;
-            m_groundPlane->m_materialConsts.GetCpu().roughnessFactor = 1.0f;
-            m_groundPlane->m_materialConsts.GetCpu().useNormalMap = 1;
-            m_groundPlane->m_materialConsts.GetCpu().useAOMap = 0;
-            m_groundPlane->UpdateRotation( 
-                Vector3(90 * 3.141592f / 180.f, 0.0f, 0.0f)); 
-            shared_ptr<Model> temp = m_groundPlane;
-            temp->isObjectLock = true;  
-            AddBasicList(temp, false);  
-    }
        
          //Grass object  
     if (true)  
@@ -870,10 +816,10 @@ void Ex2001_GamePlay::UpdateGUI() {
                 static float createDensity = 0.1f;
 
                  ImGui::DragFloat("Range", &createRange, 0.1f, 0.1f,
-                                     1.0f);
+                                     10.0f);
                 ImGui::DragFloat("foliageDensity", &createDensity,
                                      0.1f, 0.1f, 1.0f);
-                     
+                       
                 for (auto object : m_JsonManager->quicellPaths) {
                     if (object.second.isFolige == false)
                         continue;
@@ -893,30 +839,19 @@ void Ex2001_GamePlay::UpdateGUI() {
                             Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
                         temp.minMetallic = 0.5f;
                         temp.minRoughness = 1.0f;
-                        temp.position = RayCasting(0.0f, 0.0f);
-                        temp.isFolige = object.second.isFolige;
-                         
-                        float dist = 0.0f;
+                        temp.position = RayCasting(false, 0.0f, 0.0f);
+                        float dist = 0.0f; 
                         SetHeightPosition(temp.position +
-                                              Vector3(0.0f, 5.0f, 0.0f),
+                                              Vector3(0.0f, 2.0f, 0.0f),
                                           Vector3(0.0f, -1.0f, 0.0f), dist);
-                        if (dist > 0.0f)  
-                            temp.position = temp.position +
-                                            Vector3(0.0f, 5.0f, 0.0f) + 
-                                            Vector3(0.0f, -1.0f, 0.0f) * dist;
-                        temp.scale = Vector3(0.2f, 0.2f, 0.2f);
+                        if (dist > 0.0f) 
+                            temp.position += Vector3(0.0f, 2.0f -dist, 0.0f);
+
+                        temp.isFolige = object.second.isFolige;
+                         temp.scale = Vector3(0.2f, 0.2f, 0.2f);
+
                         shared_ptr<Model> tempModel =
                             m_JsonManager->CreateMesh(temp);
-
-                        Matrix tempRow = tempModel->m_worldRow;
-                        tempRow.Translation(Vector3(0.0f));
-                        Vector3 tempExtents = Vector3::Transform(
-                            tempModel->m_boundingBox.Extents, tempRow);
-
-                        tempModel->UpdatePosition(
-                            tempModel->GetPosition() +
-                            Vector3(0.0f, std::abs(tempExtents.y), 0.0f));
-
                         UpdateBVH();
                     }
                 }

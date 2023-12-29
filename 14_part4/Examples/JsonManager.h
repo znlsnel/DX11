@@ -29,6 +29,7 @@ struct QuicellMeshPathInfo {
     string billboardNormal; 
 
     vector<vector<MeshData>> meshs;
+    vector<Vector3> yOffset;
     vector<bool> hasMeshs;
 
     ComPtr<ID3D11Texture2D> objectImage;
