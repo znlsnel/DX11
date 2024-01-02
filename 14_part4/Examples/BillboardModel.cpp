@@ -21,9 +21,9 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
     m_geometryShader = Graphics::billboardGS;
     m_inputLayout = Graphics::billboardIL;
     m_pixelShader = pixelShader;
-
+      
     static int index = 0;
-    m_billboardConsts.GetCpu().widthWorld = width;
+    m_billboardConsts.GetCpu().widthWorld = width; 
     m_billboardConsts.GetCpu().index = index;
     index++;
 

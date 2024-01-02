@@ -409,7 +409,7 @@ PixelShaderOutput main(PixelShaderInput input)
         };
         // 임시로 unroll 사용
         // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
-
+         
         [unroll]
         for (int i = 0; i <= 4; i++)
         {
@@ -440,6 +440,7 @@ PixelShaderOutput main(PixelShaderInput input)
     //}
     
    output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
+    output.pixelColor *= 1.2;
     output.indexColor = indexColor;
     
     

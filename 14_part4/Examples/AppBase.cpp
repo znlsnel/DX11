@@ -185,7 +185,7 @@ Vector3 AppBase::RayCasting(bool editTexture, float mouseNdcX, float mouseNdcY) 
                                                         m_textureType);  
                 return pos;
 
-       }
+       } 
        return Vector3(0.0f, 0.0f, 0.0f); 
 }
 
@@ -286,9 +286,9 @@ void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
 }
  
 void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) { 
-        float dv = 1024.f / 100.f * 0.5f;
+        float dv = 1024.f / 500.f * 0.5f;
         float a = 1024.f / 60.f;
-        float rv = 60.f / 100.f * 0.5f;
+        float rv = 60.f / 500.f * 0.5f;
            
         // up down left right pos; 
         origin -= m_groundPlane->GetPosition(); 
@@ -335,17 +335,17 @@ void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) {
          changePos(upPos, upPosition);
          changePos(downPos, downPosition);
          changePos(leftPos, leftPosition);
-         changePos(rightPos, rightPosition);
+         changePos(rightPos, rightPosition); 
 
          //m_cursorSphere[1]->UpdatePosition(upPosition);
          //m_cursorSphere[2]->UpdatePosition(downPosition);
          //m_cursorSphere[3]->UpdatePosition(leftPosition);
-         //m_cursorSphere[4]->UpdatePosition(rightPosition);
+         //m_cursorSphere[4]->UpdatePosition(rightPosition); 
 
          DirectX::SimpleMath::Ray ray = SimpleMath::Ray(origin, dir);
          bool result = ray.Intersects(downPosition, leftPosition, upPosition, dist);
          if (result == false)
-                 result =
+                 result = 
                      ray.Intersects(downPosition, upPosition, rightPosition,
                                          dist);
 }
@@ -553,10 +553,10 @@ int AppBase::Run() {
 }
 
 bool AppBase::Initialize() {
-
+         
     if (!InitMainWindow())
         return false;  
-
+     
     if (!InitDirect3D())    
         return false;
 
@@ -582,30 +582,30 @@ bool AppBase::Initialize() {
     // 콘솔창이 렌더링 창을 덮는 것을 방지
     SetForegroundWindow(m_mainWindow); 
 
-        // Plane
-    if (true) {
+        // Plane   
+    if (true) { 
         string heightMapPath;
-        bool hasHeightMap = false;
-
+        bool hasHeightMap = false; 
+         
         auto filePath = std::filesystem::current_path();
         for (const auto file : std::filesystem::directory_iterator(filePath)) {
             if (file.path().stem() == "heightMap") {
                                 hasHeightMap = true;
                                 heightMapPath = file.path().string();
                                 break;
-            }
-        }
-        if (hasHeightMap) {
+            }   
+        }     
+        if (hasHeightMap) { 
             D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
-        }
-
-        Vector2 mapTexScale = Vector2(100.f, 100.f);
-        int mapArea = 100;
+        } 
+               
+        Vector2 mapTexScale = Vector2(50.f, 50.f); 
+        int mapArea = 100; 
         float mapScale = 30.f;
         auto mesh = GeometryGenerator::MakeTessellationPlane(
-            mapArea, mapArea, mapScale, Vector2(100.0f, 100.0f),
+            mapArea, mapArea, mapScale, mapTexScale,
             heightMapImage);
-        string path =
+        string path = 
             "../Assets/Textures/PBR/TerrainTextures/Ground037_4K-PNG/";
         mesh.albedoTextureFilename = path + "Ground037_4K-PNG_Color.png";
         mesh.aoTextureFilename = path + "Ground037_4K-PNG_AmbientOcclusion.png";
@@ -620,7 +620,7 @@ bool AppBase::Initialize() {
         m_groundPlane->texScale = mapTexScale;
         m_groundPlane->mapArea[0] = mapArea;
         m_groundPlane->mapArea[1] = mapArea;
-
+         
         m_groundPlane->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
         m_groundPlane->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
         m_groundPlane->m_materialConsts.GetCpu().metallicFactor = 0.f;
@@ -649,7 +649,7 @@ bool AppBase::InitScene() {
                         m_globalConstsCPU.lights[i].position =
                             Vector3(0.0f, 2.698f, -0.159f);
                         m_globalConstsCPU.lights[i].direction =
-                            Vector3(0.0f, -1.0f, 0.8f);
+                            Vector3(0.85f, -0.781f, 0.625f); 
                         m_globalConstsCPU.lights[i].direction.Normalize();
                         m_globalConstsCPU.lights[i].spotPower = 3.0f;
                         m_globalConstsCPU.lights[i].radius = 0.131f;
@@ -724,12 +724,12 @@ void AppBase::UpdateGUI() {
    // ResizeSwapChain(m_screenWidth , m_screenHeight);
    //std::cout << "ImGui Width : " << m_imGuiWidth << std::endl;
     }
-
+ 
 void AppBase::Update(float dt) {
 
         m_dt = dt;
         m_inputManager->Update(dt);
-
+          
         for (auto sphere : m_cursorSphere) {
                 float length =
             (sphere->GetPosition() - m_camera->GetPosition())
@@ -738,12 +738,12 @@ void AppBase::Update(float dt) {
 
                 sphere->UpdateScale(Vector3(length) * 2);
         }
-          
+           
         static float frustumTimer = 0.0f;
         if (frustumTimer > 1.0f / 30.f) {
-                GetObjectsInFrustum();
+                GetObjectsInFrustum(m_foundModelList, m_basicList, m_BVNodes); 
                 frustumTimer = 0.0f;
-        }
+        } 
         frustumTimer += dt;
 
         for (const auto &model : m_characters) {
@@ -831,16 +831,16 @@ void AppBase::UpdateLights(float dt) {
         }
     }
 } 
- 
+  
 void AppBase::UpdateLightInfo(
     ComPtr<ID3D11Buffer> &shadowGlobalConstsGPU, GlobalConstants &shadowGlobalConstants,
                               Light &light, Vector3 &aspect) {
     Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
     if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
         up = Vector3(1.0f, 0.0f, 0.0f); 
-
-
-
+     
+      
+      
     // 그림자맵을 만들 때 필요
     Matrix lightViewRow =
         XMMatrixLookAtLH(light.position, light.position + light.direction, up);
@@ -1196,61 +1196,30 @@ void AppBase::OnMouseClick(int mouseX, int mouseY) {
     m_mouseNdcY = -mouseY * 2.0f / m_screenHeight + 1.0f;
 }
   
-void AppBase::GetObjectsInFrustum() {
+void AppBase::GetObjectsInFrustum(vector<shared_ptr<Model>> &result,vector<shared_ptr<Model>> &models, vector<BVNode> &bvh) {
              
-       vector<shared_ptr<Model>> &result = m_foundModelList;
         result.clear();
        result.resize(0); 
 
-    static Matrix viewProjRow = (m_camera->GetViewRow() * m_camera->GetProjRow(true)).Transpose();
-      
     MyFrustum frustum;
     frustum.InitFrustum(this);
 
     std::queue<pair<BVNode, int>> queue;   
           
-    auto CheckFrustumIntersection = [&](BoundingBox &box){
-      //  return frustum.Intersects(box.Center, box.Extents); 
-            //return f.Intersects(box);    
-             
-    //BoundingFrustum frustum(viewProjRow, /*true*/);
-             
-             
-        testPos = Vector3::Transform(box.Center, viewProjRow);
-        //Vector3 CenterProjPos = Vector3::Transform(box.Center, viewProjRow);
-        Vector3 CenterProjPos = testPos;
-        Vector3 ExtentsProjPos = Vector3::Transform(box.Center + box.Extents, viewProjRow);
-           
-        float distX_centerToExtents =
-            std::abs(ExtentsProjPos.x - CenterProjPos.x);
-        float distY_centerToExtents =
-            std::abs(ExtentsProjPos.y - CenterProjPos.y); 
-           
-       // float dist = 1.0f + dist_centerToExtents;
-        float distX = 1.0f + distX_centerToExtents * frustumSize;
-        float distY = 1.0f + distY_centerToExtents * frustumSize;
-              
-        if (CenterProjPos.x >= -distX + 1.0f && CenterProjPos.x <= distX &&
-            CenterProjPos.y >= -distY + 1.0f && CenterProjPos.y <= distY) 
-            return true;  
-            
-        return false;
-    };
-
-    if (m_BVNodes.size() == 0)
+    if (bvh.size() == 0)
                 UpdateBVH();
-    if (m_BVNodes.size() == 0)
+    if (bvh.size() == 0)
                 return;
        
     static int id = 0; 
-    queue.push(make_pair(m_BVNodes[0], 0)); 
+    queue.push(make_pair(bvh[0], 0)); 
       
     while (!queue.empty()) {
                 BVNode &node = queue.front().first;
                 int index = queue.front().second;
                 queue.pop();
-                  
-                  
+                
+                   
                 Vector3 center = node.boundingBox.Center;
                 Vector3 Extents = node.boundingBox.Extents;  
                   Matrix t; 
@@ -1263,69 +1232,22 @@ void AppBase::GetObjectsInFrustum() {
                 } 
                  
                 bool check = frustum.Intersects(center, Extents, t);
-                 
+                  
                 if (check) 
                 { 
                         if (node.objectID >= 0) {
-                                result.push_back(m_basicList[node.objectID]); 
+                result.push_back(models[node.objectID]); 
                         }   
                           
-                        int leftID = m_BVNodes[index].leftChildID;
-                        int rightID = m_BVNodes[index].rightChildID;
-                        if (leftID < m_BVNodes.size())
-                                queue.push(make_pair(m_BVNodes[leftID], leftID));
-                        if (rightID < m_BVNodes.size())
-                                queue.push(make_pair(m_BVNodes[rightID], rightID));
+                        int leftID = bvh[index].leftChildID;
+                        int rightID = bvh[index].rightChildID;
+                        if (leftID < bvh.size())
+                                queue.push(make_pair(bvh[leftID], leftID));
+                        if (rightID < bvh.size())
+                                queue.push(make_pair(bvh[rightID], rightID));
                 } 
     }  
-    // 
-    //    if (id < m_cursorSphere.size()) {
 
-    //            // m_cursorSphere[id++]->UpdatePosition(result.back()->GetPosition());
-
-    //            BVNode &node = m_BVNodes[m_BVHNodeID];
-    //            vector<Vector3> positions;
-    //             
-    //            // 앞면
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(-1.0f, -1.0f, -1.0f) *
-    //                                    node.boundingBox.Extents);
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(-1.0f, 1.0f, -1.0f) *
-    //                                    node.boundingBox.Extents);
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(1.0f, 1.0f, -1.0f) *
-    //                                    node.boundingBox.Extents);
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(1.0f, -1.0f, -1.0f) *
-    //                                    node.boundingBox.Extents);
-
-    //            // 뒷면
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(-1.0f, -1.0f, 1.0f) *
-    //                                    node.boundingBox.Extents);
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(-1.0f, 1.0f, 1.0f) *
-    //                                    node.boundingBox.Extents);
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(1.0f, 1.0f, 1.0f) *
-    //                                    node.boundingBox.Extents);
-    //            positions.push_back(node.boundingBox.Center +
-    //                                Vector3(1.0f, -1.0f, 1.0f) *
-    //                                    node.boundingBox.Extents);
-
-    //            for (int i = 0; i < positions.size(); i++) {
-    //                    m_cursorSphere[id++]->UpdatePosition(positions[i]);
-    //                    if (id >= m_cursorSphere.size())
-    //                            id = 0;
-    //            }
-    //}  
-      
-    //static int temp = 0;
-    ////system("cls");
-    //if (temp % 10 == 0) 
-    //    cout << "ObjectsCountInFrustum : " << result.size() << "\n";
-    //temp++;
 }
 
 

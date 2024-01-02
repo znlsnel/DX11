@@ -821,13 +821,13 @@ MeshData GeometryGenerator::SubdivideToSphere(const float radius,
         for (uint32_t j = 0; j < 12; j++) {
             newMesh.indices.push_back(j + count);
         }
-        count += 12;
+        count += 12; 
     }
 
     return newMesh;
-}
+} 
 
-MeshData GeometryGenerator::MakeLine() { 
+MeshData GeometryGenerator::MakeLine() {  
         
         MeshData mesh;
 
@@ -847,7 +847,7 @@ MeshData GeometryGenerator::MakeLine() {
 
         return mesh;
 }
-
+  
 
 void GeometryGenerator::SetVertexFromHeightMap(
     int mapWidth, int mapHeight, float scale, float dx, float dy, Vertex &v,
@@ -871,7 +871,7 @@ void GeometryGenerator::SetVertexFromHeightMap(
         int rightHeightID[2] = {(int)(rightHeight.x * mapWidth),
                                 (int)(rightHeight.y * mapHeight)};
         int leftHeightID[2] = {(int)(leftHeight.x * mapWidth),
-                               (int)(leftHeight.y * mapHeight)};
+                               (int)(leftHeight.y * mapHeight)}; 
 
         int id = (heightID[0] * 4) + (heightID[1] * mapWidth * 4);
         id = clamp(id, 0, (int)heightMapImage.size() - 1);
@@ -892,7 +892,7 @@ void GeometryGenerator::SetVertexFromHeightMap(
         id = (leftHeightID[0] * 4) + (leftHeightID[1] * mapWidth * 4);
         id = clamp(id, 0, (int)heightMapImage.size() - 1);
         float leftH = (float)heightMapImage[id] / 255.0f;
-           
+            
         float heightScale = 8.0f;
         v.position.z = -h * heightScale;
 

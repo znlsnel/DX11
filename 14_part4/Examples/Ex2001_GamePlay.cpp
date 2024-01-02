@@ -101,7 +101,7 @@ bool Ex2001_GamePlay::InitScene() {
 
        
          //Grass object  
-    if (true)  
+    if (false)  
     {
             shared_ptr<GrassModel> grass = make_shared<GrassModel>();
             shared_ptr<Model> temp = static_pointer_cast<Model>(grass);
@@ -382,8 +382,20 @@ void Ex2001_GamePlay::UpdateGUI() {
              ImGui::DragFloat("Shadow farZ", &m_shadowAspects[i].z, 0.25f, 
                                  0.0f, 1000.f); 
 
-        
-    } 
+             Vector3 shadowDir = m_globalConstsCPU.lights[0].direction;
+             float *temp2[3] = {
+                 &m_globalConstsCPU.lights[0].direction.x,
+                 &m_globalConstsCPU.lights[0].direction.y,
+                 &m_globalConstsCPU.lights[0].direction.z, 
+             }; 
+             if (ImGui::DragFloat3("Shadow Dir", *temp2, 0.025f, -3.14159, 3.14159)) {
+                for (int i = 0; i < MAX_LIGHTS; i++) {
+                    m_globalConstsCPU.lights[i].direction.x = *temp2[0]; 
+                    m_globalConstsCPU.lights[i].direction.y = *temp2[1];
+                    m_globalConstsCPU.lights[i].direction.z = *temp2[2];
+                }
+             }       
+    }  
     if (ImGui::TreeNode("Basic")) {
     
         //            m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);

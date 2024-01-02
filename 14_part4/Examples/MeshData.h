@@ -61,7 +61,11 @@ struct MeshData {
     string metallicTextureFilename;
     string roughnessTextureFilename;
     string opacityTextureFilename;
-
+    string artTextureFilename;
+    string billboardDiffuseTextureFilename;
+    string billboardNormalTextureFilename;
+    string billboardARTTextureFilename;
+     
 };
 
 } // namespace hlab

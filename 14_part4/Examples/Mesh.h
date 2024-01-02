@@ -29,6 +29,10 @@ struct Mesh {
     ComPtr<ID3D11Texture2D> heightTexture;
     ComPtr<ID3D11Texture2D> aoTexture;
     ComPtr<ID3D11Texture2D> metallicRoughnessTexture;
+    ComPtr<ID3D11Texture2D> artTexture;
+    ComPtr<ID3D11Texture2D> billboardDiffuseTexture;
+    ComPtr<ID3D11Texture2D> billboardNormalTexture;
+    ComPtr<ID3D11Texture2D> billboardArtTexture;
 
     ComPtr<ID3D11ShaderResourceView> albedoSRV;
     ComPtr<ID3D11ShaderResourceView> emissiveSRV;
@@ -36,7 +40,11 @@ struct Mesh {
     ComPtr<ID3D11ShaderResourceView> heightSRV;
     ComPtr<ID3D11ShaderResourceView> aoSRV;
     ComPtr<ID3D11ShaderResourceView> metallicRoughnessSRV;
-
+    ComPtr<ID3D11ShaderResourceView> artSRV;
+    ComPtr<ID3D11ShaderResourceView> billboardDiffuseSRV;
+    ComPtr<ID3D11ShaderResourceView> billboardNormalSRV;
+    ComPtr<ID3D11ShaderResourceView> billboardArtSRV;
+    
     // 3D Textures
     Texture3D densityTex;
     Texture3D lightingTex;

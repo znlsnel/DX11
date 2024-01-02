@@ -2,9 +2,9 @@
 #include "Common.hlsli"
 
 
-Texture2D g_textureMap : register(t0);
+Texture2D g_heightMap : register(t0);
 Texture2DArray ORDp : register(t1);
-
+  
 struct HullShaderOutput
 {
     float3 posModel : POSITION; //¸ðµ¨ ÁÂÇ¥°èÀÇ À§Ä¡ position
@@ -25,7 +25,7 @@ struct PatchConstOutput
 PixelShaderInput main(PatchConstOutput patchConst,
              float2 uv : SV_DomainLocation,
              const OutputPatch<HullShaderOutput, 4> quad)
-{
+{ 
     PixelShaderInput output;
     
     float3 v1 = quad[0].posModel * (1 - uv.x) + quad[1].posModel * (uv.x);
@@ -67,17 +67,22 @@ PixelShaderInput main(PatchConstOutput patchConst,
         float2 temp2 = quad[2].texcoord * (1 - uv.x) + quad[3].texcoord * (uv.x);
         output.texcoord = (temp1 * (1 - uv.y) + temp2 * (uv.y));
     }
-     
-    if (useHeightMap) 
-    {
-        float temp = g_textureMap.SampleLevel(linearWrapSampler, output.texcoord / 30, 0).r;
-        int currTexture = round(temp * 255);
-        float height = ORDp.SampleLevel(linearWrapSampler, float3(output.texcoord, currTexture), 0).b;
-        height = height * 2.0 - 1.0;
-        output.posWorld += output.normalWorld * height * heightScale;
-        output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
-    }
-    return output;
+       
+    //if (useHeightMap) 
+    //{    
+    //    float temp = g_heightMap.SampleLevel(linearWrapSampler, output.texcoord / 100, 0).r;
+    //    //int currTexture = round(temp * 255);
+    //    float height = ORDp.SampleLevel(linearWrapSampler, float3(output.texcoord, currTexture), 0).b;
+    //    height = height * 2.0 - 1.0;
+    //    output.posWorld += output.normalWorld * height * heightScale; 
+    //    output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
+    //} 
+        
+    float height = g_heightMap.SampleLevel(linearWrapSampler, output.texcoord / 50, 0).r * 8.0;
+    output.posWorld.y = height;
+    output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
     
-}
+    return output;
+     
+} 
  

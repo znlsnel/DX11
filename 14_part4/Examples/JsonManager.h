@@ -25,8 +25,10 @@ struct QuicellMeshPathInfo {
     string Roughness; // R
     string Displacement; // dp
     string metallic; // F
+    string art;
     string billboardDiffuse;
     string billboardNormal; 
+    string billboardArt;
 
     vector<vector<MeshData>> meshs;
     vector<Vector3> yOffset;

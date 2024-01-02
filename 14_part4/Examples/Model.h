@@ -192,8 +192,8 @@ class Model {
                 vector<shared_ptr<Mesh>>& bvhMeshs,
             const MeshData &mesh, int minIndex,
                 int maxIndex, int level);
-  private:
-    void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
+  protected:
+    virtual void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
 
   public:
     void UpdateWorldRow(const Matrix& row, bool debug = false);

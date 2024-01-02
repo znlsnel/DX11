@@ -62,7 +62,7 @@ enum EEditTextureType : int {
 };
 
 class AppBase {
-
+  public:
     struct MyFrustum {
         public:
                 MyFrustum(){};
@@ -168,7 +168,7 @@ class AppBase {
                                 outCount++; 
                             } else
                                 inCount++;
-                        }
+                        } 
                          
                         if (inCount == 0)
                             return false;          
@@ -211,8 +211,10 @@ class AppBase {
     void SetMainViewport();
     void SetShadowViewport();
 
-    void GetObjectsInFrustum();
-
+    void GetObjectsInFrustum(vector<shared_ptr<Model>> &result,
+                             vector<shared_ptr<Model>> &models,
+                             vector<BVNode>& bvh);
+     
     virtual void OnMouseMove(int mouseX, int mouseY);
     virtual void OnMouseClick(int mouseX, int mouseY);
 
@@ -389,11 +391,11 @@ class AppBase {
     // shadow 0.3 -> 1.0 -> 3.0 -> 5.0 -> (10.0 * 10.0) 
     Vector3 m_shadowAspects[5] =   
     {
-            Vector3(0.8f, -0.8f, 6.f),   
-            Vector3(2.0f, -2.0f, 6.5f),  
-            Vector3(3.5f, -3.5f, 8.f),   
-            Vector3(7.0f, -7.0f, 10.f),  
-            Vector3(10.0f, -10.0f, 200.f),  
+            Vector3(0.8f, -0.8f, 7.25f),   
+            Vector3(2.0f, -2.0f, 8.f),  
+            Vector3(3.5f, -3.5f, 10.f),   
+            Vector3(7.0f, -7.0f, 20.f),  
+            Vector3(10.0f, -10.0f, 120.f),  
     };   
          
     // 여러 예제들 공용     

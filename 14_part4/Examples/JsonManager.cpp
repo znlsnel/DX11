@@ -3,6 +3,7 @@
 #include "JsonManager.h"
 #include "AppBase.h"
 
+#include "FoliageModel.h"
 #include "BillboardModel.h"
 #include "D3D11Utils.h"
 #include "Character.h"
@@ -154,8 +155,9 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                 char format = fileName.string()[formatIndex];
                                  
                                 bool isBillboardTexture =
-                                    KMP(fileName.string(), "Billboard");
-                                   
+                                    KMP(fileName.string(), "Billboard") ||
+                                    KMP(fileName.string(), "billboard");
+                                    
                                 if (isBillboardTexture)
                                     temp->isFolige = true;
                                    
@@ -168,11 +170,17 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                 } 
                                 else if (format == 'N' ) { 
                                     if (isBillboardTexture)
-                                        temp->billboardDiffuse =
+                                        temp->billboardNormal =  
                                             fileName.string();
                                     else
                                         temp->Normal = fileName.string();
-                                } 
+                                } else if (format == 'T') {
+                                    if (isBillboardTexture)
+                                        temp->billboardArt =
+                                            fileName.string();
+                                    else
+                                        temp->art = fileName.string();
+                                }
 
                                  
                                 else if (format == 'F') {
@@ -653,8 +661,8 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
 
     // density = 0 ~ 1 
     float range =   info.foliageRange;
-    float density = 1.1f - info.foliageDensity;
-       
+    float density = 1.01f - info.foliageDensity;
+     
     std::random_device rd;
     std::mt19937 gen(rd()); 
     std::uniform_real_distribution<float> randId(0.f, float(temp->mesh.size()) - 1.f);
@@ -703,7 +711,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                     for (int id = 0; id < tempMD.size(); id++) {
                         for (auto &vtx : tempMD[id].vertices) { 
                                  vtx.position =  (vtx.position - temp->yOffset[quixelNum]) + GenPos; 
-                        }  
+                        }   
                     }     
                     temp->yOffset[quixelNum] = GenPos;
 
@@ -736,7 +744,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                                  }
                         }   
                          
-
+                         
                    mesheStartID.push_back(meshes->size());
                    meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
             
@@ -749,8 +757,8 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                    temp->hasMeshs[quixelNum] = true;
                    temp->yOffset[quixelNum] = GenPos;
             } 
-    } 
-
+    }  
+        
     for (int i : mesheStartID) { 
                 (*meshes)[i].albedoTextureFilename =
                 temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
@@ -771,8 +779,8 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                 temp->metallic == "" ? "" : info.quicellPath + temp->metallic;    
     }  
        
-    shared_ptr<Model> tempModel =
-        make_shared<Model>(m_appBase->m_device, m_appBase->m_context, *meshes, m_appBase);
+    shared_ptr<FoliageModel> tempModel =
+        make_shared<FoliageModel>(m_appBase->m_device, m_appBase->m_context, *meshes, m_appBase, mesheStartID);
     tempModel->objectInfo.quixelID = info.quixelID;
 
     tempModel->UpdateTranseform(info.scale, info.rotation, info.position);

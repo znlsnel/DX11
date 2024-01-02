@@ -22,7 +22,7 @@ float3 SchlickFresnel(float3 F0, float NdotH)
 {
     return F0 + (1.0 - F0) * pow(2.0, (-5.55473 * NdotH - 6.98316) * NdotH);
     //return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
+} 
 
 struct PixelShaderOutput
 {
@@ -36,8 +36,12 @@ float4 GetTexture(Texture2DArray textureArray, SamplerState ss, float2 texc, flo
     float4 rightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, rightTexture.x), lod);
     float4 upT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upTexture.x), lod);
     float4 upRightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upRightTexture.x), lod);
-    float4 result = curT * (currTexture.y) + rightT * (rightTexture.y)
-                     + upT * (upTexture.y) + upRightT * (upRightTexture.y);
+    float4 result = 
+    curT * (currTexture.y) + 
+    rightT * (rightTexture.y)+ 
+    upT * (upTexture.y) + 
+    upRightT * (upRightTexture.y);
+     
     //result *= 0.5; 
     return result;  
 }
@@ -249,14 +253,14 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
         float2 lightTexcoord = float2(lightScreen.x, -lightScreen.y);
         lightTexcoord += 1.0;
         lightTexcoord *= 0.5;
-        
+         
         // 3. 쉐도우맵에서 값 가져오기
         float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
         bool usedOverallShadowMap = false;
         // 4. 가려져 있다면 그림자로 표시
-        if (depth + 0.001 < lightScreen.z)
+        if (depth - 0.1 < lightScreen.z)
             shadowFactor = 0.0;
-        
+         
         //else if (light.type & LIGHT_DIRECTIONAL)
         //{
         //    lightScreenOverall = mul(float4(posWorld, 1.0), lights[MAX_LIGHTS - 1].viewProj);
@@ -353,7 +357,7 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
             //    radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap2);
             
             // 오류 임시 수정 (radiance가 (0,0,0)일 경우  directLighting += ... 인데도 0 벡터가 되어버림
-    if (abs(dot(float3(1, 1, 1), radiance)) > 1e-5)
+    if (abs(dot(float3(1, 1, 1), radiance)) > 1e-5) 
         directLighting += (diffuseBRDF + specularBRDF) * radiance * NdotI;
 
     return directLighting;
@@ -362,14 +366,16 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
 PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
-     
-    float texDx = 1.0 / 1024;
-    float2 originTexc = input.texcoord / 100;
-    float2 texc = input.texcoord;
+        
+    float texDx = 1.0 / 1024; 
+    float texSize = 50.0;
+    float2 originTexc = input.texcoord / texSize;
+    float2 texc = input.texcoord; 
     { // 0 ~ 1024 -> 0 ~ 1
-        texc *= 10.24;
-        texc.x = round(texc.x);
-        texc.y = round(texc.y);
+        texc /= texSize;
+        texc *= 1024; 
+        texc.x = floor(texc.x);  
+        texc.y = floor(texc.y);
         texc /= 1024;
     }
     float2 texDir = originTexc - texc;
@@ -377,8 +383,8 @@ PixelShaderOutput main(PixelShaderInput input)
     {
         texDir.x = texDir.x > 0 ? texDx : -texDx;
         texDir.y = texDir.y > 0 ? texDx : -texDx;
-    }
-     
+    } 
+        
     currTexture.x = int(textureMap.Sample(pointWrapSampler, texc).r * 255);
     float2 rightTexc = texc + float2(texDir.x, 0);
     rightTexture.x = int(textureMap.Sample(pointWrapSampler, rightTexc).r * 255);
@@ -388,34 +394,50 @@ PixelShaderOutput main(PixelShaderInput input)
     upRightTexture.x = int(textureMap.Sample(pointWrapSampler, upRightTexc).r * 255);
     
     float eyeToPixelLength = length(input.posWorld - eyeWorld);
-      
-    float originToTexLength = length(originTexc - texc);
+       
+  
+        
+    float originToTexLength = length(originTexc - texc); 
     float originToRightTexLength = length(originTexc - rightTexc);
     float originToUpTexLength = length(originTexc - upTexc);
-    float originToUpRightTexLength =   length(originTexc - upRightTexc); 
-         
+    float originToUpRightTexLength = length(originTexc - upRightTexc);
+          
+    originToTexLength = clamp(originToTexLength - (texDx / 8), 0.0, originToTexLength);
+    originToRightTexLength = clamp(originToRightTexLength - (texDx / 8), 0.0, originToRightTexLength);
+    originToUpTexLength = clamp(originToUpTexLength - (texDx / 8), 0.0, originToUpTexLength);
+    originToUpRightTexLength = clamp(originToUpRightTexLength - (texDx / 8), 0.0, originToUpRightTexLength);
+      
+     
+    
     float totalLength = originToTexLength + originToRightTexLength + 
                                         originToUpTexLength + originToUpRightTexLength;
-     
-    //currTexture.y = (originToTexLength / totalLength);
-    //rightTexture.y = (originToRightTexLength / totalLength);
-    //upTexture.y = (originToUpTexLength / totalLength);
-    //upRightTexture.y = (originToUpRightTexLength / totalLength);
-     
+       
     currTexture.y = (totalLength / originToTexLength);
     rightTexture.y = (totalLength / originToRightTexLength);
     upTexture.y = (totalLength / originToUpTexLength);
     upRightTexture.y = (totalLength / originToUpRightTexLength);
-              
+
+    //currTexture.y = saturate(originToTexLength / totalLength);
+    //rightTexture.y = saturate(originToRightTexLength / totalLength);
+    //upTexture.y = saturate(originToUpTexLength / totalLength);
+    //upRightTexture.y = saturate(originToUpRightTexLength / totalLength);
+       
     totalLength = currTexture.y + rightTexture.y + upTexture.y + upRightTexture.y;
     currTexture.y /= totalLength;
     rightTexture.y /= totalLength;
     upTexture.y /= totalLength;
     upRightTexture.y /= totalLength;
-      
+        
+    currTexture.y = saturate(currTexture.y);
+    rightTexture.y = saturate(rightTexture.y);
+    upTexture.y = saturate(upTexture.y);
+    upRightTexture.y = saturate(upRightTexture.y);
+
+
+    
     float lod = length(input.posWorld - eyeWorld);
    // lod -= 3;
-   // lod /= 3; 
+   lod /= 3;  
     lod = clamp(lod, 0.0, 5.0);
     
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
@@ -496,8 +518,9 @@ PixelShaderOutput main(PixelShaderInput input)
         rt = clamp(rt, 0.0, 1.0); 
         directLighting = tempDL[0] * (1.0 - rt) + tempDL[1] * rt;
     }
-      
+       
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
+    output.pixelColor *= 1.2;
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
     output.indexColor = indexColor;
