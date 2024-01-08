@@ -182,7 +182,7 @@ class AppBase {
 
   public:
     AppBase();
-    virtual ~AppBase(); 
+    virtual ~AppBase();  
 
     int Run();
     float GetAspectRatio() const;

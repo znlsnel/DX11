@@ -93,7 +93,8 @@ struct Light {
     // Light type bitmasking 
     // ex) LIGHT_SPOT | LIGHT_SHADOW
     uint32_t type = LIGHT_OFF;
-    float radius = 0.035f; // 반지름
+    //float radius = 0.035f; // 반지름
+    float radius = 0.45f; // 반지름
 
     float haloRadius = 0.0f;
     float haloStrength = 0.0f;

@@ -30,16 +30,73 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
     exit(-1);
 }
 
-
-
+ 
+ 
 void Model::InitMeshBuffers(ComPtr<ID3D11Device> &device,
                             const MeshData &meshData,
                             shared_ptr<Mesh> &newMesh) {
+           
+    static const int minVertexCount = 3; 
+
+    int interval = (meshData.vertices.size() - minVertexCount) / 9;
+ //   cout << "interval : " << interval << "\n"; 
+    vector<int> vertexNumbers(10);
+    vertexNumbers[0] = int(meshData.vertices.size()); 
+    vertexNumbers[9] = int(minVertexCount); 
+     
+    for (int i = 1; i < 5; i++) {
+        int nextAddVal =
+             interval > vertexNumbers[vertexNumbers.size() - i ] * 10
+                ? vertexNumbers[vertexNumbers.size() - i] * 10
+                : interval;
+      //  cout << "nextAddVal : " << nextAddVal << "\n";
+        vertexNumbers[vertexNumbers.size() - i - 1] =
+            vertexNumbers[vertexNumbers.size() - i] + nextAddVal; 
+
+        nextAddVal = nextAddVal == interval ? interval : interval * 2;
+    //    cout << "nextAddVal : " << nextAddVal << "\n"; 
+        vertexNumbers[i] = vertexNumbers[i - 1] - nextAddVal;  
+
+        if (vertexNumbers[i] < vertexNumbers[vertexNumbers.size() - i - 1])
+            vertexNumbers[i] = (vertexNumbers[i - 1] + 
+                    vertexNumbers[vertexNumbers.size() - i - 1] )/ 2; 
+    }
+    newMesh->vertexBuffers.resize(vertexNumbers.size());
+    newMesh->vertexCounts.resize(vertexNumbers.size());
+
+       
+    for (int i = 1; i < vertexNumbers.size(); i++) {
+        const float skipCount = float(meshData.vertices.size() - vertexNumbers[i]) /
+                                (float)meshData.vertices.size(); 
+     //   cout << "skipCount   : " << skipCount << "\n";
          
+        float count = 0.0f;
+        vector<Vertex> tempVertex;
+
+        for (auto &Vertex : meshData.vertices) {
+            count += skipCount;
+   //         cout << "count   : " << count << "\n";
+              
+            if (count > 1) {
+                count -= 1.0f;
+                continue;
+            }
+            tempVertex.push_back(Vertex);
+        } 
+  //      cout << "tempVertex . size  : " << tempVertex.size() << "\n";
+        D3D11Utils::CreateVertexBuffer(device, tempVertex,
+                                       newMesh->vertexBuffers[i]);  
+        newMesh->vertexCounts[i] = tempVertex.size();  
+    }
+        
     D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-                                   newMesh->vertexBuffer);
+                                   newMesh->vertexBuffers[0]); 
+    newMesh->vertexBuffer = newMesh->vertexBuffers[0]; 
+
     newMesh->indexCount = UINT(meshData.indices.size());
-    newMesh->vertexCount = UINT(meshData.vertices.size());
+    newMesh->vertexCounts[0] = UINT(meshData.vertices.size());
+    newMesh->vertexCount = newMesh->vertexCounts[0]; 
+     
     newMesh->stride = UINT(sizeof(Vertex));
     D3D11Utils::CreateIndexBuffer(device, meshData.indices,
                                   newMesh->indexBuffer);
@@ -487,7 +544,7 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
 
             context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(),
                                         &mesh->stride, &mesh->offset);
-            context->IASetIndexBuffer(mesh->indexBuffer.Get(),
+           context->IASetIndexBuffer(mesh->indexBuffer.Get(),
                                       DXGI_FORMAT_R32_UINT, 0);
            
             context->DrawIndexed(mesh->indexCount, 0, 0);
@@ -773,7 +830,7 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     for (auto model : childModels) {
         model->UpdateTranseform(m_scale, m_rotation, m_position);
     }
-}
+} 
 
 ComPtr<ID3D11Buffer>
 Model::MergeBuffer(vector<ComPtr<ID3D11Buffer>> &buffers) {
@@ -818,13 +875,13 @@ bool Model::MergeMeshes(vector<shared_ptr<Mesh>> &meshes,
                                     shared_ptr<Mesh> &result) {
     if (meshes.size() == 0)
         return false;
-       
+        
     vector<ComPtr<ID3D11Buffer>> vertexBuffers;
     vector<ComPtr<ID3D11Buffer>> indexBuffers;
     result = meshes[0];
     UINT indexCount = 0;
     UINT vertexCount = 0;
-
+     
        
     for (auto& mesh : meshes) {
         vertexBuffers.push_back(mesh->vertexBuffer);

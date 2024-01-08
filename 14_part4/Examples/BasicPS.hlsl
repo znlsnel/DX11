@@ -223,7 +223,7 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
     {
         const float nearZ = 0.01; // 카메라 설정과 동일
         
-        // 1. Project posWorld to light screen    
+        // 1. Project posWorld to light screen     
         float4 lightScreenOverall = float4(0.0, 0.0, 0.0, 0.0);
         float2 lightTexcoordOverall = float2(0.0, 0.0);
         float4 lightScreen = mul(float4(posWorld, 1.0), light.viewProj);
@@ -234,17 +234,12 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
         lightTexcoord += 1.0;
         lightTexcoord *= 0.5;
         
-       //  3. 쉐도우맵에서 값 가져오기
-        float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
-        bool usedOverallShadowMap = false;
-        // 4. 가려져 있다면 그림자로 표시
-        if (depth + 0.001 < lightScreen.z)
-            shadowFactor = 0.0;
-        //else if (light.type & LIGHT_DIRECTIONAL)
-        //{
-        //    lightScreenOverall = mul(float4(posWorld, 1.0), lights[MAX_LIGHTS - 1].viewProj);
-        //    lightScreenOverall.xyz /= lightScreenOverall.w;
-        
+       ////  3. 쉐도우맵에서 값 가져오기
+       // float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
+       // // 4. 가려져 있다면 그림자로 표시
+       // if (depth + 0.001 < lightScreen.z)
+       //     shadowFactor = 0.0;
+                
         //// 2. 카메라(광원)에서 볼 때의 텍스춰 좌표 계산
         //    lightTexcoordOverall = float2(lightScreenOverall.x, -lightScreenOverall.y);
         //    lightTexcoordOverall += 1.0;
@@ -255,32 +250,17 @@ float3 LightRadiance(Light light, float3 representativePoint, float3 posWorld, f
         //        shadowFactor = 0.0;
         //        usedOverallShadowMap = true;
         //    }
-        //}
-        
-        if (usedOverallShadowMap == false)
-        {
-            uint width, height, numMips;
-            shadowMap.GetDimensions(0, width, height, numMips);
+        //} 
+          
+        uint width, height, numMips;
+        shadowMap.GetDimensions(0, width, height, numMips);
         
             // float dx = 5.0 / (float) width;
             // shadowFactor = PCF_Filter(lightTexcoord.xy, lightScreen.z - 0.001, dx, shadowMap);
         
-            float radiusScale = 0.5; // 광원의 반지름을 키웠을 때 깨지는 것 방지
-            shadowFactor = PCSS(lightTexcoord, lightScreen.z - 0.001, shadowMap, light.invProj, light.radius * radiusScale);            
-                   
-        }
-        else
-        {
-            uint width, height, numMips;
-            shadowMaps[MAX_LIGHTS - 1].GetDimensions(0, width, height, numMips);
-        
-            // float dx = 5.0 / (float) width;
-            // shadowFactor = PCF_Filter(lightTexcoord.xy, lightScreen.z - 0.001, dx, shadowMap);
-        
-            float radiusScale = 0.5; // 광원의 반지름을 키웠을 때 깨지는 것 방지
-            shadowFactor = PCSS(lightTexcoordOverall, lightScreenOverall.z - 0.001, shadowMaps[MAX_LIGHTS - 1], light.invProj, light.radius * radiusScale);
-                   
-        }
+        float radiusScale = 0.5; // 광원의 반지름을 키웠을 때 깨지는 것 방지
+        shadowFactor = PCSS(lightTexcoord, lightScreen.z - 0.001, shadowMap, light.invProj, light.radius * radiusScale);
+
     }
 
     float3 radiance = light.radiance * spotFator * att * shadowFactor;
@@ -292,11 +272,11 @@ float3 DrawLight(PixelShaderInput input, Light light, Texture2D shadowMap,
 float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roughness, float3 directLighting)
 {
     if (light.type == 0)
-        return float3(0.0, 0.0, 0.0);
+        return float3(0.0, 0.0, 0.0); 
     
         float3 L = light.position - input.posWorld;
     if (light.type & LIGHT_DIRECTIONAL)
-            L = -light.direction;
+        L = -light.direction;
         float3 r = normalize(reflect(eyeWorld - input.posWorld, normalWorld));
         float3 centerToRay = dot(L, r) * r - L;
         float3 representativePoint = L + centerToRay * clamp(light.radius / length(centerToRay), 0.0, 1.0);
@@ -348,10 +328,9 @@ PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
     lod = length(input.posWorld - eyeWorld);
-  //  lod -= 5;
+   //lod -= 5;
     lod = clamp(lod, 0.0, 10.0);
-   // lod /= 5;
-      
+   // lod /= 5; 
     float a = ARTTex.SampleLevel(linearClampSampler, input.texcoord, lod).r;
     if (useARTTexture && a < 0.7) 
         clip(-0.1 );
@@ -373,7 +352,7 @@ PixelShaderOutput main(PixelShaderInput input)
                                      : emissionFactor;
 
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
-    
+    ambientLighting = float3(0.0, 0.0, 0.0); 
     float3 directLighting = float3(0, 0, 0);
 
     // 0.3, 1.0, 3.0, 5.0, 10.0
@@ -435,12 +414,6 @@ PixelShaderOutput main(PixelShaderInput input)
     directLighting *= directionalLightPow; 
     //emission *= directionalLightPow;
    // ambientLighting *= directionalLightPow;
-    //[unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
-    //for (int j = MAX_DIRECTIONALLIGHT; j < MAX_LIGHTS; j++)
-    //{
-    //    directLighting += DrawLight(input, lights[j], shadowMaps[j],
-    //     normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
-    //}
     
    output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
     output.pixelColor *= 1.2;

@@ -18,8 +18,7 @@ class FoliageModel : public Model{
     void GetMeshInFrustum();
     virtual void Render(ComPtr<ID3D11DeviceContext> &context) override;
     void RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
-                       vector<shared_ptr<Mesh>> &meshes,
-                       shared_ptr<Mesh> &mergeMesh);
+                       vector<shared_ptr<Mesh>> &meshes);
     float billboardDistance = 10.0f;
     float shadowDistance = 1.0f;
        

@@ -163,27 +163,31 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                 Vector3 Extents = node.boundingBox.Extents;
                 // Matrix t = m_worldRow;
                 Matrix t;
-                      
+                       
                 bool check = frustum.Intersects(center, Extents, t);
                      
                 if (check) { 
-
+                          
                     if (node.objectID >= 0)  
                     {   
                         float cameraToCenter = (cameraPos - center).Length();
+                        shared_ptr<Mesh> &tempMesh =
+                            m_meshes[m_meshStartID[node.objectID]]; 
+                        int vertexId =min(int(cameraToCenter * 3.0f), int(tempMesh->vertexBuffers.size() / 2)); 
+                        tempMesh->vertexBuffer =
+                            tempMesh->vertexBuffers[vertexId];
+                        tempMesh->vertexCount = tempMesh->vertexCounts[vertexId];
+
                          if (cameraToCenter < billboardDistance){ 
 
                             if (cameraToCenter < shadowDistance)
-                                m_foundMesh.push_back(
-                                        m_meshes[m_meshStartID[node.objectID]]);
+                                m_foundMesh.push_back(tempMesh);
                             else  
-                                m_foundDistantMesh.push_back(
-                                    m_meshes[m_meshStartID[node.objectID]]); 
+                                m_foundDistantMesh.push_back(tempMesh); 
                          } 
                         else  
                             m_foundBillboardMesh.push_back(make_pair(
-                                m_meshes[m_meshStartID[node.objectID]],
-                                m_vertexBuffers[node.objectID]));
+                                tempMesh, m_vertexBuffers[node.objectID]));
                     } 
                  
                  
@@ -195,24 +199,22 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                         queue.push(make_pair(m_bvh[rightID], rightID));
                 }
         }
-}  
-      
+}   
+       
 void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
               
     static int searchingMeshTimer = 20;
        
-        if (searchingMeshTimer > 10) {
+        if (searchingMeshTimer > 10) { 
                 GetMeshInFrustum();  
-                MergeMeshes(m_foundMesh, m_mergeMesh);
-                MergeMeshes(m_foundDistantMesh, m_mergeDistantMesh);
                 searchingMeshTimer = 0;
         }
-        searchingMeshTimer++;  
-            
-       RenderFoliage(context, m_foundMesh, m_mergeMesh);
-          
-        if (  m_appBase->isRenderShadowMap == false) {
-                RenderFoliage(context, m_foundDistantMesh, m_mergeDistantMesh);
+        searchingMeshTimer++;   
+             
+       RenderFoliage(context, m_foundMesh);
+           
+        if (true ||  m_appBase->isRenderShadowMap == false) {
+                RenderFoliage(context, m_foundDistantMesh);
         } 
          
 
@@ -255,50 +257,51 @@ void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
 }
 
 void hlab::FoliageModel::RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
-                                       vector<shared_ptr<Mesh>> &meshes,
-                                       shared_ptr<Mesh> &mergeMesh) { 
-        if (meshes.size() == 0 || mergeMesh == nullptr) {
-                return; 
-    } 
-         
-        shared_ptr<Mesh> mesh = meshes[0];
-        ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
-                                                mesh->materialConstsGPU.Get()};
-        context->VSSetConstantBuffers(1, 2, constBuffers);
+                                       vector<shared_ptr<Mesh>> &meshes) { 
+        if (meshes.size() == 0) { 
+                return;   
+        } 
+         for (int i = 0; i < meshes.size(); i++){
+                    
+                shared_ptr<Mesh> mesh = meshes[i];
+                ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
+                                                 mesh->materialConstsGPU.Get()};
+                context->VSSetConstantBuffers(1, 2, constBuffers);
 
-        context->VSSetShaderResources(0, 1,
-                                        mesh->heightSRV.GetAddressOf());
+                context->VSSetShaderResources(0, 1,
+                                              mesh->heightSRV.GetAddressOf());
 
-        // 물체 렌더링할 때 여러가지 텍스춰 사용 (t0 부터시작)
-        vector<ID3D11ShaderResourceView *> resViews = {
-                mesh->albedoSRV.Get(),   mesh->normalSRV.Get(),
-                mesh->aoSRV.Get(),       mesh->metallicRoughnessSRV.Get(),
-                mesh->emissiveSRV.Get(), mesh->artSRV.Get()};
-        context->PSSetShaderResources(0, // register(t0)
-                                        UINT(resViews.size()),
-                                        resViews.data());
+                // 물체 렌더링할 때 여러가지 텍스춰 사용 (t0 부터시작)
+                vector<ID3D11ShaderResourceView *> resViews = {
+                    mesh->albedoSRV.Get(),   mesh->normalSRV.Get(),
+                    mesh->aoSRV.Get(),       mesh->metallicRoughnessSRV.Get(),
+                    mesh->emissiveSRV.Get(), mesh->artSRV.Get()};
+                context->PSSetShaderResources(0, // register(t0)
+                                              UINT(resViews.size()),
+                                              resViews.data());
 
-        context->PSSetConstantBuffers(1, 2, constBuffers);
+                context->PSSetConstantBuffers(1, 2, constBuffers);
 
-        // Volume Rendering
-        if (mesh->densityTex.GetSRV())
-        context->PSSetShaderResources(
-                5, 1, mesh->densityTex.GetAddressOfSRV());
-        if (mesh->lightingTex.GetSRV())
-        context->PSSetShaderResources(
-                6, 1, mesh->lightingTex.GetAddressOfSRV());
+                // Volume Rendering
+                if (mesh->densityTex.GetSRV())
+                context->PSSetShaderResources(
+                    5, 1, mesh->densityTex.GetAddressOfSRV());
+                if (mesh->lightingTex.GetSRV())
+                context->PSSetShaderResources(
+                    6, 1, mesh->lightingTex.GetAddressOfSRV());
 
-        vector<ID3D11Buffer *> vertexBuffers = {
-                mergeMesh->mergeVertexBuffer.Get()};
-        context->IASetVertexBuffers(0, UINT(vertexBuffers.size()),
-                                        vertexBuffers.data(), &mesh->stride,
-                                        &mesh->offset);
+                vector<ID3D11Buffer *> vertexBuffers = {
+                    mesh->vertexBuffer.Get()};
+                context->IASetVertexBuffers(0, UINT(vertexBuffers.size()),
+                                            vertexBuffers.data(), &mesh->stride,
+                                            &mesh->offset);
+                  
+                context->Draw(mesh->vertexCount, 0);
 
-        context->Draw(mergeMesh->mergeVertexCount, 0);
-
-        // Release resources
-        ID3D11ShaderResourceView *nulls[3] = {NULL, NULL, NULL};
-        context->PSSetShaderResources(5, 3, nulls);
+                // Release resources
+                ID3D11ShaderResourceView *nulls[3] = {NULL, NULL, NULL};
+                context->PSSetShaderResources(5, 3, nulls);
+    }
 }
 
 

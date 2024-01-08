@@ -809,7 +809,14 @@ void AppBase::UpdateLights(float dt) {
           
         //Vector3 tempCamPos = m_camera->GetPosision();
          
-        //Vector3 tempCamPos = RayCasting(0.0f, -0.25f); 
+        //Vector3 tempCamPos = RayCasting(0.0f, -0.25f);  
+        float updateDistance = 10.f;
+        tempCamPos.x = round(tempCamPos.x * updateDistance) / updateDistance;
+        tempCamPos.y = round(tempCamPos.y * updateDistance) / updateDistance;
+        tempCamPos.z = round(tempCamPos.z * updateDistance) / updateDistance;
+         
+         
+
         Vector3 tempLPos = m_globalConstsCPU.lights[0].direction;
         tempCamPos += -tempLPos * 5;
 
@@ -818,7 +825,7 @@ void AppBase::UpdateLights(float dt) {
 
         updateTimer = 0.0f;  
     } 
-    updateTimer += dt;
+    updateTimer += dt; 
 
     // 그림자맵을 만들기 위한 시점
     for (int i = 0; i < MAX_LIGHTS; i++) {
@@ -830,7 +837,7 @@ void AppBase::UpdateLights(float dt) {
                             m_shadowAspects[i]);
         }
     }
-} 
+}  
   
 void AppBase::UpdateLightInfo(
     ComPtr<ID3D11Buffer> &shadowGlobalConstsGPU, GlobalConstants &shadowGlobalConstants,
@@ -974,7 +981,7 @@ void AppBase::RenderOpaqueObjects() {
     };
       
     m_context->OMSetRenderTargets(2, targets,
-                                  m_defaultDSV.Get());  
+                                  m_defaultDSV.Get());   
       
     // 그림자맵들도 공용 텍스춰들 이후에 추가
     // 주의: 마지막 shadowDSV를 RenderTarget에서 해제한 후 설정
@@ -982,23 +989,23 @@ void AppBase::RenderOpaqueObjects() {
     for (int i = 0; i < MAX_LIGHTS; i++) { 
         shadowSRVs.push_back(m_shadowSRVs[i].Get()); 
     } 
-
+     
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
-    
+     
     m_context->PSSetShaderResources(20, 1, m_billboardTreeSRV.GetAddressOf()); 
 
     m_context->ClearDepthStencilView(
         m_defaultDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     AppBase::SetGlobalConsts(m_globalConstsGPU);
 
-    // 스카이박스 그리기
+    // 스카이박스 그리기 
     // 투명한 물체가 있어서 편의상 다른 물체들보다 먼저 그렸습니다.
     // 최적화를 하고 싶다면 투명한 물체들만 따로 마지막에 그리면 됩니다.
     AppBase::SetPipelineState(m_drawAsWire ? Graphics::skyboxWirePSO
                                            : Graphics::skyboxSolidPSO);
     m_skybox->Render(m_context);
-     
+      
         for (const auto &model : m_foundModelList) {
                 AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
                 model->Render(m_context); 
@@ -1007,7 +1014,7 @@ void AppBase::RenderOpaqueObjects() {
         for (const auto &model : m_NoneBVHList) {
                 AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
                 model->Render(m_context);
-                
+                 
         } 
 
     
