@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "AppBase.h"
- 
+  
 namespace hlab {
 class FoliageModel : public Model{
   public:
@@ -11,25 +11,34 @@ class FoliageModel : public Model{
                  ComPtr<ID3D11DeviceContext> &context,
                  const vector<MeshData> &meshes, class AppBase *appBase,
                  vector<int> &meshStartID);
-     
-    void MakeBoundingBox(const vector<MeshData>& meshDatas);
+      
+    void MakeBoundingBox(
+        ComPtr<ID3D11Device> &device, const vector<MeshData> &meshDatas);
     void MakeBVH();
-    void GetMeshInFrustum(vector<shared_ptr<Mesh>> &mesh);
+    void GetMeshInFrustum();
     virtual void Render(ComPtr<ID3D11DeviceContext> &context) override;
-    //virtual GraphicsPSO &GetPSO(const bool wired);
-    //virtual GraphicsPSO &GetDepthOnlyPSO();
-    //virtual GraphicsPSO &GetReflectPSO(const bool wired);
-    // 
+    void RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
+                       vector<shared_ptr<Mesh>> &meshes,
+                       shared_ptr<Mesh> &mergeMesh);
+    float billboardDistance = 10.0f;
+    float shadowDistance = 1.0f;
        
+private:
+    vector<ComPtr<ID3D11Buffer>> m_vertexBuffers;
     vector<BoundingBox> m_boundingBoxs;
     vector<int> m_meshStartID;
-    vector<BVNode> m_bvh; 
+    vector<BVNode> m_bvh;  
     vector<shared_ptr<Mesh>> m_foundMesh; 
+    vector<shared_ptr<Mesh>> m_foundDistantMesh; 
+    shared_ptr<Mesh> m_mergeMesh; 
+    shared_ptr<Mesh> m_mergeDistantMesh;
+    vector<pair<shared_ptr<Mesh>, ComPtr<ID3D11Buffer>>> m_foundBillboardMesh; 
      
-    private:
+    
+
         bool isBBDRendering = false;
-      virtual void UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
-                                  Vector3 &position)override;
+        virtual void UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
+                                Vector3 &position)override;
 };
 }
  

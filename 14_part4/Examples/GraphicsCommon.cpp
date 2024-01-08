@@ -76,6 +76,7 @@ ComPtr<ID3D11ComputeShader> editTexureMapCS;
 
 ComPtr<ID3D11GeometryShader> normalGS;
 ComPtr<ID3D11GeometryShader> billboardGS;
+ComPtr<ID3D11GeometryShader> foliageGS;
 
 // Input Layouts
 ComPtr<ID3D11InputLayout> basicIL;
@@ -116,10 +117,13 @@ GraphicsPSO terrainSolidPSO;
 GraphicsPSO terrainWirePSO;
 GraphicsPSO terrainDepthPSO;
 GraphicsPSO oceanPSO;
-ComputePSO editTexturePSO;
-    // 주의: 초기화가 느려서 필요한 경우에만 초기화
 GraphicsPSO volumeSmokePSO;
+GraphicsPSO foliageBillboardPSO;
+GraphicsPSO foliageBillboardDepthPSO;
 
+    // 주의: 초기화가 느려서 필요한 경우에만 초기화
+
+ComputePSO editTexturePSO;
 // Compute Pipeline States
 
 } // namespace Graphics
@@ -518,13 +522,14 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreatePixelShader(device, L"GameExplosionPS.hlsl",
                                   gameExplosionPS);
     D3D11Utils::CreatePixelShader(device, L"VolumetricFirePS.hlsl",
-                                  volumetricFirePS);
-
+                                  volumetricFirePS); 
+     
     D3D11Utils::CreateGeometryShader(device, L"NormalGS.hlsl", normalGS);
     D3D11Utils::CreateGeometryShader(device, L"BillboardGS.hlsl", billboardGS);
-
+    D3D11Utils::CreateGeometryShader(device, L"FoliageBillboardGS.hlsl", foliageGS);
+      
     D3D11Utils::CreateComputeShader(device, L"EditTextureMapCS.hlsl",
-                                    editTexureMapCS);
+                                    editTexureMapCS); 
 
 }   
  
@@ -672,7 +677,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     grassSolidPSO.m_inputLayout = grassIL;
     grassSolidPSO.m_rasterizerState = solidBothRS; // 양면
     grassSolidPSO.m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
+     
     // grassWirePSO
     grassWirePSO = grassSolidPSO;
     grassWirePSO.m_rasterizerState = wireBothRS; // 양면
@@ -685,7 +690,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
 
     editTexturePSO.m_computeShader = editTexureMapCS;
 }
-
+  
 // 주의: 초기화가 느려서 필요한 경우에만 초기화하는 쉐이더
 void Graphics::InitVolumeShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreatePixelShader(device, L"VolumeSmokePS.hlsl", volumeSmokePS);
@@ -694,6 +699,18 @@ void Graphics::InitVolumeShaders(ComPtr<ID3D11Device> &device) {
     volumeSmokePSO = defaultSolidPSO;
     volumeSmokePSO.m_blendState = alphaBS;
     volumeSmokePSO.m_pixelShader = volumeSmokePS;
-}
 
+    foliageBillboardPSO = defaultSolidPSO;
+    foliageBillboardPSO.m_vertexShader = billboardVS;
+    foliageBillboardPSO.m_pixelShader = basicPS;
+    foliageBillboardPSO.m_geometryShader = foliageGS;
+    foliageBillboardPSO.m_inputLayout = billboardIL;
+    foliageBillboardPSO.m_rasterizerState = solidBothRS; 
+    foliageBillboardPSO.m_primitiveTopology = 
+        D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+      
+    foliageBillboardDepthPSO = foliageBillboardPSO;
+    foliageBillboardDepthPSO.m_pixelShader = depthOnlyPS; 
+} 
+ 
 } // namespace hlab

@@ -72,8 +72,8 @@ void BillboardModel::Render(ComPtr<ID3D11DeviceContext> &context) {
             this->m_meshConsts.Get(),
             this->m_materialConsts.Get(),
             this->m_billboardConsts.Get(),
-        };
-             //   this->m_billboardConsts.Get()}; 
+        }; 
+             //   this->m_billboardConsts.Get()};  
         context->VSSetConstantBuffers(1, 3, constBuffers);
        //context->PSSetConstantBuffers(3, 1, m_billboardConsts.GetAddressOf());
        // context->GSSetConstantBuffers(3, 1, m_billboardConsts.GetAddressOf());

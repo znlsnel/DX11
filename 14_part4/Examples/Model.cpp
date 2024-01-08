@@ -128,12 +128,12 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
     // 일반적으로는 Mesh들이 m_mesh/materialConsts를 각자 소유 가능
     // 여기서는 한 Model 안의 여러 Mesh들이 Consts를 모두 공유
-    cout << "Mode :: Initialize \n";
+ //  cout << "Mode :: Initialize \n";
     m_meshConsts.GetCpu().world = Matrix();
     m_meshConsts.Initialize(device);
     m_materialConsts.Initialize(device);
 
-    cout << "Mode :: meshData Setting \n";
+ //   cout << "Mode :: meshData Setting \n";
 
     auto CreateOrFindTexture = [&](string textureFile1Name, 
             string textureFile2Name, ComPtr<ID3D11Texture2D> &texture,
@@ -190,16 +190,13 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         }
     };
-
+     
     bool debugTextureFile = true;
-
+     
     for (const auto &meshData : meshes) {
         auto newMesh = std::make_shared<Mesh>();
 
         InitMeshBuffers(device, meshData, newMesh);
-        cout << "Mode :: InitMeshBuffers \n";
-
-        
 
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
@@ -212,7 +209,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
 
 
-                } else if (debugTextureFile){
+                } else{
                         CreateOrFindTexture(meshData.albedoTextureFilename,
                                             "",  newMesh->albedoTexture,
                                             newMesh->albedoSRV);
@@ -232,9 +229,6 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
                                     newMesh->emissiveTexture,
                                     newMesh->emissiveSRV);
 
-                //D3D11Utils::CreateTexture(
-                //    device, context, meshData.emissiveTextureFilename, true,
-                //    newMesh->emissiveTexture, newMesh->emissiveSRV);
                 m_materialConsts.GetCpu().useEmissiveMap = true;
             } else {
                 cout << meshData.emissiveTextureFilename
@@ -248,9 +242,6 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
                 CreateOrFindTexture(meshData.normalTextureFilename, "",
                                     newMesh->normalTexture, newMesh->normalSRV);
 
-                //D3D11Utils::CreateTexture(
-                //    device, context, meshData.normalTextureFilename, true,
-                //    newMesh->normalTexture, newMesh->normalSRV);
                 m_materialConsts.GetCpu().useNormalMap = true;
             } else if (debugTextureFile) {
                 cout << meshData.normalTextureFilename
@@ -264,44 +255,40 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
                 CreateOrFindTexture(meshData.heightTextureFilename, "",
                                 newMesh->heightTexture, newMesh->heightSRV);
 
-                //D3D11Utils::CreateTexture(
-                //    device, context, meshData.heightTextureFilename, true,
-                //    newMesh->heightTexture, newMesh->heightSRV);
                 m_meshConsts.GetCpu().useHeightMap = true;
             } else if (debugTextureFile) {
                 cout << meshData.heightTextureFilename
                      << " does not exists. Skip texture reading." << endl; 
             }
         } 
-
+         
         if (!meshData.aoTextureFilename.empty()) {
             if (filesystem::exists(meshData.aoTextureFilename)) { 
-
+                     
                     
                 CreateOrFindTexture(meshData.aoTextureFilename, "",
                                     newMesh->aoTexture, newMesh->aoSRV);
                  
-                //D3D11Utils::CreateTexture(device, context, 
-                //                          meshData.aoTextureFilename, true,
-                //                          newMesh->aoTexture, newMesh->aoSRV);
                 m_materialConsts.GetCpu().useAOMap = true;
             } else if (debugTextureFile) {
                 cout << meshData.aoTextureFilename
                      << " does not exists. Skip texture reading." << endl;
-            }
+            } 
         }  
-           
+            
         if (!meshData.artTextureFilename.empty()) {
             if (filesystem::exists(meshData.artTextureFilename)) {
 
                 CreateOrFindTexture(meshData.artTextureFilename, "",
                                     newMesh->artTexture, newMesh->artSRV);
+                m_meshConsts.GetCpu().useARTTexture = true;
+
             } else if (debugTextureFile) {
                 cout << meshData.artTextureFilename
                      << " does not exists. Skip texture reading." << endl;
             }
         } 
-         
+          
         if (!meshData.billboardDiffuseTextureFilename.empty()) {
             if (filesystem::exists(meshData.billboardDiffuseTextureFilename)) {
 
@@ -457,11 +444,11 @@ GraphicsPSO &Model::GetPSO(const bool wired) {
 }
 
 GraphicsPSO &Model::GetDepthOnlyPSO() { 
-  
-       renderState = ERenderState::depth;
+    
+       renderState = ERenderState::depth; 
     return Graphics::depthOnlyPSO;
 }
-
+ 
 GraphicsPSO &Model::GetReflectPSO(const bool wired) {
         
        renderState = ERenderState::reflect;
@@ -787,6 +774,71 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
         model->UpdateTranseform(m_scale, m_rotation, m_position);
     }
 }
+
+ComPtr<ID3D11Buffer>
+Model::MergeBuffer(vector<ComPtr<ID3D11Buffer>> &buffers) {
+    // 개별 정점 버퍼들의 크기를 계산하여 합친 큰 정점 버퍼의 크기를 구합니다
+    size_t totalSize = 0;
+    for (const auto &buffer : buffers) {
+        D3D11_BUFFER_DESC desc;
+        buffer->GetDesc(&desc);
+        totalSize += desc.ByteWidth;
+       
+    }
+      
+    // 큰 정점 버퍼를 생성합니다
+    D3D11_BUFFER_DESC mergedDesc = {};
+    mergedDesc.ByteWidth = static_cast<UINT>(totalSize);
+    mergedDesc.Usage = D3D11_USAGE_DEFAULT;
+    mergedDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    mergedDesc.CPUAccessFlags = 0;
+    mergedDesc.MiscFlags = 0;
+    mergedDesc.StructureByteStride = 0; 
+    ComPtr<ID3D11Buffer> mergedBuffer;
+    m_appBase->m_device->CreateBuffer(&mergedDesc, nullptr,
+                                      mergedBuffer.GetAddressOf());
+     
+    // 개별 정점 버퍼들의 데이터를 복사하여 큰 정점 버퍼로 합칩니다
+    UINT offset = 0;
+    for (const auto &buffer : buffers) {
+        D3D11_BUFFER_DESC desc;
+        buffer->GetDesc(&desc);
+
+        m_appBase->m_context->CopySubresourceRegion(
+            mergedBuffer.Get(), 0, offset, 0, 0,
+            buffer.Get(), 0, nullptr);
+        
+        offset += desc.ByteWidth;
+    } 
+
+    return mergedBuffer;
+}
+
+bool Model::MergeMeshes(vector<shared_ptr<Mesh>> &meshes,
+                                    shared_ptr<Mesh> &result) {
+    if (meshes.size() == 0)
+        return false;
+       
+    vector<ComPtr<ID3D11Buffer>> vertexBuffers;
+    vector<ComPtr<ID3D11Buffer>> indexBuffers;
+    result = meshes[0];
+    UINT indexCount = 0;
+    UINT vertexCount = 0;
+
+       
+    for (auto& mesh : meshes) {
+        vertexBuffers.push_back(mesh->vertexBuffer);
+        indexBuffers.push_back(mesh->indexBuffer);
+        indexCount += mesh->indexCount;
+        vertexCount += mesh->vertexCount;
+    }  
+    result->mergeVertexBuffer = MergeBuffer(vertexBuffers);
+    //result->mergeIndexBuffer = MergeBuffer(indexBuffers); 
+    result->mergeIndexCount = indexCount;
+    result->mergeVertexCount = vertexCount;
+    return true; 
+    
+}  
  
 void Model::UpdateWorldRow(const Matrix &row, bool debug) {
    

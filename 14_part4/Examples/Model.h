@@ -92,11 +92,11 @@ class Model {
 
     virtual void Initialize(ComPtr<ID3D11Device> &device,
                             ComPtr<ID3D11DeviceContext> &context);
-
+      
     virtual void InitMeshBuffers(ComPtr<ID3D11Device> &device,
                                  const MeshData &meshData,
                                  shared_ptr<Mesh> &newMesh);
-
+      
     void Initialize(ComPtr<ID3D11Device> &device,
                     ComPtr<ID3D11DeviceContext> &context,
                     const string &basePath, const string &filename);
@@ -106,7 +106,7 @@ class Model {
                     const vector<MeshData> &meshes);
     virtual void UpdatePose(ComPtr<ID3D11DeviceContext> &context, float dt
                             ){};
-    
+      
     void UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context);
 
@@ -194,6 +194,10 @@ class Model {
                 int maxIndex, int level);
   protected:
     virtual void UpdateWorldRow(Vector3& scale, Vector3& rotation, Vector3& position);
+    ComPtr<ID3D11Buffer>
+    MergeBuffer(vector<ComPtr<ID3D11Buffer>> &vertexBuffers);
+    bool  MergeMeshes(vector<shared_ptr<Mesh>> &meshes,
+                                 shared_ptr<Mesh>& result);
 
   public:
     void UpdateWorldRow(const Matrix& row, bool debug = false);
@@ -226,7 +230,7 @@ class Model {
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;
     vector<vector<BoundingCollision>> m_BVHs;
-    ERenderState renderState = ERenderState::basic;
+    ERenderState renderState = ERenderState::basic; 
     //                        [0]
     //          [1]                        [2]
     //    [3]       [4]           [5]           [6]

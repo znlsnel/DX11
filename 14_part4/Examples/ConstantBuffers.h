@@ -33,9 +33,10 @@ __declspec(align(256)) struct MeshConstants {
    //int indexColor[4] = {0, 0, 0, 255};
 
     int useHeightMap = 0;
-    float heightScale = 0.0f;
+    float heightScale = 0.0f; 
     float windTrunk = 0.0f;
     float windLeaves = 0.0f;
+    int useARTTexture = 0;
 };
 
 // 주로 Pixel 쉐이더에서 사용

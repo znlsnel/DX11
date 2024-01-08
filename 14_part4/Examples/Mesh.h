@@ -17,8 +17,48 @@ namespace hlab {
 using Microsoft::WRL::ComPtr;
 
 struct Mesh {
+
+	public:
+    Mesh(){};
+      Mesh(Mesh *otherMesh) { 
+	 //     meshConstsGPU = otherMesh->meshConstsGPU; 
+	 //     materialConstsGPU = otherMesh->materialConstsGPU; 
+
+		//albedoTexture = otherMesh->albedoTexture; 
+		//emissiveTexture = otherMesh->emissiveTexture; 
+		//normalTexture = otherMesh->normalTexture; 
+		//heightTexture = otherMesh->heightTexture; 
+		//aoTexture = otherMesh->aoTexture; 
+		//metallicRoughnessTexture = otherMesh->metallicRoughnessTexture; 
+		//artTexture = otherMesh->artTexture; 
+		//billboardDiffuseTexture = otherMesh->billboardDiffuseTexture; 
+		//billboardNormalTexture = otherMesh->billboardNormalTexture; 
+		//billboardArtTexture = otherMesh->billboardArtTexture; 
+
+		//albedoSRV = otherMesh->albedoSRV;
+  //      emissiveSRV = otherMesh->emissiveSRV;
+  //      normalSRV = otherMesh->normalSRV;
+  //      heightSRV = otherMesh->heightSRV;
+  //      aoSRV = otherMesh->aoSRV;
+  //      metallicRoughnessSRV = otherMesh->metallicRoughnessSRV;
+  //      artSRV = otherMesh->artSRV;
+  //      billboardDiffuseSRV = otherMesh->billboardDiffuseSRV;
+  //      billboardNormalSRV = otherMesh->billboardNormalSRV;
+  //      billboardArtSRV = otherMesh->billboardArtSRV; 
+
+		//densityTex = otherMesh->densityTex;
+  //      lightingTex = otherMesh->lightingTex;
+		// 
+		//stride = otherMesh->stride;
+  //      offset = otherMesh->offset;
+		*this = *otherMesh; 
+      }
+
     ComPtr<ID3D11Buffer> vertexBuffer;
     ComPtr<ID3D11Buffer> indexBuffer;
+
+    ComPtr<ID3D11Buffer> mergeVertexBuffer;
+    ComPtr<ID3D11Buffer> mergeIndexBuffer;
 
     ComPtr<ID3D11Buffer> meshConstsGPU;
     ComPtr<ID3D11Buffer> materialConstsGPU;
@@ -51,6 +91,8 @@ struct Mesh {
 
     UINT indexCount = 0;
     UINT vertexCount = 0;
+    UINT mergeVertexCount = 0;
+    UINT mergeIndexCount = 0;
     UINT stride = 0;
     UINT offset = 0;
 };

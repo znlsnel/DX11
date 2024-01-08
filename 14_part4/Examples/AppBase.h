@@ -204,6 +204,8 @@ class AppBase {
     void PostRender();
     void RenderBVH();
       
+    bool isRenderShadowMap = false;
+
     void SetPipelineState(const GraphicsPSO &pso);
     void SetPipelineState(const ComputePSO &pso);
     void SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU);
@@ -415,7 +417,7 @@ class AppBase {
 
     DirectX::SimpleMath::Plane m_mirrorPlane; 
     float m_mirrorAlpha = 1.0f; // Opacity
-
+     
     EMouseMode m_mouseMode = EMouseMode::ObjectPickingMode;
     EEditTextureType m_textureType = EEditTextureType::EditTextureTypeNone;
 

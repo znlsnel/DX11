@@ -593,11 +593,11 @@ bool AppBase::Initialize() {
                                 hasHeightMap = true;
                                 heightMapPath = file.path().string();
                                 break;
-            }   
+            }     
         }     
         if (hasHeightMap) { 
             D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
-        } 
+        }  
                
         Vector2 mapTexScale = Vector2(50.f, 50.f); 
         int mapArea = 100; 
@@ -685,8 +685,8 @@ bool AppBase::InitScene() {
         }
     }
      
-    // 커서 표시 (Main sphere와의 충돌이 감지되면 월드 공간에 작게 그려지는 구)
-    for (int i = 0; i < 400; i++)
+    // 커서 표시 (Main sphere와의 충돌이 감지되면 월드 공간에 작게 그려지는 구) 
+    for (int i = 0; i < 4; i++)
     { 
         MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
         shared_ptr<Model>cursorSphere =
@@ -901,6 +901,12 @@ void AppBase::RenderDepthOnly(){
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
+    for (const auto &model : m_NoneBVHList) {
+        AppBase::SetPipelineState(model->GetDepthOnlyPSO());
+        model->Render(m_context);
+    } 
+
+
     //m_groundPlane->RenderTessellation(m_context);
 
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
@@ -918,8 +924,7 @@ void AppBase::RenderShadowMaps() {
     m_context->PSSetShaderResources(15, 2, nulls);
      
     AppBase::SetShadowViewport(); // 그림자맵 해상도
-      
-
+       
     for (int i = 0; i < MAX_LIGHTS; i++) {
         if (m_globalConstsCPU.lights[i].type & LIGHT_SHADOW) {
             m_context->OMSetRenderTargets(0, NULL, 
@@ -1115,11 +1120,13 @@ void AppBase::Render() {
         m_brdfSRV.Get()};
     m_context->PSSetShaderResources(10, UINT(commonSRVs.size()),
                                     commonSRVs.data());
-
+      
     RenderDepthOnly();
-
-    RenderShadowMaps();
-
+     
+    isRenderShadowMap = true;
+    RenderShadowMaps(); 
+    isRenderShadowMap = false;
+     
     RenderOpaqueObjects();
 
     RenderMirror();
@@ -2125,7 +2132,7 @@ bool AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     desc.Usage = D3D11_USAGE_STAGING;
     ThrowIfFailed(device->CreateTexture2D(
         &desc, NULL, m_indexStagingTexture.GetAddressOf()));
-
+     
     D3D11_BOX box;
     box.left = std::clamp(m_mouseX  - 1, 0, 
                           (int)desc.Width - 1);

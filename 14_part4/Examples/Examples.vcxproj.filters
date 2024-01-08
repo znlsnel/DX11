@@ -601,5 +601,8 @@
     </FxCompile>
     <FxCompile Include="tessellatedDepthDS.hlsl" />
     <FxCompile Include="EditTextureMapCS.hlsl" />
+    <FxCompile Include="FoliageBillboardGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

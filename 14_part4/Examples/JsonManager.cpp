@@ -161,7 +161,7 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                 if (isBillboardTexture)
                                     temp->isFolige = true;
                                    
-                                if (format == 'D') { 
+                                if (format == 'D') {  
                                     if (isBillboardTexture)
                                         temp->billboardDiffuse =
                                             fileName.string();
@@ -178,11 +178,15 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                     if (isBillboardTexture)
                                         temp->billboardArt =
                                             fileName.string();
-                                    else
+                                    else {
                                         temp->art = fileName.string();
-                                }
-
+                                    
+                                    } 
+                                    cout << "Found ART Texture"
+                                         << fileName.string() << "\n";
+                                } 
                                  
+                                  
                                 else if (format == 'F') {
                                     temp->Displacement = fileName.string();
                                     temp->Roughness = fileName.string();
@@ -228,10 +232,10 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                             quicellPaths.insert(make_pair(
                                                 filePath.string() + "\\",
                                                 *temp));        
-                                }
+                                } 
                         }
                 }
-
+                 
         }
 }
 
@@ -384,7 +388,7 @@ void hlab::JsonManager::SaveMesh() {
             const char *quicellPath = meshInfo.quicellPath.c_str();
 
         rapidjson:Value filePath(kObjectType); 
-                cout << "meshName : "  << name << endl;
+         //       cout << "meshName : "  << name << endl;
 
                 //rapidjson::CharType
                 filePath.AddMember("object",
@@ -674,8 +678,8 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
     while (CreateNum--) { 
            int quixelNum = int(round(randId(gen))); 
            quixelNum = std::clamp(quixelNum, 0, int(temp->mesh.size()) - 1);
-           cout << "quixelNum : "<< quixelNum << "\n"; 
-                cout << "meshes Size : " << CreateNum << "\n";
+    //       cout << "quixelNum : "<< quixelNum << "\n"; 
+            //    cout << "meshes Size : " << CreateNum << "\n";
                     
             Vector2 pos; 
             Vector3 GenPos = Vector3(pos.x, 0.0f, pos.y);
@@ -703,7 +707,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                     else
                         GenPos = Vector3(pos.x,pos.y , 0.0f);    
                     GenPos *= 5.0f;
-                    cout << "GenPos.Y : " << GenPos.z << "\n";
+           //         cout << "GenPos.Y : " << GenPos.z << "\n";
             } 
 
             if (temp->hasMeshs.size() > 0 && temp->hasMeshs[quixelNum]) {
@@ -769,14 +773,26 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                 (*meshes)[i].heightTextureFilename =
                 temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
 
-                (*meshes)[i].aoTextureFilename =
+                (*meshes)[i].aoTextureFilename = 
                 temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
                 
                 (*meshes)[i].roughnessTextureFilename =
                 temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
-                 
+                  
                 (*meshes)[i].metallicTextureFilename =
                 temp->metallic == "" ? "" : info.quicellPath + temp->metallic;    
+
+                (*meshes)[i].artTextureFilename =
+                    temp->art == "" ? "" : info.quicellPath + temp->art;    
+                  
+                (*meshes)[i].billboardARTTextureFilename = 
+                    temp->billboardArt == "" ? "" : info.quicellPath + temp->billboardArt;    
+
+                (*meshes)[i].billboardDiffuseTextureFilename =
+                    temp->billboardDiffuse == "" ? ""  : info.quicellPath + temp->billboardDiffuse;    
+                 
+                (*meshes)[i].billboardNormalTextureFilename =
+                    temp->billboardNormal == "" ? "" : info.quicellPath + temp->billboardNormal;    
     }  
        
     shared_ptr<FoliageModel> tempModel =

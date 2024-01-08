@@ -437,8 +437,8 @@ PixelShaderOutput main(PixelShaderInput input)
     
     float lod = length(input.posWorld - eyeWorld);
    // lod -= 3;
-   lod /= 3;  
-    lod = clamp(lod, 0.0, 5.0);
+   //lod;  
+    lod = clamp(lod, 0.0, 5.0); 
     
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);

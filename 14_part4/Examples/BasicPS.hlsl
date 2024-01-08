@@ -10,6 +10,7 @@ Texture2D normalTex : register(t1);
 Texture2D aoTex : register(t2);
 Texture2D metallicRoughnessTex : register(t3);
 Texture2D emissiveTex : register(t4); 
+Texture2D ARTTex : register(t5); 
 
 static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
 static float lod = 0.0f;
@@ -326,7 +327,7 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
         float3 specularBRDF = (F * D * G) / max(1e-5, 4.0 * NdotI * NdotO);
 
         float3 radiance = LightRadiance(light, representativePoint, input.posWorld, normalWorld, shadowMap);
-            
+             
             //if (i == 0)
             //    radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMaps[0]);
             //if (i == 1)
@@ -340,19 +341,21 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
 
     return directLighting;
 }
-
-
+ 
+ 
 
 PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
     lod = length(input.posWorld - eyeWorld);
-    lod -= 5;
+  //  lod -= 5;
     lod = clamp(lod, 0.0, 10.0);
-    lod /= 5;
-    
-    
-    texcoord = input.texcoord;
+   // lod /= 5;
+      
+    float a = ARTTex.SampleLevel(linearClampSampler, input.texcoord, lod).r;
+    if (useARTTexture && a < 0.7) 
+        clip(-0.1 );
+        
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);
     

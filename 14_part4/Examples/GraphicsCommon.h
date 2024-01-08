@@ -78,6 +78,7 @@ extern ComPtr<ID3D11ComputeShader> editTexureMapCS;
 
 extern ComPtr<ID3D11GeometryShader> normalGS;
 extern ComPtr<ID3D11GeometryShader> billboardGS;
+extern ComPtr<ID3D11GeometryShader> foliageGS;
 
 // Input Layouts
 extern ComPtr<ID3D11InputLayout> basicIL;
@@ -108,8 +109,8 @@ extern GraphicsPSO mirrorBlendSolidPSO;
 extern GraphicsPSO mirrorBlendWirePSO;
 extern GraphicsPSO skyboxSolidPSO;
 extern GraphicsPSO skyboxWirePSO;
-extern GraphicsPSO reflectSkyboxSolidPSO;
-extern GraphicsPSO reflectSkyboxWirePSO;
+extern GraphicsPSO reflectSkyboxSolidPSO; 
+extern GraphicsPSO reflectSkyboxWirePSO; 
 extern GraphicsPSO normalsPSO;
 extern GraphicsPSO depthOnlyPSO;
 extern GraphicsPSO depthOnlySkinnedPSO;
@@ -125,6 +126,9 @@ extern GraphicsPSO terrainDepthPSO;
 
 // 주의: 초기화가 느려서 필요한 경우에만 초기화
 extern GraphicsPSO volumeSmokePSO;
+extern GraphicsPSO foliageBillboardPSO;
+extern GraphicsPSO foliageBillboardDepthPSO;
+
 
 extern ComputePSO editTexturePSO;
 void InitCommonStates(ComPtr<ID3D11Device> &device);

@@ -87,6 +87,7 @@ cbuffer MeshConstants : register(b1)
     float heightScale;
     float windTrunk;
     float windLeaves;
+    int useARTTexture; 
 };
 
 cbuffer MaterialConstants : register(b2)

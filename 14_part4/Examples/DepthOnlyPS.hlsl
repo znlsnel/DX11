@@ -1,5 +1,10 @@
 #include "Common.hlsli" // 쉐이더에서도 include 사용 가능
 Texture2D albedoTex : register(t0);
+Texture2D normalTex : register(t1);
+Texture2D aoTex : register(t2);
+Texture2D metallicRoughnessTex : register(t3);
+Texture2D emissiveTex : register(t4);
+Texture2D ARTTex : register(t5);
 
 struct DepthOnlyPixelShaderInput
 {
@@ -16,9 +21,11 @@ void main(DepthOnlyPixelShaderInput input)
 {
    // // 아무것도 하지 않음 (Depth Only)
     float a = albedoTex.SampleLevel(linearWrapSampler, input.texcoord, 0).a;
-
+    float a2 = ARTTex.SampleLevel(linearWrapSampler, input.texcoord, 0).r;
+      
     clip(a - 0.05);
-
+    if (useARTTexture && a2 < 0.1)
+        clip(-1);
 }
 
 /* 비교: 반환 자료형 불필요
