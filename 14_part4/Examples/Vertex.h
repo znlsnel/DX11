@@ -19,6 +19,22 @@ struct Vertex {
 };
 
 struct SkinnedVertex {
+  public:
+    static SkinnedVertex InterporlationVertex(SkinnedVertex &v1, SkinnedVertex &v2){
+        SkinnedVertex result;
+
+        result.position = (v1.position + v2.position) / 2.0f;
+        result.normalModel = (v1.normalModel + v2.normalModel) / 2.0f;
+        result.texcoord = (v1.texcoord + v2.texcoord) / 2.0f;
+        result.tangentModel = (v1.tangentModel + v2.tangentModel) / 2.0f;
+
+        for (int i = 0; i < 8; i++) {
+            result.blendWeights[i] =
+                v1.blendWeights[i] ;
+            result.boneIndices[i] = v1.boneIndices[i];
+        }
+        return result;
+    };
     Vector3 position;
     Vector3 normalModel;
     Vector2 texcoord;

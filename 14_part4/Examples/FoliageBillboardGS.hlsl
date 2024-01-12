@@ -35,9 +35,9 @@ void main(point GeometryShaderInput input[1], uint primID
         output.pos = mul(output.pos, view);
         output.pos = mul(output.pos, proj);
         output.normalWorld = front;
-        output.posModel = -(right);
+        output.posModel = -(right); 
         output.texCoord = float2(1.0, 1.0);
-
+         
         outputStream.Append(output);
 
         output.posWorld = input[0].pos - (right) + (0.2 * up);

@@ -565,7 +565,7 @@ bool AppBase::Initialize() {
 
     if (!InitScene())
         return false;
-
+     
 
     m_JsonManager = make_shared<JsonManager>(this);
 
@@ -578,7 +578,7 @@ bool AppBase::Initialize() {
     std::reverse(skyboxMesh.indices.begin(), skyboxMesh.indices.end());
     m_skybox = make_shared<Model>(m_device, m_context, vector{skyboxMesh});
     m_skybox->m_name = "SkyBox";
-
+    m_skybox->m_isLodFixed = true;
     // 콘솔창이 렌더링 창을 덮는 것을 방지
     SetForegroundWindow(m_mainWindow); 
 
@@ -855,6 +855,7 @@ void AppBase::UpdateLightInfo(
     Matrix lightProjRow =
         m_camera->GetShadowProjRow(Vector2(aspect.x, aspect.y), aspect.z);
     shadowGlobalConstants.eyeWorld = light.position;
+    shadowGlobalConstants.cameraWorld = m_camera->GetPosition();
     // m_shadowGlobalConstsCPU[i].eyeWorld =
     //     light.position +
     //     -light.direction * 3.f;
@@ -1431,18 +1432,19 @@ void AppBase::InitCubemaps(wstring basePath, wstring envFilename,
                                  m_irradianceSRV);
     D3D11Utils::CreateDDSTexture(m_device, (basePath + brdfFilename).c_str(),
                                  false, m_brdfSRV);
-}
+} 
 
 // 여러 물체들이 공통적으료 사용하는 Const 업데이트
 void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
                                     const Matrix &viewRow,
                                     const Matrix &projRow, const Matrix &refl) {
 
-       for (int i = 0; i < MAX_LIGHTS; i++)
+       for (int i = 0; i < MAX_LIGHTS; i++) 
         m_shadowGlobalConstsCPU[i].globalTime += dt;
         
     m_globalConstsCPU.globalTime += dt;
-    m_globalConstsCPU.eyeWorld = eyeWorld;
+    m_globalConstsCPU.eyeWorld = eyeWorld; 
+    m_globalConstsCPU.cameraWorld = eyeWorld;
     m_globalConstsCPU.view = viewRow.Transpose();
     m_globalConstsCPU.proj = projRow.Transpose();
     m_globalConstsCPU.invProj = projRow.Invert().Transpose();

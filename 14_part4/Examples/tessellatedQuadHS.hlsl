@@ -40,40 +40,41 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     
     float3 posCenter = (posWorld1 + posWorld2 + posWorld3 + posWorld4) / 4.0;
     
-    float len1 = 0.5 * (length(eyeWorld - posWorld1) + length(eyeWorld - posWorld2));
-    float len2 = 0.5 * (length(eyeWorld - posWorld2) + length(eyeWorld - posWorld3));
-    float len3 = 0.5 * (length(eyeWorld - posWorld3) + length(eyeWorld - posWorld4));
-    float len4 = 0.5 * (length(eyeWorld - posWorld4) + length(eyeWorld - posWorld1));
-    float len5 = length(eyeWorld - posCenter);
+    float len1 = 0.5 * (length(cameraWorld - posWorld1) + length(cameraWorld - posWorld2));
+    float len2 = 0.5 * (length(cameraWorld - posWorld2) + length(cameraWorld - posWorld3));
+    float len3 = 0.5 * (length(cameraWorld - posWorld3) + length(cameraWorld - posWorld4));
+    float len4 = 0.5 * (length(cameraWorld - posWorld4) + length(cameraWorld - posWorld1));
+    float len5 = length(cameraWorld - posCenter);
   //  len5 = 1.0; 
+     
+    float maxSize = 10;
     float distMin = 1.0;
     float distMax = 10.0;
-    
-    
-    len1 = 1.0 -  saturate((distMax - len1) / (distMax - distMin));
-    len2= 1.0 - saturate((distMax - len2) / (distMax - distMin));
+   
+    len1 = clamp(len1, 1.0, 10.0);
+    len2 = clamp(len2, 1.0, 10.0);
+    len3 = clamp(len3, 1.0, 10.0);
+    len4 = clamp(len4, 1.0, 10.0);
+    len5 = clamp(len5, 1.0, 10.0); 
+       
+    len1 = 1.0 - saturate((distMax - len1) / (distMax - distMin));
+    len2 = 1.0 - saturate((distMax - len2) / (distMax - distMin));
     len3 = 1.0 - saturate((distMax - len3) / (distMax - distMin));
     len4 = 1.0 - saturate((distMax - len4) / (distMax - distMin));
     len5 = 1.0 - saturate((distMax - len5) / (distMax - distMin));
-    len1 /= 3; 
-    len2 /= 3;
-    len3 /= 3;
-    len4 /= 3;
-    len5 /= 3;
-      
-    float maxSize = 20;
-    //pt.edges[0] = lerp(1.0, maxSize, len2);
-    //pt.edges[1] = lerp(1.0, maxSize, len1);
-    //pt.edges[2] = lerp(1.0, maxSize, len4);
-    //pt.edges[3] = lerp(1.0, maxSize, len3);
-    //pt.inside[0] = lerp(1.0, maxSize, len5);
-    //pt.inside[1] = lerp(1.0, maxSize, len5);
-    pt.edges[0] = lerp(maxSize,1.0, len2);
+    //len1 /= 3;
+    //len2 /= 3;
+    //len3 /= 3;
+    //len4 /= 3;
+    //len5 /= 3; 
+        
+    pt.edges[0] = lerp(maxSize, 1.0, len2);
     pt.edges[1] = lerp(maxSize, 1.0, len1);
     pt.edges[2] = lerp(maxSize, 1.0, len4);
     pt.edges[3] = lerp(maxSize, 1.0, len3);
     pt.inside[0] = lerp(maxSize, 1.0, len5);
     pt.inside[1] = lerp(maxSize, 1.0, len5);
+    
 
     return pt;
 }

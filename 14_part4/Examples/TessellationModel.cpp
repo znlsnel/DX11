@@ -165,8 +165,9 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
             vector<ID3D11ShaderResourceView *> resViews = {
                 m_albedoTexturesSRV.Get(), m_normalTexturesSRV.Get(),
                 m_ORDpTexturesSRV.Get(), m_textureMapSRV.Get()};
-                
-            context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(),
+                 
+            context->IASetVertexBuffers(0, 1,
+                                        mesh->vertexBuffers[0].GetAddressOf(),
                                         &mesh->stride, &mesh->offset);
             context->VSSetConstantBuffers(1, 2, constBuffers);
 
@@ -196,7 +197,7 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
                     6, 1, mesh->lightingTex.GetAddressOfSRV());
 
 
-            context->Draw(mesh->vertexCount, 0);
+            context->Draw(mesh->vertexCounts[0], 0);
 
             // Release resources
             ID3D11ShaderResourceView *nulls[3] = {NULL, NULL, NULL};

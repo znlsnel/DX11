@@ -361,6 +361,7 @@ class AppBase {
 
     float cameraSpeed_min = 0.01f;
     float cameraSpeed_max = 2.0f;
+    int renderingLod = 0;
     Vector3 testPos;
 
     double timeSeconds = 0.0;

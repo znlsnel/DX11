@@ -662,7 +662,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
     QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
     vector<MeshData> *meshes = new vector<MeshData>();
     vector<int> mesheStartID;
-
+    info.scale = Vector3(0.4f, 0.4f, 0.4f); 
     // density = 0 ~ 1 
     float range =   info.foliageRange;
     float density = 1.01f - info.foliageDensity;
@@ -706,7 +706,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                         GenPos = Vector3(dir.x, dir.z, -dir.y);   
                     else
                         GenPos = Vector3(pos.x,pos.y , 0.0f);    
-                    GenPos *= 5.0f;
+                    GenPos *= 1.0f / info.scale.x;
            //         cout << "GenPos.Y : " << GenPos.z << "\n";
             } 
 
@@ -826,6 +826,8 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
       
     shared_ptr<Character> m_player = make_shared<Character>(m_appBase, m_appBase->m_device, m_appBase->m_context, path,
                                       "Ch08_nonPBR.fbx", clipNames);
+    m_player->GetMesh()->m_appBase = m_appBase;
+
     m_appBase->m_characters.push_back(m_player);
       
     m_player->GetMesh()->m_materialConsts.GetCpu().invertNormalMapY = true;

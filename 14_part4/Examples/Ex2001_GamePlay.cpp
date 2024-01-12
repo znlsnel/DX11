@@ -541,6 +541,8 @@ void Ex2001_GamePlay::UpdateGUI() {
                                50.0f);
     }
     if (m_pickedModel && m_pickedModel->m_editable) {
+            ImGui::DragInt("Rendering LOD", &renderingLod, 1.0f, 0, 20);
+                 
             if (ImGui::TreeNode("Object Editor")) {
 
                 ImGui::Checkbox("ObjectLock", &m_pickedModel->isObjectLock);
@@ -695,6 +697,7 @@ void Ex2001_GamePlay::UpdateGUI() {
                 }
                 ImGui::TreePop();
             }
+            
     }
      
         ImGui::NewLine();

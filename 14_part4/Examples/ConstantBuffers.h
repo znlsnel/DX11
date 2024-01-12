@@ -121,6 +121,8 @@ __declspec(align(256)) struct GlobalConstants {
     float globalTime = 0.0f;
 
     Light lights[MAX_LIGHTS];
+     
+    Vector3 cameraWorld; 
     float directionalLightPow = 1.0f;
 };
 

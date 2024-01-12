@@ -219,10 +219,11 @@ class Model {
     bool bRenderingBVH = false;
     bool isDestory = false;
     bool isCursorShpere = false;
-
+    bool m_isLodFixed = false;
+     
     int maxRenderingBVHLevel = 0; 
     int tempInt = 0;
-      
+       
     vector<shared_ptr<Mesh>> m_meshes;
 
     ConstantBuffer<MeshConstants> m_meshConsts;
@@ -244,6 +245,7 @@ class Model {
     ObjectSaveInfo objectInfo;
     vector<shared_ptr<Model>> childModels;
 
+    class AppBase *m_appBase = nullptr; 
   protected:
     vector<vector<shared_ptr<Mesh>>> m_BVHMesh;
 
@@ -255,7 +257,6 @@ class Model {
     Vector3 m_localPosition{0.f};
     Vector3 m_rotation{0.f};
     float m_boundingSphereRadius = 0.0f;
-    class AppBase *m_appBase = nullptr; 
 
 
 };

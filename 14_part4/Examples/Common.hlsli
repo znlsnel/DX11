@@ -72,6 +72,8 @@ cbuffer GlobalConstants : register(b0)
     float globalTime;
         
     Light lights[MAX_LIGHTS];
+     
+    float3 cameraWorld; 
     float directionalLightPow = 1.0f; 
 };
 

@@ -63,43 +63,61 @@ void Model::InitMeshBuffers(ComPtr<ID3D11Device> &device,
     }
     newMesh->vertexBuffers.resize(vertexNumbers.size());
     newMesh->vertexCounts.resize(vertexNumbers.size());
+    newMesh->indexBuffers.resize(vertexNumbers.size());
+    newMesh->indexCounts.resize(vertexNumbers.size());
 
        
     for (int i = 1; i < vertexNumbers.size(); i++) {
         const float skipCount = float(meshData.vertices.size() - vertexNumbers[i]) /
                                 (float)meshData.vertices.size(); 
-     //   cout << "skipCount   : " << skipCount << "\n";
-         
+          
         float count = 0.0f;
         vector<Vertex> tempVertex;
+        vector<seed_seq::result_type> tempIndex;
+        vector<bool> VertexCheck;
 
         for (auto &Vertex : meshData.vertices) {
             count += skipCount;
-   //         cout << "count   : " << count << "\n";
+
               
             if (count > 1) {
                 count -= 1.0f;
+                VertexCheck.push_back(false);
                 continue;
-            }
+            } 
+            VertexCheck.push_back(true);
             tempVertex.push_back(Vertex);
-        } 
-  //      cout << "tempVertex . size  : " << tempVertex.size() << "\n";
+        }
+
         D3D11Utils::CreateVertexBuffer(device, tempVertex,
                                        newMesh->vertexBuffers[i]);  
         newMesh->vertexCounts[i] = tempVertex.size();  
-    }
+         
+        for (auto &index : meshData.indices) {
+                if (VertexCheck[int(index)])
+                        tempIndex.push_back(index);
+        }
+        D3D11Utils::CreateIndexBuffer(device, tempIndex,
+                                       newMesh->indexBuffers[i]);
+        newMesh->indexCounts[i] = tempIndex.size();   
+    } 
         
+     
     D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
                                    newMesh->vertexBuffers[0]); 
-    newMesh->vertexBuffer = newMesh->vertexBuffers[0]; 
-
-    newMesh->indexCount = UINT(meshData.indices.size());
+    newMesh->vertexBuffer = newMesh->vertexBuffers[8]; 
+     
+D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                                   newMesh->indexBuffers[0]);
+    newMesh->indexBuffer = newMesh->indexBuffers[8]; 
+     
+    newMesh->indexCounts[0] = UINT(meshData.indices.size());
+    newMesh->indexCount = newMesh->indexCounts[8];
     newMesh->vertexCounts[0] = UINT(meshData.vertices.size());
-    newMesh->vertexCount = newMesh->vertexCounts[0]; 
+    newMesh->vertexCount = newMesh->vertexCounts[8]; 
      
     newMesh->stride = UINT(sizeof(Vertex));
-    D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                                  newMesh->indexBuffer);
+
 }
 
 void Model::Initialize(ComPtr<ID3D11Device> &device,
@@ -515,9 +533,13 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
  
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
           
-
+         
     if (m_isVisible) {  
         for (const auto &mesh : m_meshes) {
+                if (m_isLodFixed)
+                        mesh->SetLod(0);
+             
+
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
             context->VSSetConstantBuffers(1, 2, constBuffers);
@@ -531,7 +553,7 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
             context->PSSetShaderResources(0, // register(t0)
                                           UINT(resViews.size()), 
                                           resViews.data());
-
+             
             context->PSSetConstantBuffers(1, 2, constBuffers);
                
             // Volume Rendering

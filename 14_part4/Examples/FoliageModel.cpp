@@ -169,11 +169,11 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                 if (check) { 
                           
                     if (node.objectID >= 0)  
-                    {   
+                    {     
                         float cameraToCenter = (cameraPos - center).Length();
-                        shared_ptr<Mesh> &tempMesh =
+                        shared_ptr<Mesh> &tempMesh = 
                             m_meshes[m_meshStartID[node.objectID]]; 
-                        int vertexId =min(int(cameraToCenter * 3.0f), int(tempMesh->vertexBuffers.size() / 2)); 
+                        int vertexId =min(int(cameraToCenter), int(tempMesh->vertexBuffers.size() - 3)); 
                         tempMesh->vertexBuffer =
                             tempMesh->vertexBuffers[vertexId];
                         tempMesh->vertexCount = tempMesh->vertexCounts[vertexId];
@@ -203,6 +203,9 @@ void hlab::FoliageModel::GetMeshInFrustum() {
        
 void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
               
+        if (isDestory || m_isVisible == false)
+                return;
+         
     static int searchingMeshTimer = 20;
        
         if (searchingMeshTimer > 10) { 
