@@ -328,13 +328,14 @@ PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
     lod = length(input.posWorld - eyeWorld);
-   //lod -= 5;
+    lod -= 5;
     lod = clamp(lod, 0.0, 10.0);
-   // lod /= 5; 
+    lod /= 5;  
+    
     float a = ARTTex.SampleLevel(linearClampSampler, input.texcoord, lod).r;
-    if (useARTTexture && a < 0.7) 
-        clip(-0.1 );
-        
+    if (useARTTexture && a < 0.99) 
+        clip(-0.1);
+         
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);
     
@@ -383,7 +384,7 @@ PixelShaderOutput main(PixelShaderInput input)
         
     }
     else
-    {
+    { 
         float3 tempDL[2] =
         {
             float3(0.0, 0.0, 0.0),

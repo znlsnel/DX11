@@ -432,6 +432,7 @@ class AppBase {
     shared_ptr<class JsonManager> m_JsonManager;
     map < string, tuple<ComPtr<ID3D11Texture2D>,
             ComPtr<ID3D11ShaderResourceView>>> m_textureStorage; 
-}; 
+    map<string, shared_ptr<Mesh>> m_meshSrotage;
+};  
 
 } // namespace hlab

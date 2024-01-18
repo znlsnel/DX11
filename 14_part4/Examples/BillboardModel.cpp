@@ -11,8 +11,8 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
                                 const float width,
                                 const ComPtr<ID3D11PixelShader> &pixelShader) {
 
-     //    Model::Initialize(device, context);
-    BillboardModel::m_castShadow = false;
+        // Model::Initialize(device, context);
+    //BillboardModel::m_castShadow = false;
 
     D3D11Utils::CreateVertexBuffer(device, points, m_vertexBuffer);
 
@@ -21,7 +21,7 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
     m_geometryShader = Graphics::billboardGS;
     m_inputLayout = Graphics::billboardIL;
     m_pixelShader = pixelShader;
-      
+    
     static int index = 0;
     m_billboardConsts.GetCpu().widthWorld = width; 
     m_billboardConsts.GetCpu().index = index;
@@ -57,28 +57,40 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
 }
 
 void BillboardModel::Render(ComPtr<ID3D11DeviceContext> &context) {
+
     
         if (m_hasLifespan && m_appBase->timeSeconds - m_GenerationTime > m_lifespan) {
                 m_isVisible = false;
             this->~BillboardModel();
         }
-
+          
     if (m_isVisible) {
         // 편의상 PSO 설정을 Render()에서 바꾸는 방식
         context->IASetInputLayout(m_inputLayout.Get());
         context->VSSetShader(m_vertexShader.Get(), 0, 0);
         context->PSSetShader(m_pixelShader.Get(), 0, 0);
-        ID3D11Buffer *constBuffers[3] = {
+        ID3D11Buffer *constBuffers[4] = {
             this->m_meshConsts.Get(),
             this->m_materialConsts.Get(),
-            this->m_billboardConsts.Get(),
-        }; 
-             //   this->m_billboardConsts.Get()};  
-        context->VSSetConstantBuffers(1, 3, constBuffers);
+            this->m_billboardConsts.Get(), 
+            this->m_foliageConstsGPU.Get()
+        };    
+
+         
+        if (useOtherShaderResource) {
+            context->PSSetShaderResources(0, resViews.size(), resViews.data());
+        } else {
+            context->PSSetShaderResources(
+            20, 1, m_appBase->m_billboardTreeSRV.GetAddressOf());         
+        }
+
+
+             //   this->m_billboardConsts.Get()};  cc
+        context->VSSetConstantBuffers(1, 4, constBuffers);
        //context->PSSetConstantBuffers(3, 1, m_billboardConsts.GetAddressOf());
        // context->GSSetConstantBuffers(3, 1, m_billboardConsts.GetAddressOf());
-        context->PSSetConstantBuffers(1, 3, constBuffers);
-        context->GSSetConstantBuffers(1, 3, constBuffers);
+        context->PSSetConstantBuffers(1, 4, constBuffers);
+        context->GSSetConstantBuffers(1, 4, constBuffers);
         context->GSSetShader(m_geometryShader.Get(), 0, 0);
         context->RSSetState(Graphics::solidBothRS.Get());
         //context->OMSetBlendState(Graphics::alphaBS.Get(),

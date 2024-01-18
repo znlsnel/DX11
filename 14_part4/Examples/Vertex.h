@@ -11,23 +11,29 @@ using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector4;
 
 struct Vertex {
+  public: 
+    static Vertex InterporlationVertex(Vertex &v1, Vertex &v2){
+        Vertex result;
+
+        result.position = (v1.position + v2.position) / 2.0f;
+        result.normalModel = (v1.normalModel + v2.normalModel) / 2.0f;
+        result.texcoord = (v1.texcoord + v2.texcoord) / 2.0f;
+        result.tangentModel = (v1.tangentModel + v2.tangentModel) / 2.0f;
+        return result;
+    };
     Vector3 position;
     Vector3 normalModel;
     Vector2 texcoord;
     Vector3 tangentModel;
     // Vector3 biTangentModel; // biTangent는 쉐이더에서 계산
 };
-
-struct SkinnedVertex {
+ 
+struct SkinnedVertex : public Vertex{
   public:
     static SkinnedVertex InterporlationVertex(SkinnedVertex &v1, SkinnedVertex &v2){
         SkinnedVertex result;
-
-        result.position = (v1.position + v2.position) / 2.0f;
-        result.normalModel = (v1.normalModel + v2.normalModel) / 2.0f;
-        result.texcoord = (v1.texcoord + v2.texcoord) / 2.0f;
-        result.tangentModel = (v1.tangentModel + v2.tangentModel) / 2.0f;
-
+        result = (SkinnedVertex&)Vertex::InterporlationVertex(v1, v2);
+         
         for (int i = 0; i < 8; i++) {
             result.blendWeights[i] =
                 v1.blendWeights[i] ;
@@ -35,10 +41,6 @@ struct SkinnedVertex {
         }
         return result;
     };
-    Vector3 position;
-    Vector3 normalModel;
-    Vector2 texcoord;
-    Vector3 tangentModel;
 
     float blendWeights[8] = {0.0f, 0.0f, 0.0f, 0.0f,
                              0.0f, 0.0f, 0.0f, 0.0f};  // BLENDWEIGHT0 and 1

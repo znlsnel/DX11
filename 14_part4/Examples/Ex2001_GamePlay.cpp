@@ -538,7 +538,7 @@ void Ex2001_GamePlay::UpdateGUI() {
             }
             
             ImGui::SliderFloat("EditRadius", &m_groundPlane->editRadius, 1.0f,
-                               50.0f);
+                               50.0f); 
     }
     if (m_pickedModel && m_pickedModel->m_editable) {
             ImGui::DragInt("Rendering LOD", &renderingLod, 1.0f, 0, 20);
@@ -546,7 +546,10 @@ void Ex2001_GamePlay::UpdateGUI() {
             if (ImGui::TreeNode("Object Editor")) {
 
                 ImGui::Checkbox("ObjectLock", &m_pickedModel->isObjectLock);
-
+                
+                ImGui::Checkbox("Use Lod", &m_pickedModel->m_useLod); 
+                ImGui::SliderInt("Max Lod", &m_pickedModel->m_maxLod, 0,
+                                 m_pickedModel->m_lodCount);
                 if (ImGui::Checkbox("Render BVH",
                                     &m_pickedModel->bRenderingBVH)) {
                     // m_pickedModel->maxRenderingBVHLevel = 0;

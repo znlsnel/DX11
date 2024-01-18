@@ -175,7 +175,7 @@ class SkinnedMeshModel : public Model {
         return Graphics::depthOnlySkinnedPSO;
     }
 
-    void InitMeshBuffers(ComPtr<ID3D11Device> &device, const MeshData &meshData, shared_ptr<Mesh> &newMesh) override {
+    virtual void InitMeshBuffers(ComPtr<ID3D11Device> &device, const MeshData &meshData, shared_ptr<Mesh> &newMesh) override{
                  vector<SkinnedVertex> initVtx;
                 vector<seed_seq::result_type> initIdx;
         {  
@@ -205,19 +205,7 @@ class SkinnedMeshModel : public Model {
                             continue;
                         initIdx.push_back(
                             seed_seq::result_type(id));
-                 } 
-                 D3D11Utils::CreateVertexBuffer(device, initVtx,
-                                                newMesh->vertexBuffer);
-                 newMesh->vertexBuffers.push_back(newMesh->vertexBuffer);
-
-                 D3D11Utils::CreateIndexBuffer(device, initIdx,
-                                               newMesh->indexBuffer);
-                 newMesh->indexBuffers.push_back(newMesh->indexBuffer);
-
-                newMesh->indexCount = UINT(initIdx.size());
-                newMesh->indexCounts.push_back(newMesh->indexCount);
-                newMesh->vertexCount = UINT(initVtx.size());
-                newMesh->vertexCounts.push_back(newMesh->vertexCount);
+                 }  
                  
                  D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
                                                 newMesh->vertexBuffer);
@@ -237,157 +225,90 @@ class SkinnedMeshModel : public Model {
                 newMesh->stride = UINT(sizeof(SkinnedVertex));
                  
         }
-
+        
         static const int minVertexCount = 3;
          
         vector<vector<SkinnedVertex>> newVertexs;
         vector<vector<seed_seq::result_type>> newIndexs;
         newVertexs.push_back(initVtx);
         newIndexs.push_back(initIdx); 
-         
-                // 문제1  : 멀리 떨어진 vertex끼리 합쳐지는거같음
+        
         int lodCount = 5;
         while (lodCount--) { 
                 vector<SkinnedVertex> nextVtx;
                 vector<seed_seq::result_type> nextIdx;
-                
-                //  sliceNum = vertex 갯수의 를 3제곱으로 두는 수
-                // vertex들의 center와 extents를 구함
-                // x방향 길이, y방향 길이, z방향 길이
-                // abs = (x + y + z) / 3;
-                // x = x / abx * sliceNum 
-                // y = y / abx * sliceNum 
-                // z = z / abx * sliceNum 
-                // vertex의 position을 xyz의 배수가 되게끔 반올림
-                // 반올림 이후에 같은 vertex들은 모두 합침
-                // vertex가 10000개 있으면 5000개를 기준으로 코드를 작성 ->
-                // 2500개 -> 1250개 -> 625개 
-                
-                Vector3 minCorner(1000.f);
-                Vector3 maxCorner(0.0f);
-                for (auto& vtx : newVertexs.back()) {
-                        minCorner = Vector3::Min(minCorner, vtx.position);
-                        maxCorner = Vector3::Max(maxCorner, vtx.position);
-                } 
-                 // 길이가 100 -> 10000개로 나누면 0.01 씩 1만개
-                 // 73.5에 vertex가 위치 -> 인덱스로 따지면 7350
-                 // 계산법 -> 73.501 / 0.01 = int(7350) 
-                 // 100 -> 30개로 나누면 3.33씩 30개
-                 // 73.5에 위치 -> 
-                 // 73.5 / 3.33 인덱스 -> 22
-                 // 
-                 // 
-                // 바뀐 인덱스, 보간 인덱스  
-                Vector3 vtxInterval;
-                {  
-                        float sliceNum = cbrt(newVertexs.back().size() / 2);
-                        sliceNum *= 10;
-    /*                    cout << "vertexSize /2 : "
-                             << newVertexs.back().size() / 2
-                             << "cbrt = " << sliceNum << "\n";*/
-                        vtxInterval = maxCorner - minCorner;
-                        float abs =
-                            (vtxInterval.x + vtxInterval.y + vtxInterval.z) /
-                            3.f;
-                        vtxInterval /= abs * sliceNum;
-                }
-                map<Vector3, int> vertexCluster;
+
                 vector<pair<int, int>> newIdInfo(newVertexs.back().size(), make_pair(-1, 0));
 
-                for (int i = 0; i < newVertexs.back().size(); i++) {
-                        SkinnedVertex temp = newVertexs.back()[i];
-                        Vector3 roundingPos =
-                            (newVertexs.back()[i].position - minCorner) /
-                            vtxInterval;
-                        roundingPos.x = roundf(roundingPos.x);
-                        roundingPos.y = roundf(roundingPos.y);
-                        roundingPos.z = roundf(roundingPos.z);
+                for (int i = 0; i < newIndexs.back().size(); i+= 3) {
+                       vector<int> edge;
+                       {
+                            int v1 = newIndexs.back()[i];
+                            int v2 = newIndexs.back()[min(int(newIndexs.back().size()) - 1, i + 1)];
+                            int v3 = newIndexs.back()[min(int(newIndexs.back().size()) - 1, i + 2)];
+                                     
+                            if (newIdInfo[v1].first == -1) 
+                                edge.push_back(v1); 
+                            if (v1 != v2 && newIdInfo[v2].first == -1)
+                                edge.push_back(v2);    
+                            if (edge.size() < 2 && v2 != v3 && v1 != v3 &&
+                                newIdInfo[v3].first == -1) 
+                                edge.push_back(v3);
+                               
+                            if (edge.size() == 2 &&  edge [0] > edge[1]) 
+                            {
+                                int temp = edge[0];
+                                edge[0] = edge[1];
+                                edge[1] = temp;
+                            }
+                       }
+                         
+                       if (edge.size() < 2)
+                            continue;
 
-                        roundingPos = minCorner + (roundingPos * vtxInterval);
+                       newIdInfo[edge[0]].first = edge[0];
+                       newIdInfo[edge[1]].first = edge[0];
 
-                        auto it = vertexCluster.find(roundingPos);
-                        if (it == vertexCluster.end()) {
-                            temp.position = roundingPos;
-                            vertexCluster.insert(make_pair(roundingPos, i));
-                            nextVtx.push_back(temp);
-                            newIdInfo[i].first = i;
-                            newIdInfo[i].second = newIdInfo[max(i - 1, 0)].second;
-                        } else {
-                            newIdInfo[i].first = it->second;
-                            newIdInfo[i].second =
-                                newIdInfo[max(i - 1, 0)].second + 1; 
-                        }
                 }
-                //for (int i = 0; i < newIndexs.back().size(); i+= 3) {
-                //       vector<int> edge;
-                //       {
-                //            int v1 = newIndexs.back()[i];
-                //            int v2 = newIndexs.back()[min(int(newIndexs.back().size()) - 1, i + 1)];
-                //            int v3 = newIndexs.back()[min(int(newIndexs.back().size()) - 1, i + 2)];
-                //                     
-                //            if (newIdInfo[v1].first == -1) 
-                //                edge.push_back(v1); 
-                //            if (v1 != v2 && newIdInfo[v2].first == -1)
-                //                edge.push_back(v2);    
-                //            if (edge.size() < 2 && v2 != v3 && v1 != v3 &&
-                //                newIdInfo[v3].first == -1) 
-                //                edge.push_back(v3);
-                //               
-                //            if (edge.size() == 2 &&  edge [0] > edge[1]) 
-                //            {
-                //                int temp = edge[0];
-                //                edge[0] = edge[1];
-                //                edge[1] = temp;
-                //            }
-                //       }
-                //         
-                //       if (edge.size() < 2)
-                //            continue;
-
-                //       newIdInfo[edge[0]].first = edge[0];
-                //       newIdInfo[edge[1]].first = edge[0];
-
-                //}
-                //for (int i = 0; i < newIdInfo.size(); i++) {
-                //       if (newIdInfo[i].first == -1)
-                //            newIdInfo[i].first = i; 
-                //        
-                //       if (newIdInfo[i].first == i)
-                //            newIdInfo[i].second =
-                //                newIdInfo[max(i - 1, 0)].second;
-                //       else {
-                //            newIdInfo[i].second =
-                //                newIdInfo[max(i - 1, 0)].second + 1;
-                //       }
-                //}
-                //   
-                //for (int i = 0; i < newVertexs.back().size(); i++) {
-                //       if (newIdInfo[i].first == i) {  
-                //                nextVtx.push_back(newVertexs.back()[i]);
-                //       } 
-                //       else
-                //       {
-                //                int baseId = newIdInfo[i].first;
-                //                
-                //                if (baseId - newIdInfo[baseId].second >=
-                //                    nextVtx.size()) 
-                //                cout << "baseId : " << baseId
-                //                     << ", newIdInfo[baseId].second :"
-                //                     << newIdInfo[baseId].second << "\n";
-                //                 
-                //                SkinnedVertex &baseVtx =
-                //                        nextVtx[baseId - newIdInfo[baseId].second];
-                //                baseVtx = SkinnedVertex::InterporlationVertex(
-                //                        baseVtx, newVertexs.back()[i]); 
-                //       }
-                //} 
-                 // 문제 2 indices에 vertex에 포함되지 않는 index가 있음
+                for (int i = 0; i < newIdInfo.size(); i++) {
+                       if (newIdInfo[i].first == -1)
+                            newIdInfo[i].first = i; 
+                        
+                       if (newIdInfo[i].first == i)
+                            newIdInfo[i].second =
+                                newIdInfo[max(i - 1, 0)].second;
+                       else {
+                            newIdInfo[i].second =
+                                newIdInfo[max(i - 1, 0)].second + 1;
+                       }
+                }
+                    
+                for (int i = 0; i < newVertexs.back().size(); i++) {
+                       if (newIdInfo[i].first == i) {  
+                                nextVtx.push_back(newVertexs.back()[i]);
+                       } 
+                       else
+                       {
+                                int baseId = newIdInfo[i].first;
+                                 
+                                if (baseId - newIdInfo[baseId].second >=
+                                    nextVtx.size()) 
+                                cout << "baseId : " << baseId
+                                     << ", newIdInfo[baseId].second :"
+                                     << newIdInfo[baseId].second << "\n";
+                                 
+                                SkinnedVertex &baseVtx =
+                                        nextVtx[baseId - newIdInfo[baseId].second];
+                                baseVtx = SkinnedVertex::InterporlationVertex(
+                                        baseVtx, newVertexs.back()[i]); 
+                       }
+                } 
                 for (int j = 0; j < newIndexs.back().size() - 2; j += 3) {
                              
                         int i1 = newIndexs.back()[j];
                        int i2 = newIndexs.back()[j + 1]; 
                         int i3 = newIndexs.back()[j + 2];  
-
+                         
                         i1 = newIdInfo[i1].first;
                         i2 = newIdInfo[i2].first;
                         i3 = newIdInfo[i3].first;

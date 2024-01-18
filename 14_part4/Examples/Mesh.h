@@ -20,11 +20,11 @@ struct Mesh {
 
 	public:
     Mesh(){};
-      Mesh(Mesh *otherMesh) { 
+      Mesh(Mesh *otherMesh) {  
 		*this = *otherMesh; 
       }
     void SetLod(int level) {
-	    level = std::clamp(level, 0, int(vertexBuffers.size()));
+	    level = std::clamp(level, 0, int(vertexBuffers.size()) - 1);
         vertexBuffer = vertexBuffers[level];
         vertexCount = vertexCounts[level];
         indexBuffer = indexBuffers[level];
@@ -63,7 +63,6 @@ struct Mesh {
     ComPtr<ID3D11ShaderResourceView> billboardDiffuseSRV;
     ComPtr<ID3D11ShaderResourceView> billboardNormalSRV;
     ComPtr<ID3D11ShaderResourceView> billboardArtSRV;
-    
     // 3D Textures 
     Texture3D densityTex;
     Texture3D lightingTex;
@@ -76,6 +75,8 @@ struct Mesh {
     UINT mergeIndexCount = 0; 
     UINT stride = 0;
     UINT offset = 0;
+
+    
 }; 
 
 } // namespace hlab

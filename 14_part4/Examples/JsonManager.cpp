@@ -666,7 +666,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
     // density = 0 ~ 1 
     float range =   info.foliageRange;
     float density = 1.01f - info.foliageDensity;
-     
+    
     std::random_device rd;
     std::mt19937 gen(rd()); 
     std::uniform_real_distribution<float> randId(0.f, float(temp->mesh.size()) - 1.f);
@@ -983,9 +983,9 @@ shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
     m_trunk->UpdateTranseform(info.scale, info.rotation, info.position);
     m_trunk->SetChildModel(m_leaves);
 
-    return m_trunk;
-}
- 
+    return m_trunk; 
+}  
+  
 shared_ptr<class Model> JsonManager::CreateBillboadTree(ObjectSaveInfo info) {
     shared_ptr<BillboardModel> model = std::make_shared<BillboardModel>(m_appBase);
 
@@ -995,7 +995,7 @@ shared_ptr<class Model> JsonManager::CreateBillboadTree(ObjectSaveInfo info) {
     model->Initialize(m_appBase->m_device, m_appBase->m_context, {{0.0f, 0.0f, 0.0f, 1.0f}}, 2.f, Graphics::billboardPS);
     model->UpdateTranseform(info.scale, info.rotation, info.position);
 
-
+    
     return model;
 }
 } // namespace hlab

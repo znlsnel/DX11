@@ -108,20 +108,20 @@ class D3D11Utils {
 
         D3D11_SUBRESOURCE_DATA vertexBufferData = {
             0}; // MS 예제에서 초기화하는 방식
-        vertexBufferData.pSysMem = instances.data();
+        vertexBufferData.pSysMem = instances.data(); 
         vertexBufferData.SysMemPitch = 0;
         vertexBufferData.SysMemSlicePitch = 0;
 
         ThrowIfFailed(device->CreateBuffer(&bufferDesc, &vertexBufferData,
                                            instanceBuffer.GetAddressOf()));
-    }
+    } 
 
     template <typename T_CONSTANT>
     static void CreateConstBuffer(ComPtr<ID3D11Device> &device,
                                   const T_CONSTANT &constantBufferData,
                                   ComPtr<ID3D11Buffer> &constantBuffer) {
 
-        static_assert((sizeof(T_CONSTANT) % 16) == 0,
+        static_assert((sizeof(T_CONSTANT) % 16) == 0, 
                       "Constant Buffer size must be 16-byte aligned");
 
         D3D11_BUFFER_DESC desc;
@@ -131,8 +131,8 @@ class D3D11Utils {
         desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         desc.MiscFlags = 0;
-        desc.StructureByteStride = 0;
-
+        desc.StructureByteStride = 0; 
+          
         D3D11_SUBRESOURCE_DATA initData;
         ZeroMemory(&initData, sizeof(initData));
         initData.pSysMem = &constantBufferData;
@@ -168,7 +168,7 @@ class D3D11Utils {
             std::cout << "UpdateBuffer() buffer was not initialized."
                       << std::endl;
         }
-
+        
         D3D11_MAPPED_SUBRESOURCE ms;
         context->Map(buffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);
         memcpy(ms.pData, &bufferData, sizeof(bufferData));

@@ -978,18 +978,30 @@ vector<MeshData> GeometryGenerator::ReadFromFile(std::string basePath,
     GeometryGenerator::Normalize(Vector3(0.0f), 1.0f, modelLoader.m_meshes,
                                  modelLoader.m_aniData);
 
+    if (filename != "") {
+            for (int i = 0; i < modelLoader.m_meshes.size(); i++) {
+                auto &mesh = modelLoader.m_meshes[i];
+                mesh.name = filename + "_" + to_string(i);
+            }
+    }
+
     return modelLoader.m_meshes;
 }
-
+ 
 auto GeometryGenerator::ReadAnimationFromFile(string basePath, string filename, bool revertNormals)
     -> tuple<vector<MeshData>, AnimationData> {
 
     ModelLoader modelLoader;
-    modelLoader.Load(basePath, filename, revertNormals);
+    modelLoader.Load(basePath, filename, revertNormals); 
 
     GeometryGenerator::Normalize(Vector3(0.0f), 1.0f, modelLoader.m_meshes,
                                  modelLoader.m_aniData);
-
+    if (filename != "") {
+            for (int i = 0; i < modelLoader.m_meshes.size(); i++) {
+                auto &mesh = modelLoader.m_meshes[i];
+                mesh.name = filename + "_" + to_string(i);
+            }
+    }
     return {modelLoader.m_meshes, modelLoader.m_aniData};
 }
 

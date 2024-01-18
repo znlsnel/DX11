@@ -75,12 +75,8 @@ struct BoundingCollision {
     }
     BoundingBox m_bb;
     vector<Vector3> vertexs;
-    vector<Vector3> worldVertexs;
+    vector<Vector3> worldVertexs; 
 };
-
-
-
-
 
 class Model {
   public: 
@@ -200,29 +196,31 @@ class Model {
                                  shared_ptr<Mesh>& result);
 
   public:
-    void UpdateWorldRow(const Matrix& row, bool debug = false);
+    void UpdateWorldRow(const Matrix& row);
          
-
+     
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
     Matrix m_worldITRow = Matrix(); // InverseTranspose
 
     bool m_drawNormals = false;
     bool m_isVisible = true;
     bool m_castShadow = true; 
-    bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
+    bool m_isPickable = false; 
     bool m_saveable = false;
     bool m_editable = false;
     bool m_drawBackFace = false; 
-     int m_BVHMaxLevel = 0;
     bool isChildModel = false; 
     bool isObjectLock = false;
     bool bRenderingBVH = false;
     bool isDestory = false;
-    bool isCursorShpere = false;
-    bool m_isLodFixed = false;
+    bool m_useLod = true;
+    bool m_allowDuplicateMesh = false; 
      
+    bool isCursorShpere = false; 
+    int m_maxLod = 10;
+    int m_lodCount = 0;
+     int m_BVHMaxLevel = 0;
     int maxRenderingBVHLevel = 0; 
-    int tempInt = 0;
        
     vector<shared_ptr<Mesh>> m_meshes;
 
@@ -239,8 +237,8 @@ class Model {
     // 왼쪽 자식 :  *2 + 1
     // 오른쪽 자식 :  *2 + 2
 
-
-
+    
+    
     string m_name = "NoName";
     ObjectSaveInfo objectInfo;
     vector<shared_ptr<Model>> childModels;
@@ -259,6 +257,6 @@ class Model {
     float m_boundingSphereRadius = 0.0f;
 
 
-};
-
+}; 
+ 
 } // namespace hlab

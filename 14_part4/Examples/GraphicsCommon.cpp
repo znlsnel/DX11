@@ -687,7 +687,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     oceanPSO.m_blendState = alphaBS;
     //oceanPSO.m_rasterizerState = solidBothRS; // ¾ç¸é
     oceanPSO.m_pixelShader = oceanPS;
-
+     
     editTexturePSO.m_computeShader = editTexureMapCS;
 }
   
@@ -700,9 +700,9 @@ void Graphics::InitVolumeShaders(ComPtr<ID3D11Device> &device) {
     volumeSmokePSO.m_blendState = alphaBS;
     volumeSmokePSO.m_pixelShader = volumeSmokePS;
 
-    foliageBillboardPSO = defaultSolidPSO;
+    foliageBillboardPSO = defaultSolidPSO; 
     foliageBillboardPSO.m_vertexShader = billboardVS;
-    foliageBillboardPSO.m_pixelShader = basicPS;
+    foliageBillboardPSO.m_pixelShader = billboardPS;
     foliageBillboardPSO.m_geometryShader = foliageGS;
     foliageBillboardPSO.m_inputLayout = billboardIL;
     foliageBillboardPSO.m_rasterizerState = solidBothRS; 

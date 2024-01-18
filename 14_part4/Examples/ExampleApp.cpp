@@ -1,6 +1,6 @@
-﻿#include "ExampleApp.h"
+﻿
 
-
+#include "ExampleApp.h"
 #include <DirectXCollision.h> // 구와 광선 충돌 계산에 사용
 #include <directxtk/DDSTextureLoader.h>
 #include <directxtk/SimpleMath.h>
@@ -23,24 +23,16 @@ bool ExampleApp::InitScene() {
     AppBase::m_camera->Reset(Vector3(-0.112852f, 0.307729f, -0.542159f),
                             0.0589047f, 0.14399f);
     AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
-
     AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
                           L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
                           L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
     AppBase::InitScene();
-
     // 바닥(거울)
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
         auto mesh = GeometryGenerator::MakeSquare(5.0, {10.0f, 10.0f});
         string path = "../Assets/Textures/PBR/black-tile1-ue/";
-        //mesh.albedoTextureFilename = path + "black-tile1_albedo.png";
-        //mesh.emissiveTextureFilename = "";
-        //mesh.aoTextureFilename = path + "black-tile1_ao.png";
-        //mesh.metallicTextureFilename = path + "black-tile1_metallic.png";
-        //mesh.normalTextureFilename = path + "black-tile1_normal-dx-dx.png";
-        //mesh.roughnessTextureFilename = path + "black-tile1_roughness.png";
          
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.7f);
@@ -50,16 +42,12 @@ bool ExampleApp::InitScene() {
         m_ground->m_name = "Ground";
 
         Vector3 position = Vector3(0.0f, -0.5f, 2.0f);
-        //m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-        //                         Matrix::CreateTranslation(position));
 
         m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
         m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
 
-        // m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
     }
-
-    // Main Object
+    
     {
         // auto meshes = GeometryGenerator::ReadFromFile(
         //     "../Assets/Models/DamagedHelmet/", "DamagedHelmet.gltf");

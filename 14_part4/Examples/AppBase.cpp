@@ -578,7 +578,7 @@ bool AppBase::Initialize() {
     std::reverse(skyboxMesh.indices.begin(), skyboxMesh.indices.end());
     m_skybox = make_shared<Model>(m_device, m_context, vector{skyboxMesh});
     m_skybox->m_name = "SkyBox";
-    m_skybox->m_isLodFixed = true;
+    m_skybox->m_useLod = false;
     // 콘솔창이 렌더링 창을 덮는 것을 방지
     SetForegroundWindow(m_mainWindow); 
 
@@ -994,8 +994,7 @@ void AppBase::RenderOpaqueObjects() {
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
      
-    m_context->PSSetShaderResources(20, 1, m_billboardTreeSRV.GetAddressOf()); 
-
+    
     m_context->ClearDepthStencilView(
         m_defaultDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     AppBase::SetGlobalConsts(m_globalConstsGPU);
@@ -2032,17 +2031,17 @@ void AppBase::UpdateBVH() {
           
         std::queue<std::pair<int, int>> queue;
         queue.push(make_pair(0, m_basicList.size()));
-           
+             
         int index = 0;
         while (!queue.empty()) 
-        { 
+        {  
                 int min = queue.front().first;
                 int max = queue.front().second;
                 queue.pop();  
                 m_BVNodes.push_back(CreateBVNode(min, max)); 
                 
                 int midValue = (max + min) / 2; 
-                int nextMin = min;
+                int nextMin = min; 
                 int nextMax = midValue;
                 if (nextMax - nextMin > 0 && nextMax != max) {
                         queue.push(make_pair(nextMin, nextMax));
@@ -2126,7 +2125,7 @@ bool AppBase::IsMouseHoveringImGui() {
                 return true;
         }
         return false;
-}
+} 
 
     template <typename T>
 bool AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
@@ -2141,7 +2140,7 @@ bool AppBase::ReadPixelOfMousePos(ComPtr<ID3D11Device> &device,
     desc.Usage = D3D11_USAGE_STAGING;
     ThrowIfFailed(device->CreateTexture2D(
         &desc, NULL, m_indexStagingTexture.GetAddressOf()));
-     
+    
     D3D11_BOX box;
     box.left = std::clamp(m_mouseX  - 1, 0, 
                           (int)desc.Width - 1);

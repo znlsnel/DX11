@@ -2,6 +2,9 @@
 #include "Model.h"
 #include "GeometryGenerator.h"
 #include "AppBase.h"
+#include "SkinnedMeshModel.h"
+#include "FoliageModel.h"
+
 #include <filesystem>
 #include <DirectXMath.h>
 #include <queue>
@@ -14,7 +17,7 @@ using namespace DirectX;
 Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context, const std::string &basePath, const std::string &filename,
              class AppBase *appBase) {
     m_appBase = appBase;
-    Initialize(device, context, basePath, filename);
+    Initialize(device, context, basePath, filename); 
 }
  
 Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context, const std::vector<MeshData> &meshes, class AppBase *appBase) {
@@ -30,94 +33,251 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
     exit(-1);
 }
 
- 
- 
 void Model::InitMeshBuffers(ComPtr<ID3D11Device> &device,
                             const MeshData &meshData,
-                            shared_ptr<Mesh> &newMesh) {
-           
-    static const int minVertexCount = 3; 
+                            shared_ptr<Mesh> &newMesh) 
+{ 
+    vector<Vertex> initVtx;
+    vector<seed_seq::result_type> initIdx;
+   {
+        map<Vector3, int> uniVtx;
+       vector<pair<int, int>> indexs(meshData.vertices.size());
 
-    int interval = (meshData.vertices.size() - minVertexCount) / 9;
- //   cout << "interval : " << interval << "\n"; 
-    vector<int> vertexNumbers(10);
-    vertexNumbers[0] = int(meshData.vertices.size()); 
-    vertexNumbers[9] = int(minVertexCount); 
-     
-    for (int i = 1; i < 5; i++) {
-        int nextAddVal =
-             interval > vertexNumbers[vertexNumbers.size() - i ] * 10
-                ? vertexNumbers[vertexNumbers.size() - i] * 10
-                : interval;
-      //  cout << "nextAddVal : " << nextAddVal << "\n";
-        vertexNumbers[vertexNumbers.size() - i - 1] =
-            vertexNumbers[vertexNumbers.size() - i] + nextAddVal; 
+        int forSize = meshData.vertices.size();
+        for (int i = 0; i < forSize; i++) {
 
-        nextAddVal = nextAddVal == interval ? interval : interval * 2;
-    //    cout << "nextAddVal : " << nextAddVal << "\n"; 
-        vertexNumbers[i] = vertexNumbers[i - 1] - nextAddVal;  
+            Vertex tmpVtx = meshData.vertices[i];
 
-        if (vertexNumbers[i] < vertexNumbers[vertexNumbers.size() - i - 1])
-            vertexNumbers[i] = (vertexNumbers[i - 1] + 
-                    vertexNumbers[vertexNumbers.size() - i - 1] )/ 2; 
-    }
-    newMesh->vertexBuffers.resize(vertexNumbers.size());
-    newMesh->vertexCounts.resize(vertexNumbers.size());
-    newMesh->indexBuffers.resize(vertexNumbers.size());
-    newMesh->indexCounts.resize(vertexNumbers.size());
+            auto it = uniVtx.find(tmpVtx.position);
+            if (it == uniVtx.end()) {
+                initVtx.push_back(tmpVtx);
+                uniVtx.insert(make_pair(tmpVtx.position, i));
 
-       
-    for (int i = 1; i < vertexNumbers.size(); i++) {
-        const float skipCount = float(meshData.vertices.size() - vertexNumbers[i]) /
-                                (float)meshData.vertices.size(); 
-          
-        float count = 0.0f;
-        vector<Vertex> tempVertex;
-        vector<seed_seq::result_type> tempIndex;
-        vector<bool> VertexCheck;
-
-        for (auto &Vertex : meshData.vertices) {
-            count += skipCount;
-
-              
-            if (count > 1) {
-                count -= 1.0f;
-                VertexCheck.push_back(false);
-                continue;
+                indexs[i].first = i;
+                indexs[i].second = indexs[max(0, i - 1)].second;
             } 
-            VertexCheck.push_back(true);
-            tempVertex.push_back(Vertex);
+            else 
+            {
+                indexs[i].first = it->second;
+                indexs[i].second = indexs[max(0, i - 1)].second + 1;
+            }
         }
-
-        D3D11Utils::CreateVertexBuffer(device, tempVertex,
-                                       newMesh->vertexBuffers[i]);  
-        newMesh->vertexCounts[i] = tempVertex.size();  
+        for (int i = 0; i < meshData.indices.size(); i++) {
+            int id = meshData.indices[i];
+            id = indexs[id].first - indexs[indexs[id].first].second;
+            if (id >= initVtx.size())
+                continue;
+            initIdx.push_back(seed_seq::result_type(id));
+        }
          
-        for (auto &index : meshData.indices) {
-                if (VertexCheck[int(index)])
-                        tempIndex.push_back(index);
-        }
-        D3D11Utils::CreateIndexBuffer(device, tempIndex,
-                                       newMesh->indexBuffers[i]);
-        newMesh->indexCounts[i] = tempIndex.size();   
-    } 
-        
-     
-    D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-                                   newMesh->vertexBuffers[0]); 
-    newMesh->vertexBuffer = newMesh->vertexBuffers[8]; 
-     
-D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                                   newMesh->indexBuffers[0]);
-    newMesh->indexBuffer = newMesh->indexBuffers[8]; 
-     
-    newMesh->indexCounts[0] = UINT(meshData.indices.size());
-    newMesh->indexCount = newMesh->indexCounts[8];
-    newMesh->vertexCounts[0] = UINT(meshData.vertices.size());
-    newMesh->vertexCount = newMesh->vertexCounts[8]; 
-     
-    newMesh->stride = UINT(sizeof(Vertex));
+        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+                                               newMesh->vertexBuffer);
 
+        newMesh->vertexBuffers.push_back(newMesh->vertexBuffer);
+
+        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                                      newMesh->indexBuffer);
+        newMesh->indexBuffers.push_back(newMesh->indexBuffer);
+
+        newMesh->indexCount = UINT(meshData.indices.size());
+        newMesh->indexCounts.push_back(newMesh->indexCount);
+        newMesh->vertexCount = UINT(meshData.vertices.size());
+        newMesh->vertexCounts.push_back(newMesh->vertexCount);
+
+        newMesh->stride = UINT(sizeof(Vertex));
+    }
+    
+    static const int minVertexCount = 3;
+     
+    vector<vector<Vertex>> newVertexs;
+    vector<vector<seed_seq::result_type>> newIndexs;
+    newVertexs.push_back(initVtx);
+    newIndexs.push_back(initIdx);
+     
+    int lodCount = 5;
+    while (lodCount--) {
+        vector<Vertex> nextVtx;  
+        vector<float> nextVtxMinDist;  
+        vector<seed_seq::result_type> nextIdx;
+
+        map<Vector3, int> simplifyVtxs;
+        vector<pair<int, int>> newIdInfo(newVertexs.back().size(),
+                                         make_pair(-1, 0));
+        // Vector3 minCorner(1000.f);
+        // Vector3 maxCorner(0.f); 
+        // for (int i = 0; i < newVertexs.back().size(); i++) {
+        //    minCorner = Vector3::Min(minCorner,
+        //    newVertexs.back()[i].position); maxCorner =
+        //    Vector3::Max(maxCorner, newVertexs.back()[i].position);
+        //}
+        // float vertexDensity =
+        //     newVertexs.back().size() / 
+        //     (maxCorner - minCorner).Length() * 100; 
+        ////if (vertexDensity < 1.f)
+        ////    break;
+        // 
+        // float avgLength = 0.f;
+        // int addCount = 0;
+        // for (int i = 0; i < newIndexs.back().size() / 2; i += 3) {
+        //    int idx = newIndexs.back()[i];
+        //    int nextIdx = newIndexs.back()[min(i + 1,
+        //    int(newIndexs.back().size()) - 1)]; if (idx == nextIdx) continue;
+        //
+        //    float nextEdgeLength =
+        //        (newVertexs.back()[idx].position -
+        //         newVertexs.back()[nextIdx].position).Length();
+
+        //    avgLength += nextEdgeLength;
+        //    addCount++;
+        //}
+        // avgLength /= addCount;
+        // avgLength *= 1.2f;
+        // 
+        // for (int i = 0; i < newVertexs.back().size(); i++) {
+        //    Vertex tempVTX = newVertexs.back()[i];
+        //    Vector3 tempPos = (tempVTX.position - minCorner)  /= avgLength;
+
+        //        tempPos.x = minCorner.x + int(tempPos.x) * avgLength;
+        //        tempPos.y = minCorner.y + int(tempPos.y) * avgLength;
+        //        tempPos.z = minCorner.z + int(tempPos.z) * avgLength;
+        //        
+        //        if (tempPos.x > maxCorner.x- avgLength)
+        //                tempPos.x = tempVTX.position.x; 
+        //        if (tempPos.y > maxCorner.y - avgLength)
+        //                tempPos.y = tempVTX.position.y;
+        //        if (tempPos.z > maxCorner.z - avgLength)
+        //                tempPos.z = tempVTX.position.z;
+        //                  
+        //        tempVTX.position = tempPos;
+   
+        //    auto it = simplifyVtxs.find(tempVTX.position);
+        //    if (it == simplifyVtxs.end()) {
+        //        nextVtx.push_back(tempVTX);
+        //        nextVtxMinDist.push_back(
+        //                    (tempVTX.position - newVertexs.back()[i].position).Length()); 
+        //         
+        //        simplifyVtxs.insert(make_pair(tempVTX.position, i));
+
+        //        newIdInfo[i].first = i;
+        //        newIdInfo[i].second = newIdInfo[max(i - 1, 0)].second;
+        //    } 
+        //    else 
+        //    {
+        //            int idx =
+        //            newIdInfo[it->second].first - newIdInfo[it->second].second;
+        //        if (nextVtxMinDist[idx] >
+        //            (tempVTX.position - newVertexs.back()[i].position)
+        //                .Length()) {  
+        //                nextVtxMinDist[idx] =
+        //                    (tempVTX.position - newVertexs.back()[i].position)
+        //                        .Length(); 
+        //            nextVtx[idx].texcoord =
+        //                newVertexs.back()[i].texcoord; 
+        //        } 
+        //        newIdInfo[i].first = it->second;
+        //        newIdInfo[i].second = newIdInfo[max(i - 1, 0)].second + 1;
+        //    }
+        //}
+
+        for (int i = 0; i < newIndexs.back().size(); i += 3) {
+            vector<int> edge;
+            {
+                int v1 = newIndexs.back()[i];
+                int v2 =
+                    newIndexs
+                        .back()[min(int(newIndexs.back().size()) - 1, i + 1)];
+                int v3 =
+                    newIndexs
+                        .back()[min(int(newIndexs.back().size()) - 1, i + 2)];
+                if (newIdInfo[v1].first == -1)
+                    edge.push_back(v1);
+                if (v1 != v2 && newIdInfo[v2].first == -1)
+                    edge.push_back(v2);
+                if (edge.size() < 2 && v2 != v3 && v1 != v3 &&
+                    newIdInfo[v3].first == -1)
+                    edge.push_back(v3);
+                if (edge.size() == 2 && edge[0] > edge[1]) {
+                    int temp = edge[0];
+                    edge[0] = edge[1];
+                    edge[1] = temp;
+                }
+            }
+            if (edge.size() < 2)
+                continue;
+            newIdInfo[edge[0]].first = edge[0];
+            newIdInfo[edge[1]].first = edge[0];
+        }
+        for (int i = 0; i < newIdInfo.size(); i++) {
+            if (newIdInfo[i].first == -1)
+                newIdInfo[i].first = i;
+            if (newIdInfo[i].first == i)
+                newIdInfo[i].second = newIdInfo[max(i - 1, 0)].second;
+            else {
+                newIdInfo[i].second = newIdInfo[max(i - 1, 0)].second + 1;
+            }
+        }
+        for (int i = 0; i < newVertexs.back().size(); i++) {
+            if (newIdInfo[i].first == i) {
+                nextVtx.push_back(newVertexs.back()[i]);
+            } else {
+                int baseId = newIdInfo[i].first;
+                if (baseId - newIdInfo[baseId].second >= nextVtx.size())
+                    cout << "baseId : " << baseId
+                         << ", newIdInfo[baseId].second :"
+                         << newIdInfo[baseId].second << "\n";
+                Vertex &baseVtx =
+                    nextVtx[baseId - newIdInfo[baseId].second];
+                baseVtx =
+                    Vertex::InterporlationVertex(baseVtx, newVertexs.back()[i]);
+            }
+        }
+
+         
+        for (int j = 0; j < newIndexs.back().size() - 2; j += 3) {
+
+            int i1 = newIndexs.back()[j];
+            int i2 = newIndexs.back()[j + 1];
+            int i3 = newIndexs.back()[j + 2];
+
+            i1 = newIdInfo[i1].first;
+            i2 = newIdInfo[i2].first;
+            i3 = newIdInfo[i3].first;
+
+            if (i1 == i2 || i1 == i3 || i2 == i3) {
+                continue;
+            }
+
+            nextIdx.push_back(i1 - newIdInfo[i1].second);
+            nextIdx.push_back(i2 - newIdInfo[i2].second);
+            nextIdx.push_back(i3 - newIdInfo[i3].second);
+        }
+
+        newVertexs.push_back(nextVtx);
+        newIndexs.push_back(nextIdx);
+        nextVtx.clear();
+        nextIdx.clear();
+        if (newIndexs.back().size() > 3) {
+
+            D3D11Utils::CreateVertexBuffer(device, newVertexs.back(),
+                                           newMesh->vertexBuffer);
+            newMesh->vertexBuffers.push_back(newMesh->vertexBuffer);
+            newMesh->vertexCounts.push_back(newVertexs.back().size());
+
+            D3D11Utils::CreateIndexBuffer(device, newIndexs.back(),
+                                          newMesh->indexBuffer);
+            newMesh->indexBuffers.push_back(newMesh->indexBuffer);
+            newMesh->indexCounts.push_back(newIndexs.back().size());
+        } else
+            break;
+    }
+
+    int idx = newMesh->vertexBuffers.size() - 1;
+    idx = 0;
+    newMesh->vertexBuffer = newMesh->vertexBuffers[idx];
+    newMesh->indexBuffer = newMesh->indexBuffers[idx];
+    newMesh->indexCount = newMesh->indexCounts[idx];
+    newMesh->vertexCount = newMesh->vertexCounts[idx]; 
+    m_lodCount = max(m_lodCount, int(newMesh->vertexBuffers.size() )- 1);
 }
 
 void Model::Initialize(ComPtr<ID3D11Device> &device,
@@ -200,16 +360,16 @@ void ExtendBoundingBox(const BoundingBox &inBox, BoundingBox &outBox) {
 void Model::Initialize(ComPtr<ID3D11Device> &device,
                        ComPtr<ID3D11DeviceContext> &context,
                        const vector<MeshData> &meshes) {
-
+         
     // 일반적으로는 Mesh들이 m_mesh/materialConsts를 각자 소유 가능
     // 여기서는 한 Model 안의 여러 Mesh들이 Consts를 모두 공유
  //  cout << "Mode :: Initialize \n";
     m_meshConsts.GetCpu().world = Matrix();
     m_meshConsts.Initialize(device);
     m_materialConsts.Initialize(device);
-
- //   cout << "Mode :: meshData Setting \n";
-
+     
+    //cout << "Mode :: meshData Setting \n";
+     
     auto CreateOrFindTexture = [&](string textureFile1Name, 
             string textureFile2Name, ComPtr<ID3D11Texture2D> &texture,
                                    ComPtr<ID3D11ShaderResourceView> &srv,
@@ -267,11 +427,26 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
     };
      
     bool debugTextureFile = true;
-     
+    
     for (const auto &meshData : meshes) {
         auto newMesh = std::make_shared<Mesh>();
-
-        InitMeshBuffers(device, meshData, newMesh);
+         
+        if (m_allowDuplicateMesh == false &&  meshData.name != "" && m_appBase != nullptr) 
+        { 
+                auto it = m_appBase->m_meshSrotage.find(meshData.name);
+                if (it == m_appBase->m_meshSrotage.end()) 
+                {
+                        InitMeshBuffers(device, meshData, newMesh);
+                       m_appBase->m_meshSrotage.insert(make_pair(meshData.name, newMesh));  
+                }
+                else 
+                {
+                       *newMesh =  Mesh(*(it->second));
+                       
+                } 
+        } else {
+                InitMeshBuffers(device, meshData, newMesh);
+        }
 
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
@@ -530,16 +705,20 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
     return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
 }  
  
- 
+  
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
           
-         
+      int lod = 0; 
+    if (m_appBase)
+        lod = int((m_appBase->m_camera->GetPosition() - GetPosition()).Length());
     if (m_isVisible) {  
         for (const auto &mesh : m_meshes) {
-                if (m_isLodFixed)
-                        mesh->SetLod(0);
+            if (m_useLod == false)
+                mesh->SetLod(0);
+            else
+                mesh->SetLod(min(lod, m_maxLod));
              
-
+              
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
             context->VSSetConstantBuffers(1, 2, constBuffers);
@@ -832,7 +1011,7 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
                  Matrix::CreateRotationY(m_rotation.y) *
                  Matrix::CreateRotationZ(m_rotation.z) *
                  Matrix::CreateTranslation(m_position);
-
+     
     m_worldITRow = m_worldRow;
     m_worldITRow.Translation(Vector3(0.0f));
     m_worldITRow = m_worldITRow.Invert().Transpose();
@@ -916,22 +1095,13 @@ bool Model::MergeMeshes(vector<shared_ptr<Mesh>> &meshes,
     result->mergeIndexCount = indexCount;
     result->mergeVertexCount = vertexCount;
     return true; 
-    
-}  
- 
-void Model::UpdateWorldRow(const Matrix &row, bool debug) {
-   
-         
-    this->m_worldRow = row;
-    if (debug)
-    {
-        tempInt = 1;
-
-    }
      
-    //ExtractPositionFromMatrix(&row, m_position);
-    //ExtractEulerAnglesFromMatrix(&row, m_rotation);
-    //ExtractScaleFromMatrix(&row, m_scale);
+}
+
+void Model::UpdateWorldRow(const Matrix &row) {
+   
+    this->m_worldRow = row;
+    
     m_worldITRow = m_worldRow;
       
     m_worldITRow.Translation(Vector3(0.0f));

@@ -1,8 +1,10 @@
 #include "FoliageModel.h"
+#include "BillboardModel.h"
 #include "GraphicsPSO.h"
 #include "AppBase.h"
 #include "Camera.h"
 
+#include <cstdlib>
 #include <queue>
 
 using namespace hlab;
@@ -11,8 +13,11 @@ using namespace std;
 hlab::FoliageModel::FoliageModel(ComPtr<ID3D11Device> &device,
                                  ComPtr<ID3D11DeviceContext> &context,
                                  const vector<MeshData> &meshes,
-                                 AppBase *appBase, vector<int> &meshStartID)  
-        : Model(device, context, meshes, appBase){
+                                 AppBase *appBase, vector<int> &meshStartID) {
+    m_allowDuplicateMesh = true;
+    m_appBase = appBase;
+    Initialize(device, context, meshes);
+
     m_meshStartID = meshStartID;
     MakeBoundingBox(device, meshes); 
 }
@@ -21,7 +26,7 @@ void hlab::FoliageModel::MakeBoundingBox(
     ComPtr<ID3D11Device> &device, const vector<MeshData> &meshDatas) {
          
     for (int meshID : m_meshStartID) {
-        auto &mesh = meshDatas[meshID];
+        auto &mesh = meshDatas[meshID]; 
         Vector3 minCorner(10000.f);
         Vector3 maxCorner(0.f);
          
@@ -32,15 +37,43 @@ void hlab::FoliageModel::MakeBoundingBox(
         Vector3 Center = (minCorner + maxCorner) * 0.5f;
         Vector3 Extents = maxCorner - Center; 
         m_boundingBoxs.push_back(BoundingBox(Center, Extents));
+          
+        shared_ptr<BillboardModel> tempBM = 
+            make_shared<BillboardModel>(m_appBase);  
+        Vector4 tempPos = Vector4(Center.x, Center.y, Center.z, 1.0);
+
+        tempBM->Initialize(device, m_appBase->m_context, {tempPos}, 2,
+                           Graphics::basicPS);
+        tempBM->m_geometryShader = Graphics::foliageGS; 
+        tempBM->resViews = 
+        {m_meshes[0]->billboardDiffuseSRV.Get(),
+                            m_meshes[0]->billboardNormalSRV.Get(), 
+                            m_meshes[0]->aoSRV.Get(),
+                            m_meshes[0]->metallicRoughnessSRV.Get(),
+                            m_meshes[0]->emissiveSRV.Get(),
+                            m_meshes[0]->billboardArtSRV.Get()}; 
+
+        tempBM->useOtherShaderResource = true;
+        tempBM->m_materialConsts.GetCpu().useAlbedoMap = true; 
+        tempBM->m_materialConsts.GetCpu().useNormalMap = true;
+        tempBM->m_materialConsts.Upload(m_appBase->m_context);
+        tempBM->m_meshConsts.GetCpu().useARTTexture = 1;
          
-        ComPtr<ID3D11Buffer> buffer;
-        const vector<Vector4> v = {{Center.x, Center.y, Center.z, 1.0f}};
-         
-        D3D11Utils::CreateVertexBuffer(device, v, buffer);
-        m_vertexBuffers.push_back(buffer); 
-    }
-}  
-    
+
+        std::random_device rd;
+        std::mt19937 gen(rd()); 
+        std::uniform_int_distribution<int> dis(0, 6);
+
+        ConstantBuffer<FoliageConsts> tempConsts;
+        tempConsts.Initialize(device);
+        tempConsts.GetCpu().foliageID = int(dis(gen));
+        tempBM->m_foliageConstsGPU = tempConsts.Get();
+        tempConsts.Upload(m_appBase->m_context); 
+        
+        m_billboards.push_back(tempBM);    
+    } 
+}   
+      
 void hlab::FoliageModel::MakeBVH() { 
          
         m_bvh.clear();
@@ -140,9 +173,9 @@ void hlab::FoliageModel::GetMeshInFrustum() {
 
         m_foundMesh.clear();
         m_foundDistantMesh.clear();
-        m_foundBillboardMesh.clear();
+        m_foundBillboardFoliages.clear();
 
-        AppBase::MyFrustum frustum;
+        AppBase::MyFrustum frustum; 
         frustum.InitFrustum(m_appBase);
         Vector3 cameraPos = m_appBase->m_camera->GetPosition();
 
@@ -163,17 +196,19 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                 Vector3 Extents = node.boundingBox.Extents;
                 // Matrix t = m_worldRow;
                 Matrix t;
-                       
-                bool check = frustum.Intersects(center, Extents, t);
-                     
-                if (check) { 
+                        
+                bool check = frustum.Intersects(center, Extents, t); 
+                      
+                if (check) {   
                           
                     if (node.objectID >= 0)  
-                    {     
+                    {      
                         float cameraToCenter = (cameraPos - center).Length();
                         shared_ptr<Mesh> &tempMesh = 
                             m_meshes[m_meshStartID[node.objectID]]; 
-                        int vertexId =min(int(cameraToCenter), int(tempMesh->vertexBuffers.size() - 3)); 
+                        int vertexId =min(0, int(cameraToCenter));  
+                        vertexId =
+                            min(int(tempMesh->vertexBuffers.size() )- 1, vertexId);
                         tempMesh->vertexBuffer =
                             tempMesh->vertexBuffers[vertexId];
                         tempMesh->vertexCount = tempMesh->vertexCounts[vertexId];
@@ -184,10 +219,10 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                                 m_foundMesh.push_back(tempMesh);
                             else  
                                 m_foundDistantMesh.push_back(tempMesh); 
-                         } 
-                        else  
-                            m_foundBillboardMesh.push_back(make_pair(
-                                tempMesh, m_vertexBuffers[node.objectID]));
+                         } else {
+                            m_foundBillboardFoliages.push_back(
+                                m_billboards[node.objectID]);
+                         }
                     } 
                  
                  
@@ -199,71 +234,38 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                         queue.push(make_pair(m_bvh[rightID], rightID));
                 }
         }
-}   
+}    
        
 void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
-              
+               
         if (isDestory || m_isVisible == false)
                 return;
          
+
     static int searchingMeshTimer = 20;
        
         if (searchingMeshTimer > 10) { 
                 GetMeshInFrustum();  
                 searchingMeshTimer = 0;
-        }
+        } 
         searchingMeshTimer++;   
-             
+              
        RenderFoliage(context, m_foundMesh);
-           
-        if (true ||  m_appBase->isRenderShadowMap == false) {
+            
+        if ( m_appBase->isRenderShadowMap == false) {
                 RenderFoliage(context, m_foundDistantMesh);
         } 
-         
-
-    m_appBase->SetPipelineState(renderState == ERenderState::depth 
-                                    ? Graphics::foliageBillboardDepthPSO
-                                    : Graphics::foliageBillboardPSO);
-        
-    if (false && m_isVisible) {
-        for (const auto &meshInfo : m_foundBillboardMesh) {
-            auto &meshInfo = m_foundBillboardMesh[0]; 
-                ID3D11Buffer *constBuffers[2] = { 
-                    this->m_meshConsts.Get(),
-                    this->m_materialConsts.Get(),
-                }; 
-                 
-                context->VSSetConstantBuffers(1, 2, constBuffers);
-
-                context->PSSetConstantBuffers(1, 2, constBuffers);
-                context->GSSetConstantBuffers(1, 2, constBuffers);
-                // 물체 렌더링할 때 여러가지 텍스춰 사용 (t0 부터시작)
-                vector<ID3D11ShaderResourceView *> resViews = {
-                    meshInfo.first->albedoSRV.Get(),
-                    meshInfo.first->normalSRV.Get(),
-                    meshInfo.first->aoSRV.Get(),
-                    meshInfo.first->metallicRoughnessSRV.Get(),
-                    meshInfo.first->emissiveSRV.Get(),
-                    meshInfo.first->artSRV.Get()};
-                context->PSSetShaderResources(0, // register(t0)
-                                              UINT(resViews.size()),
-                                              resViews.data());
-                 
-                UINT stride = sizeof(Vector4); // sizeof(Vertex);
-                UINT offset = 0; 
-                context->IASetVertexBuffers(0, 1, meshInfo.second.GetAddressOf(),
-                                            &stride, &offset); 
-                context->Draw(1, 0); 
+          
+        for (auto &billboardFoliage : m_foundBillboardFoliages) {
+                billboardFoliage->Render(context);
         }
-                context->GSSetShader(NULL, 0, 0);
-    }
-}
-
+}  
+ 
 void hlab::FoliageModel::RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
                                        vector<shared_ptr<Mesh>> &meshes) { 
         if (meshes.size() == 0) { 
-                return;   
-        } 
+                return;     
+        }  
          for (int i = 0; i < meshes.size(); i++){
                     
                 shared_ptr<Mesh> mesh = meshes[i];
@@ -305,13 +307,16 @@ void hlab::FoliageModel::RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
                 ID3D11ShaderResourceView *nulls[3] = {NULL, NULL, NULL};
                 context->PSSetShaderResources(5, 3, nulls);
     }
-}
-
-
-
+}   
+  
 void hlab::FoliageModel::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
                                         Vector3 &position) {
     Model::UpdateWorldRow(scale, rotation, position);
+    for (auto& billboards : m_billboards){
+                billboards->UpdateTranseform(scale, rotation, position - Vector3(0.0f, 0.1f, 0.0f)); 
+                billboards->m_meshConsts.Upload(m_appBase->m_context);
+            } 
+
     MakeBVH(); 
 }
-  
+   

@@ -54,16 +54,19 @@ class BillboardModel : public Model {
 
   public:
     ConstantBuffer<BillboardConsts> m_billboardConsts;
+    vector<ID3D11ShaderResourceView *> resViews;
     AppBase* m_appBase;
 
     bool m_hasLifespan = false;
+    bool useOtherShaderResource = false; 
     float m_lifespan = 3.0f;
     float m_GenerationTime = 0.0f;
 
+    ComPtr<ID3D11GeometryShader> m_geometryShader;
+    ComPtr<ID3D11Buffer> m_foliageConstsGPU; 
   protected:
     ComPtr<ID3D11Buffer> m_vertexBuffer;
     ComPtr<ID3D11VertexShader> m_vertexShader;
-    ComPtr<ID3D11GeometryShader> m_geometryShader;
     ComPtr<ID3D11PixelShader> m_pixelShader;
     ComPtr<ID3D11InputLayout> m_inputLayout;
 

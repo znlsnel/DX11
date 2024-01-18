@@ -48,11 +48,12 @@ using std::vector;
 	 ETree = 7,
 	 EBillboardTree = 8,
  };
-  
+   
 struct MeshData {
     vector<Vertex> vertices;
     vector<SkinnedVertex> skinnedVertices;
     vector<uint32_t> indices;
+    string name = "";
     string albedoTextureFilename;
     string emissiveTextureFilename;
     string normalTextureFilename;

@@ -138,8 +138,8 @@ struct VertexShaderInput
     uint4 boneIndices1 : BLENDINDICES1;
 #endif
 };
-
-struct PixelShaderInput
+ 
+struct PixelShaderInput 
 {
     float4 posProj : SV_POSITION; // Screen position
     float3 posWorld : POSITION0; // World position (조명 계산에 사용)
