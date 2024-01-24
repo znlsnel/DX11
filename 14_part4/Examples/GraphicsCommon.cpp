@@ -116,6 +116,9 @@ GraphicsPSO grassWirePSO;
 GraphicsPSO terrainSolidPSO;
 GraphicsPSO terrainWirePSO;
 GraphicsPSO terrainDepthPSO;
+GraphicsPSO reflectTerrainSolidPSO;
+GraphicsPSO reflectTerrainWirePSO;
+GraphicsPSO reflectTerrainDepthPSO;
 GraphicsPSO oceanPSO;
 GraphicsPSO volumeSmokePSO;
 GraphicsPSO foliageBillboardPSO;
@@ -301,12 +304,12 @@ void Graphics::InitBlendStates(ComPtr<ID3D11Device> &device) {
     blendDesc.IndependentBlendEnable = false;
     blendDesc.RenderTarget[0].BlendEnable = true;
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_BLEND_FACTOR;
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_BLEND_FACTOR; // INV 아님
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_BLEND_FACTOR; 
     blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].RenderTargetWriteMask =
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; 
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = 
         D3D11_COLOR_WRITE_ENABLE_ALL;
     ThrowIfFailed(
         device->CreateBlendState(&blendDesc, accumulateBS.GetAddressOf()));
@@ -553,6 +556,8 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
         D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST;
   //  D3D_PRIMITIVE_TOPO
 
+
+
     terrainWirePSO = terrainSolidPSO; 
     terrainWirePSO.m_rasterizerState = wireRS; 
      
@@ -577,7 +582,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     stencilMaskPSO.m_stencilRef = 1;
     stencilMaskPSO.m_vertexShader = depthOnlyVS;
     stencilMaskPSO.m_pixelShader = depthOnlyPS;
-
+    
     // reflectSolidPSO: 반사되면 Winding 반대
     reflectSolidPSO = defaultSolidPSO;
     reflectSolidPSO.m_depthStencilState = drawMaskedDSS;
@@ -597,6 +602,21 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     reflectSkinnedWirePSO.m_rasterizerState = wireCcwRS; // 반시계
     reflectSkinnedWirePSO.m_stencilRef = 1;
 
+    reflectTerrainSolidPSO = terrainSolidPSO;
+    reflectTerrainSolidPSO.m_depthStencilState = drawMaskedDSS;
+    reflectTerrainSolidPSO.m_rasterizerState = solidCcwRS; // 반시계
+    reflectTerrainSolidPSO.m_stencilRef = 1;
+
+     reflectTerrainWirePSO = terrainWirePSO;
+    reflectTerrainWirePSO.m_depthStencilState = drawMaskedDSS;
+     reflectTerrainWirePSO.m_rasterizerState = solidCcwRS; // 반시계
+    reflectTerrainWirePSO.m_stencilRef = 1;
+
+     reflectTerrainDepthPSO = terrainDepthPSO;
+    reflectTerrainDepthPSO.m_depthStencilState = drawMaskedDSS;
+     reflectTerrainDepthPSO.m_rasterizerState = solidCcwRS; // 반시계
+    reflectTerrainDepthPSO.m_stencilRef = 1;
+     
     // mirrorBlendSolidPSO;
     mirrorBlendSolidPSO = defaultSolidPSO;
     mirrorBlendSolidPSO.m_blendState = mirrorBS;

@@ -16,10 +16,10 @@ class TessellationModel : public Model{
         virtual void Render(ComPtr<ID3D11DeviceContext> &context) override;
         virtual GraphicsPSO &GetPSO(const bool wired)override;
         virtual GraphicsPSO &GetDepthOnlyPSO() override;
-        //virtual GraphicsPSO &GetReflectPSO(const bool wired) override;
+        virtual GraphicsPSO &GetReflectPSO(const bool wired) override;
         float editRadius = 100.0f; 
         void UpdateTextureMap(ComPtr<ID3D11DeviceContext>& context, Vector3 pos, int type);
-
+         
         Vector2 texScale;
         float mapScale;
         int mapArea[2] = {0, 0};

@@ -37,9 +37,13 @@ void main(point GeometryShaderInput input[1], uint primID
 {
     
     float4 up = float4(0, 1, 0, 0);
-    float4 front = mul(float4(0.0, 0.0, -1.0, 0.0), world);
-    
-    front = float4(eyeWorld - input[0].pos.xyz, 0.0);
+    //float4 front = mul(float4(0.0, 0.0, -1.0, 0.0), world);
+    //front = mul(front, reflectWorld);
+      
+    float3 reflectPos = mul(float4(input[0].pos.xyz, 0.0), reflectWorld).xyz;
+      
+   // float4 front = float4(eyeWorld - input[0].pos.xyz, 0.0);
+    float4 front = float4(eyeWorld - reflectPos, 0.0); 
     front = normalize(front); 
     
     float4 right = float4(cross(up.xyz, normalize(front.xyz)), 0.0);

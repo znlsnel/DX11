@@ -8,7 +8,6 @@
 #include <vector>
 #include <map>
 
-
 #include "Camera.h"
 #include "ComputePSO.h"
 #include "ConstantBuffers.h"
@@ -60,7 +59,7 @@ enum EEditTextureType : int {
         PavingStones = 2,
         Rock = 3,
 };
-
+ 
 class AppBase {
   public:
     struct MyFrustum {
@@ -70,28 +69,100 @@ class AppBase {
                                Vector3 point) {
                     return normal.Dot(point - planePoint);
           };
-                void InitFrustum(AppBase* appBase) {
+                void InitFrustum(AppBase* appBase, bool isMirror = false) { 
                     frustum.clear();  
                     frustum.resize(0);  
                     shared_ptr<Camera> camera = appBase->m_camera;
-                    Vector3 frontLeftTop =
-                        camera->NdcToWorld(Vector3(-1.0f, 1.0f, 0.0f));
-                    Vector3 frontRightTop =
-                        camera->NdcToWorld(Vector3(1.0f, 1.0f, 0.0f));
-                    Vector3 frontLeftBottom =
-                        camera->NdcToWorld(Vector3(-1.0f, -1.0f, 0.0f));
-                    Vector3 frontRightBottom =
-                        camera->NdcToWorld(Vector3(1.0f, -1.0f, 0.0f));
+                    Vector3 frontLeftTop;
+                    Vector3 frontRightTop;
+                    Vector3 frontLeftBottom;
+                    Vector3 frontRightBottom;
 
-                    Vector3 backLeftTop =
-                        camera->NdcToWorld(Vector3(-1.0f, 1.0f, 1.0f));
-                    Vector3 backRightTop =
-                        camera->NdcToWorld(Vector3(1.0f, 1.0f, 1.0f));
-                    Vector3 backLeftBottom =
-                        camera->NdcToWorld(Vector3(-1.0f, -1.0f, 1.0f));
-                    Vector3 backRightBottom =
-                        camera->NdcToWorld(Vector3(1.0f, -1.0f, 1.0f));
-                      
+                    Vector3 backLeftTop;
+                    Vector3 backRightTop;
+                    Vector3 backLeftBottom;
+                    Vector3 backRightBottom;
+
+                    if (true || isMirror == false) {
+                            frontLeftTop =
+                                camera->NdcToWorld(Vector3(-1.0f, 1.0f, 0.0f));
+                            frontRightTop =
+                                camera->NdcToWorld(Vector3(1.0f, 1.0f, 0.0f));
+                            frontLeftBottom =
+                                camera->NdcToWorld(Vector3(-1.0f, -1.0f, 0.0f));
+                            frontRightBottom =
+                                camera->NdcToWorld(Vector3(1.0f, -1.0f, 0.0f));
+
+                            backLeftTop =
+                                camera->NdcToWorld(Vector3(-1.0f, 1.0f, 1.0f));
+                            backRightTop =
+                                camera->NdcToWorld(Vector3(1.0f, 1.0f, 1.0f));
+                            backLeftBottom =
+                                camera->NdcToWorld(Vector3(-1.0f, -1.0f, 1.0f));
+                            backRightBottom =
+                                camera->NdcToWorld(Vector3(1.0f, -1.0f, 1.0f));
+                    
+                    } 
+                    if (isMirror) {
+                            Matrix tempMtx = appBase->m_mirror->m_worldRow;
+                            tempMtx.Translation(Vector3(0.0f));
+                            Vector3 mirrorNormal = Vector3::Transform(
+                                Vector3(0.0f, 0.0f, -1.0f), tempMtx);
+                            mirrorNormal.Normalize(); 
+
+                            Vector3 cameraPos =
+                                appBase->m_camera->GetCameraPosition();
+                             
+                            //Vector3 reflectCameraPos = Vector3::Transform(
+                            //    cameraPos, appBase->m_reflectRow);
+                            Vector3 reflectCameraPos = cameraPos;
+
+                            Vector3 mirrorExtents = Vector3::Transform(
+                                appBase->m_mirror->m_boundingBox.Extents,
+                                tempMtx);
+                            Vector3 mirrorPos =
+                                appBase->m_mirror->GetPosition();
+                             
+                            frontLeftTop = mirrorPos + Vector3(-mirrorExtents.x,
+                                                               mirrorExtents.y,
+                                                               mirrorExtents.z);
+                            frontRightTop =
+                                mirrorPos + Vector3(mirrorExtents.x,
+                                                               mirrorExtents.y,
+                                                               mirrorExtents.z);
+                            frontLeftBottom =
+                                mirrorPos + Vector3(-mirrorExtents.x,
+                                                               -mirrorExtents.y,
+                                                               mirrorExtents.z); 
+                            frontRightBottom =
+                                mirrorPos + Vector3(mirrorExtents.x,
+                                                               -mirrorExtents.y,
+                                                               mirrorExtents.z);
+                              
+                            float maxDist = 100.f;
+                            backLeftTop = (frontLeftTop - reflectCameraPos);
+                            backLeftTop.Normalize();
+                            backLeftTop = frontLeftTop + backLeftTop * maxDist;
+
+                            backRightTop = (frontRightTop - reflectCameraPos);
+                            backRightTop.Normalize();
+                            backRightTop =
+                                frontRightTop + backRightTop * maxDist;
+
+                            backLeftBottom =
+                                (frontLeftBottom - reflectCameraPos);
+                            backLeftBottom.Normalize();
+                            backLeftBottom =
+                                frontLeftBottom + backLeftBottom * maxDist;
+                             
+                            backRightBottom =
+                                (frontRightBottom - reflectCameraPos);
+                            backRightBottom.Normalize();
+                            backRightBottom = 
+                                frontRightBottom + backRightBottom * maxDist;
+                    } 
+
+                     
                     Vector3 origin, normal;
                     auto CraeteOriginNNormal = [&](Vector3 &leftBottom,
                                                    Vector3 &leftTop,
@@ -108,7 +179,7 @@ class AppBase {
                     };
                      
                     // front
-                    CraeteOriginNNormal(frontLeftBottom, frontLeftTop,
+               CraeteOriginNNormal(frontLeftBottom, frontLeftTop,
                                         frontRightBottom, frontRightTop);
                     frustum.push_back(
                         std::make_pair(SimpleMath::Plane(origin, normal), origin));
@@ -188,14 +259,14 @@ class AppBase {
     float GetAspectRatio() const;
 
     virtual bool Initialize();
-    virtual bool InitScene();
+    virtual bool InitScene(); 
     virtual void UpdateGUI(); 
     virtual void Update(float dt);  
-    virtual void UpdateLights(float dt);
+    virtual void UpdateLights(float dt); 
     void UpdateLightInfo(ComPtr<ID3D11Buffer>& shadowGlobalConstsGPU, GlobalConstants& shadowGlobalConstants, Light &light, Vector3& aspect);
     void UpdateBVH(); 
      
-     
+       
     virtual void RenderDepthOnly();
     virtual void RenderShadowMaps();
     virtual void RenderOpaqueObjects();
@@ -211,11 +282,9 @@ class AppBase {
     void SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU);
     virtual void SetHeightPosition(Vector3 origin, Vector3 dir, float &dist);
     void SetMainViewport();
-    void SetShadowViewport();
+    void SetShadowViewport(); 
 
-    void GetObjectsInFrustum(vector<shared_ptr<Model>> &result,
-                             vector<shared_ptr<Model>> &models,
-                             vector<BVNode>& bvh);
+    void GetObjectsInFrustum(bool isMirror);
      
     virtual void OnMouseMove(int mouseX, int mouseY);
     virtual void OnMouseClick(int mouseX, int mouseY);
@@ -263,7 +332,7 @@ class AppBase {
     // 예: m_d3dDevice -> m_device
            
         Vector2 ImPos;
-        Vector2 ImSize;
+        Vector2 ImSize; 
         
     int m_imGuiWidth = 0;
     int m_screenWidth = 1920;
@@ -280,6 +349,7 @@ class AppBase {
 
     DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
+    ComPtr<ID3D11Buffer> m_skyBoxConstsGPU;
     ComPtr<ID3D11Device> m_device;
     ComPtr<ID3D11DeviceContext> m_context;
     ComPtr<IDXGISwapChain> m_swapChain;
@@ -388,9 +458,10 @@ class AppBase {
             
     bool m_lightRotate = false;             
     bool m_pauseAnimation = false;     
-     
+    bool m_foundMirror = false; 
+
     vector<uint8_t> heightMapImage; 
-          
+    Matrix m_reflectRow;
     // shadow 0.3 -> 1.0 -> 3.0 -> 5.0 -> (10.0 * 10.0) 
     Vector3 m_shadowAspects[5] =   
     {
@@ -427,6 +498,7 @@ class AppBase {
     vector<shared_ptr<Model>> m_basicList;
     vector<shared_ptr<Model>> m_NoneBVHList; 
     vector<shared_ptr<Model>> m_foundModelList;
+    vector<shared_ptr<Model>> m_foundReflectModelList;
     vector<shared_ptr<class Character>> m_characters;
      
     shared_ptr<class JsonManager> m_JsonManager;

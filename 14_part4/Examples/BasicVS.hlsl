@@ -88,7 +88,7 @@ PixelShaderInput main(VertexShaderInput input)
     output.normalWorld = mul(float4(input.normalModel, 0.0f), worldIT).xyz;
     output.normalWorld = normalize(output.normalWorld);
     output.posWorld = mul(float4(input.posModel, 1.0f), world).xyz;
-
+     
     if (useHeightMap)
     {
         float height = g_heightTexture.SampleLevel(linearClampSampler, input.texcoord, 0).r;
@@ -99,7 +99,7 @@ PixelShaderInput main(VertexShaderInput input)
     output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
     output.texcoord = input.texcoord;
     output.tangentWorld = mul(float4(input.tangentModel, 0.0f), world).xyz;
-
+       
     return output;
 }
  

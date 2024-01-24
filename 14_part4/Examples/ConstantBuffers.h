@@ -79,7 +79,7 @@ __declspec(align(256)) struct MaterialConstants {
 
             uint32_t alphaRef : 16; // half float
         };
-    };*/
+    };*/ 
 };
 
 struct Light {
@@ -95,23 +95,25 @@ struct Light {
     uint32_t type = LIGHT_OFF;
     //float radius = 0.035f; // 반지름
     float radius = 0.45f; // 반지름
-
+       
     float haloRadius = 0.0f;
     float haloStrength = 0.0f;
-
+     
     Matrix viewProj; // 그림자 렌더링에 필요
     Matrix invProj;  // 그림자 렌더링 디버깅용
 }; 
- 
+   
 // register(b1) 사용
 __declspec(align(256)) struct GlobalConstants {
-    Matrix view;
+    Matrix view; 
     Matrix proj; 
     Matrix invProj; // 역프로젝션행렬 
     Matrix viewProj;
     Matrix invViewProj; // Proj -> World
     Matrix invView;
+    Matrix reflectWorld; 
      
+
     Vector3 eyeWorld;
     float strengthIBL = 0.5f;
 

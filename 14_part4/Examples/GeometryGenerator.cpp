@@ -143,9 +143,10 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
 
         float y = 1.0f;
         float x = -1.f;
-
-        auto updateMeshData = [&](float posX, float posY) {
-
+         
+        // 2.173, -3.142, 0.0
+        auto updateMeshData = [&](float posX, float posY) { 
+                  
                 float tempX = posX;
             float tempY = posY;
                 Vertex v;
@@ -156,7 +157,7 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                 SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
                                        heightMap);
                 meshData.vertices.push_back(v);  
-
+                
                 v = Vertex();
                 tempX += dx;
                 v.position = Vector3(tempX, tempY, 0.0f) * scale;
@@ -167,9 +168,9 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                 SetVertexFromHeightMap(mapWidth, mapHeight, scale, dx, dy, v,
                                        heightMap);
                 meshData.vertices.push_back(v);
-
+                  
                 v = Vertex();
-                tempX -= dx;
+                tempX -= dx; 
                 tempY -= dy;
                 v.position = Vector3(tempX, tempY, 0.0f) * scale;
                 v.normalModel = Vector3(0.0f, 0.0f, -1.0f);
@@ -203,8 +204,8 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                         xDir *= -1;
                         x += dx * xDir;
                         y -= dy;
-                }
-
+                }  
+                  
                 // 0 1 2 2 1 3
                 // for (int j = 0; j < numStacks; j++) {
                 //    for (int i = 0; i < numSlices; i++) {
@@ -215,9 +216,9 @@ MeshData GeometryGenerator::MakeTessellationPlane(const int numSlices,
                 //        (j + 1) + i); meshData.indices.push_back((numSlices +
                 //        1) * j + i + 1); meshData.indices.push_back((numSlices
                 //        + 1) * (j + 1) + i + 1);
-                //    }
-                //} 
-        } 
+                //    } 
+                //}    
+        }   
                 for (int j = 0; j < numStacks * numSlices; j++) {
                         // ...
 

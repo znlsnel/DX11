@@ -533,7 +533,7 @@ int AppBase::Run() {
 
 
 
-
+            
             // Example의 Render()에서 RT 설정을 해주지 않았을 경우에도
             // 백 버퍼에 GUI를 그리기위해 RT 설정
             // 예) Render()에서 ComputeShader만 사용
@@ -598,9 +598,9 @@ bool AppBase::Initialize() {
         if (hasHeightMap) { 
             D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
         }  
-               
+                
         Vector2 mapTexScale = Vector2(50.f, 50.f); 
-        int mapArea = 100; 
+        int mapArea = 100;  
         float mapScale = 30.f;
         auto mesh = GeometryGenerator::MakeTessellationPlane(
             mapArea, mapArea, mapScale, mapTexScale,
@@ -633,7 +633,7 @@ bool AppBase::Initialize() {
         temp->isObjectLock = true;
         AddBasicList(temp, false);
     }
- 
+  
 
     m_JsonManager->LoadMesh();
     return true;
@@ -642,14 +642,17 @@ bool AppBase::Initialize() {
 // 여러 예제들이 공통적으로 사용하기 좋은 장면 설정
 bool AppBase::InitScene() {
          
-    // 조명 설정 
+    // 조명 설정  
     {  
                 for (int i = 0; i < MAX_LIGHTS; i++) {
                         m_globalConstsCPU.lights[i].radiance = Vector3(5.0f);
                         m_globalConstsCPU.lights[i].position =
                             Vector3(0.0f, 2.698f, -0.159f);
-                        m_globalConstsCPU.lights[i].direction =
-                            Vector3(0.85f, -0.781f, 0.625f); 
+                         m_globalConstsCPU.lights[i].direction =
+                            Vector3(0.85f, -0.781f, 0.625f);  
+                        //m_globalConstsCPU.lights[i].direction =
+                        //    Vector3(2.173f, -3.142f, 0.0f);  
+                          // 2.173, -3.142, 0.0
                         m_globalConstsCPU.lights[i].direction.Normalize();
                         m_globalConstsCPU.lights[i].spotPower = 3.0f;
                         m_globalConstsCPU.lights[i].radius = 0.131f;
@@ -657,7 +660,7 @@ bool AppBase::InitScene() {
                             LIGHT_DIRECTIONAL
                                 | LIGHT_SHADOW; // Point with shadow
                 }
-
+                 
     } 
 
     // 조명 위치 표시
@@ -741,29 +744,41 @@ void AppBase::Update(float dt) {
            
         static float frustumTimer = 0.0f;
         if (frustumTimer > 1.0f / 30.f) {
-                GetObjectsInFrustum(m_foundModelList, m_basicList, m_BVNodes); 
+                GetObjectsInFrustum(false); 
+                if (m_foundMirror)
+                        GetObjectsInFrustum(true);
                 frustumTimer = 0.0f;
         } 
         frustumTimer += dt;
-
+         
         for (const auto &model : m_characters) {
                 model->Update(dt);
         }
 
 
-    // 카메라의 이동
+    // 카메라의 이동 
     //m_camera.UpdateKeyboard(dt, m_keyPressed);
         m_camera->UpdatePos();
     // 반사 행렬 추가
     const Vector3 eyeWorld = m_camera->GetEyePos();
-    const Matrix reflectRow = Matrix::CreateReflection(m_mirrorPlane);
+        if (m_mirror) { 
+                Matrix temp = m_mirror->m_worldRow;
+                temp.Translation(Vector3(0.0f));
+                      
+                m_mirrorPlane =
+                   SimpleMath::Plane(m_mirror->GetPosition(), 
+                    Vector3::Transform(Vector3(0.0f, 0.0f, 1.0f), temp));
+            
+        } 
+        m_reflectRow = Matrix::CreateReflection(m_mirrorPlane);
     const Matrix viewRow = m_camera->GetViewRow();
     const Matrix projRow = m_camera->GetProjRow();
 
     UpdateLights(dt); 
 
     // 공용 ConstantBuffer 업데이트
-    AppBase::UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
+    AppBase::UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow,
+                                   m_reflectRow);
      
     // 거울은 따로 처리
     if (m_mirror) 
@@ -890,15 +905,10 @@ void AppBase::UpdateLightInfo(
 
 void AppBase::RenderDepthOnly(){
 
-    float clearColor[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-
     // Clear   -       -       -       -       -       -       -       - 
-
-    m_context->ClearDepthStencilView(m_depthOnlyDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-                                     1.0f, 0);
-
-    // clearColor);
-
+    
+    m_context->ClearDepthStencilView(m_depthOnlyDSV.Get(), D3D11_CLEAR_DEPTH , 1.0f, 0); 
+    
     // Set -    -       -       -       -       -       -       -       - 
     m_context->OMSetRenderTargets(0, m_indexRenderTargetView.GetAddressOf(),
                                   m_depthOnlyDSV.Get()); 
@@ -914,8 +924,6 @@ void AppBase::RenderDepthOnly(){
         model->Render(m_context);
     } 
 
-
-    //m_groundPlane->RenderTessellation(m_context);
 
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
@@ -943,7 +951,7 @@ void AppBase::RenderShadowMaps() {
 
             AppBase::SetGlobalConsts(m_shadowGlobalConstsGPU[i]);
 
-
+            
             for (const auto &model : m_basicList) {
                 if (model->m_castShadow && model->m_isVisible) {
                     AppBase::SetPipelineState(model->GetDepthOnlyPSO());
@@ -956,10 +964,7 @@ void AppBase::RenderShadowMaps() {
                     model->Render(m_context);
                 }
             }
-
-
-
-
+             
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);
         } 
@@ -972,18 +977,18 @@ void AppBase::RenderOpaqueObjects() {
     AppBase::SetMainViewport(); 
 
     // 거울 1. 거울은 빼고 원래 대로 그리기
-    const float clearColor[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+    const float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     m_context->ClearRenderTargetView(m_floatRTV.Get(), clearColor);
     m_context->ClearRenderTargetView(m_indexRenderTargetView.Get(), clearColor); 
-
-    ID3D11RenderTargetView *targets[] = {
-                                         
+    ID3D11RenderTargetView *targets[] = {                     
         m_floatRTV.Get(), m_indexRenderTargetView.Get()
     };
-      
+
+    m_context->ClearDepthStencilView(
+        m_defaultDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     m_context->OMSetRenderTargets(2, targets,
                                   m_defaultDSV.Get());   
-      
+        
     // 그림자맵들도 공용 텍스춰들 이후에 추가
     // 주의: 마지막 shadowDSV를 RenderTarget에서 해제한 후 설정
     vector<ID3D11ShaderResourceView *> shadowSRVs;
@@ -993,10 +998,9 @@ void AppBase::RenderOpaqueObjects() {
      
     m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()),
                                     shadowSRVs.data());
-     
     
-    m_context->ClearDepthStencilView(
-        m_defaultDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    
+
     AppBase::SetGlobalConsts(m_globalConstsGPU);
 
     // 스카이박스 그리기 
@@ -1024,9 +1028,6 @@ void AppBase::RenderOpaqueObjects() {
     //if (m_selected)
     //    m_cursorSphere->Render(m_context);
     
-    
-
-
     // AppBase::SetPipelineState(m_ground->GetTerrainPSO(m_drawAsWire));
 
     // 거울 반사를 그릴 필요가 없으면 불투명 거울만 그리기
@@ -1035,7 +1036,7 @@ void AppBase::RenderOpaqueObjects() {
                                                : Graphics::defaultSolidPSO);
         m_mirror->Render(m_context);
     }
-
+    
     // 노멀 벡터 그리기
     AppBase::SetPipelineState(Graphics::normalsPSO);
     for (auto &model : m_basicList) {
@@ -1069,36 +1070,51 @@ void AppBase::RenderOpaqueObjects() {
             model->RenderWireBoundingSphere(m_context);
         }
     }
-
-
-
 }
-
+//mirrorNormal : 0, 0, -1 
+// reflectCameraPos : -0.530229, 4.93401, 4.53336 
+// cameraPos : -6.96181,  4.93849,  -0.880365 
+// mirrorPos : -6.43158, 0.00447464, 3.653
+//        
+   
 void AppBase::RenderMirror() {
-
-    if (m_mirrorAlpha < 1.0f && m_mirror) { // 거울 반사를 그려야 하는 상황
-
+    if ( m_mirrorAlpha < 1.0f &&
+        m_mirror) { // 거울 반사를 그려야 하는 상황 
+         
         // 거울 2. 거울 위치만 StencilBuffer에 1로 표기
         AppBase::SetPipelineState(Graphics::stencilMaskPSO);
         m_mirror->Render(m_context);
-
+          
         // 거울 3. 거울 위치에 반사된 물체들을 렌더링
         AppBase::SetGlobalConsts(m_reflectGlobalConstsGPU);
         m_context->ClearDepthStencilView(m_defaultDSV.Get(), D3D11_CLEAR_DEPTH,
-                                         1.0f, 0);
-
-        for (auto &model : m_basicList) {
+                                         1.0f, 0); 
+          
+        for (auto &model : m_foundReflectModelList) {
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
             model->Render(m_context);
         }
+        static int tempTT = 0;
+        if (tempTT > 5) {
+                cout << "m_foundReflectModelList. size : " << int(m_foundReflectModelList.size()) << "\n";
+            tempTT = 0;
+        }
+        tempTT++;
+
+        for (auto &model : m_NoneBVHList) {
+            AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
+            model->Render(m_context);
+        }   
+        
         AppBase::SetPipelineState(m_drawAsWire
                                       ? Graphics::reflectSkyboxWirePSO
-                                      : Graphics::reflectSkyboxSolidPSO);
-        m_skybox->Render(m_context);
-
+                                     : Graphics::reflectSkyboxSolidPSO);
+        m_skybox->Render(m_context); 
+         
         // 거울 4. 거울 자체의 재질을 "Blend"로 그림
         AppBase::SetPipelineState(m_drawAsWire ? Graphics::mirrorBlendWirePSO
                                                : Graphics::mirrorBlendSolidPSO);
+ 
         AppBase::SetGlobalConsts(m_globalConstsGPU);
         m_mirror->Render(m_context);
 
@@ -1200,65 +1216,102 @@ void AppBase::RenderBVH() {
         } 
     
 }
-  
-void AppBase::OnMouseClick(int mouseX, int mouseY) {
-
+   
+void AppBase::OnMouseClick(int mouseX, int mouseY) 
+{
     m_mouseX = mouseX;
-    m_mouseY = mouseY;
-
+    m_mouseY = mouseY; 
+     
     m_mouseNdcX = mouseX * 2.0f / m_screenWidth - 1.0f;
     m_mouseNdcY = -mouseY * 2.0f / m_screenHeight + 1.0f;
 }
-  
-void AppBase::GetObjectsInFrustum(vector<shared_ptr<Model>> &result,vector<shared_ptr<Model>> &models, vector<BVNode> &bvh) {
-             
-        result.clear();
-       result.resize(0); 
+void AppBase::GetObjectsInFrustum(bool isMirror) {
 
-    MyFrustum frustum;
-    frustum.InitFrustum(this);
-
+        vector<shared_ptr<Model>> *modelList;
+        if (isMirror) {
+                modelList = &m_foundReflectModelList;
+        } 
+        else {
+                modelList = &m_foundModelList;
+                m_foundMirror = false;
+        }
+        modelList->resize(0);  
+        
+        MyFrustum frustum;
+        frustum.InitFrustum(this, isMirror);
+        
     std::queue<pair<BVNode, int>> queue;   
           
-    if (bvh.size() == 0)
+    if (m_BVNodes.size() == 0)
                 UpdateBVH();
-    if (bvh.size() == 0)
+    if (m_BVNodes.size() == 0)
                 return;
-       
+          
     static int id = 0; 
-    queue.push(make_pair(bvh[0], 0)); 
+    queue.push(make_pair(m_BVNodes[0], 0)); 
       
     while (!queue.empty()) {
                 BVNode &node = queue.front().first;
                 int index = queue.front().second;
                 queue.pop();
-                
-                   
+                  
                 Vector3 center = node.boundingBox.Center;
                 Vector3 Extents = node.boundingBox.Extents;  
-                  Matrix t; 
+                Matrix t; 
+                 
                 if (node.objectID >= 0) { 
                         center =
                             m_basicList[node.objectID]->m_boundingBox.Center;
                         Extents =
                             m_basicList[node.objectID]->m_boundingBox.Extents;
                         t = m_basicList[node.objectID]->m_worldRow;
+                         
+                        if ( isMirror) 
+                                t = t * m_reflectRow; 
                 } 
+                else if (isMirror) {
+                        center = Vector3::Transform(center, m_reflectRow);
+                        Vector3 tempP = m_reflectRow.Translation();
+                        m_reflectRow.Translation(Vector3());
+                        Extents = Vector3::Transform(Extents, m_reflectRow);
+                          
+                        m_reflectRow.Translation(tempP);
+                }
                  
+                //center:
+                //-0.000543907, 0, -0.000157923 
+                //        ReflectCenter : -0.000543907, 0,  7.97932  
+                //        center : -7.649,1.50192, 4.878 
+                //        ReflectCenter : -7.649, 1.50192, 3.10116
+
                 bool check = frustum.Intersects(center, Extents, t);
-                  
+                   
                 if (check) 
-                { 
+                {     
                         if (node.objectID >= 0) {
-                result.push_back(models[node.objectID]); 
+                                if (m_basicList[node.objectID] != m_mirror)
+                                        modelList->push_back(m_basicList[node.objectID]);
+                                else if (isMirror == false)
+                                        m_foundMirror = true;
+                                //{
+                                //        cout << "center : " << prevCenter.x
+                                //             << ", " << prevCenter.y << ", "
+                                //             << prevCenter.z
+                                //             << "\n";
+                                //        cout << "ReflectCenter : " << center.x
+                                //             << ", " << center.y << ", "
+                                //             << center.z << "\n";
+                                //}
                         }   
                           
-                        int leftID = bvh[index].leftChildID;
-                        int rightID = bvh[index].rightChildID;
-                        if (leftID < bvh.size())
-                                queue.push(make_pair(bvh[leftID], leftID));
-                        if (rightID < bvh.size())
-                                queue.push(make_pair(bvh[rightID], rightID));
+                        int leftID = m_BVNodes[index].leftChildID;
+                        int rightID = m_BVNodes[index].rightChildID;
+                        if (leftID < m_BVNodes.size())
+                                queue.push(
+                                    make_pair(m_BVNodes[leftID], leftID));
+                        if (rightID < m_BVNodes.size())
+                                queue.push(
+                                    make_pair(m_BVNodes[rightID], rightID));
                 } 
     }  
 
@@ -1440,11 +1493,12 @@ void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
 
        for (int i = 0; i < MAX_LIGHTS; i++) 
         m_shadowGlobalConstsCPU[i].globalTime += dt;
-        
+         
     m_globalConstsCPU.globalTime += dt;
     m_globalConstsCPU.eyeWorld = eyeWorld; 
     m_globalConstsCPU.cameraWorld = eyeWorld;
     m_globalConstsCPU.view = viewRow.Transpose();
+
     m_globalConstsCPU.proj = projRow.Transpose();
     m_globalConstsCPU.invProj = projRow.Invert().Transpose();
     m_globalConstsCPU.viewProj = (viewRow * projRow).Transpose();
@@ -1455,8 +1509,15 @@ void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
 
     m_reflectGlobalConstsCPU = m_globalConstsCPU;
     memcpy(&m_reflectGlobalConstsCPU, &m_globalConstsCPU, 
-           sizeof(m_globalConstsCPU));
+           sizeof(m_globalConstsCPU)); 
+     
     m_reflectGlobalConstsCPU.view = (refl * viewRow).Transpose();
+     
+    Vector3 temp = m_reflectRow.Translation(); 
+   m_reflectRow.Translation(Vector3());
+    m_reflectGlobalConstsCPU.reflectWorld = m_reflectRow.Transpose();
+   m_reflectRow.Translation(temp);
+    
     m_reflectGlobalConstsCPU.viewProj = (refl * viewRow * projRow).Transpose();
     // 그림자 렌더링에 사용 (TODO: 광원의 위치도 반사시킨 후에 계산해야 함)
     m_reflectGlobalConstsCPU.invViewProj =
@@ -1920,7 +1981,7 @@ void AppBase::ComputeShaderBarrier() {
  
 void AppBase::UpdateBVH() { 
         m_BVNodes.clear();
-        if (m_basicList.size() == 0) 
+        if (m_basicList.size() == 0)  
                 return; 
          //              0                      9  
         //        0            4          4          9 

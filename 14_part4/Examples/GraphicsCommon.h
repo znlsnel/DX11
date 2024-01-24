@@ -123,6 +123,9 @@ extern GraphicsPSO oceanPSO;
 extern GraphicsPSO terrainSolidPSO;
 extern GraphicsPSO terrainWirePSO;
 extern GraphicsPSO terrainDepthPSO;
+extern GraphicsPSO reflectTerrainSolidPSO;
+extern GraphicsPSO reflectTerrainWirePSO;
+extern GraphicsPSO reflectTerrainDepthPSO;
 
 // 주의: 초기화가 느려서 필요한 경우에만 초기화
 extern GraphicsPSO volumeSmokePSO;

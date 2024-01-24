@@ -509,7 +509,7 @@ PixelShaderOutput main(PixelShaderInput input)
                 tempDL[id] = DrawLight(input, lights[i], shadowMaps[i],
                     normalWorld, pixelToEye, albedo, metallic, roughness, tempDL[id]);
 
-            }
+            } 
         }
              
         // ex) 5.0 <= x < 10.0 - 5.0 / 10.0 - 5.0
@@ -520,7 +520,7 @@ PixelShaderOutput main(PixelShaderInput input)
     }
        
     output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
-    output.pixelColor *= 1.2;
+    //output.pixelColor *= 1.2;
     output.pixelColor = clamp(output.pixelColor, 0.0, 1000.0);
     
     output.indexColor = indexColor;

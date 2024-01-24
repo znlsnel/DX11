@@ -37,6 +37,13 @@ Matrix Camera::GetCharacterViewRow() {
 } 
 
 Vector3 Camera::GetEyePos() { return m_position; }
+Vector3 Camera::GetCameraPosition() { 
+        if (/*GetTarget() == nullptr || */m_UsingCharacterView == false) {
+               return GetPosition();   
+        }
+        return GetTarget()->GetMesh()->GetPosition();
+                   
+}
 void Camera::UpdatePos() {
 
         if (m_target != nullptr && m_objectTargetCameraMode) {

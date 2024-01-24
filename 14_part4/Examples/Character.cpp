@@ -108,7 +108,7 @@ void hlab::Character::UpdateTransform(float dt)
         if (dist > 0.0f)
         {
                 if (pos.y >  origin.y - dist) 
-                {
+                { 
                         Vector3 temp;
                         Vector3 nextPos = pos + velocity * dt;
                         Vector3 groundPos = origin + Vector3(0.0f, -dist + 0.1f, 0.0f);

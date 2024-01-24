@@ -38,7 +38,7 @@ void hlab::FoliageModel::MakeBoundingBox(
         Vector3 Extents = maxCorner - Center; 
         m_boundingBoxs.push_back(BoundingBox(Center, Extents));
           
-        shared_ptr<BillboardModel> tempBM = 
+        shared_ptr<BillboardModel> tempBM =  
             make_shared<BillboardModel>(m_appBase);  
         Vector4 tempPos = Vector4(Center.x, Center.y, Center.z, 1.0);
 
@@ -162,29 +162,46 @@ void hlab::FoliageModel::MakeBVH() {
             nextMax = max;
             if (nextMax - nextMin > 0 && nextMin != min) {
                     queue.push(make_pair(nextMin, nextMax));
-                    m_bvh.back().rightChildID = ++index;
+                    m_bvh.back().rightChildID = ++index; 
             }
     }
-
-
 }
  
-void hlab::FoliageModel::GetMeshInFrustum() {
+void hlab::FoliageModel::GetMeshInFrustum(
+    bool isFindingReflectModel) {
 
-        m_foundMesh.clear();
-        m_foundDistantMesh.clear();
-        m_foundBillboardFoliages.clear();
+        vector<shared_ptr<Mesh>>* resultModel;
+        vector<shared_ptr<Mesh>>* resultDistantModel;
+        vector<shared_ptr<Model>>* resultBillboardMesh;
 
+        if (isFindingReflectModel == false) {
+            resultModel = &m_foundMesh;
+            resultDistantModel = &m_foundDistantMesh;
+            resultBillboardMesh = &m_foundBillboardFoliages;
+        } else { 
+            resultModel = &m_foundReflectMesh;
+            resultDistantModel = &m_foundDistantReflectMesh;
+            resultBillboardMesh = &m_foundBillboardReflectFoliages;
+        }
+
+         
+        resultModel->resize(0);
+        resultDistantModel->resize(0);
+        resultBillboardMesh->resize(0);
+         
+        //bool isMirror = renderState == ERenderState::reflect;
+        bool isMirror = isFindingReflectModel;
         AppBase::MyFrustum frustum; 
-        frustum.InitFrustum(m_appBase);
+        frustum.InitFrustum(m_appBase, isMirror);
+
         Vector3 cameraPos = m_appBase->m_camera->GetPosition();
 
         std::queue<pair<BVNode, int>> queue;
-
+        
         if (m_bvh.size() == 0)
                 return;
-
-        static int id = 0;
+         
+        static int id = 0; 
         queue.push(make_pair(m_bvh[0], id));
          
         while (!queue.empty()) {
@@ -196,14 +213,28 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                 Vector3 Extents = node.boundingBox.Extents;
                 // Matrix t = m_worldRow;
                 Matrix t;
+
+                if (isMirror) {
+
+                    center = 
+                        Vector3::Transform(center, m_appBase->m_reflectRow);
+
+                    Vector3 tempT = m_appBase->m_reflectRow.Translation();
+                    m_appBase->m_reflectRow.Translation(Vector3());
+                    Extents =
+                        Vector3::Transform(Extents, m_appBase->m_reflectRow);
+                     
+                    m_appBase->m_reflectRow.Translation(tempT);
+                }
                         
                 bool check = frustum.Intersects(center, Extents, t); 
-                      
+
                 if (check) {   
-                          
+                           
                     if (node.objectID >= 0)  
                     {      
                         float cameraToCenter = (cameraPos - center).Length();
+
                         shared_ptr<Mesh> &tempMesh = 
                             m_meshes[m_meshStartID[node.objectID]]; 
                         int vertexId =min(0, int(cameraToCenter));  
@@ -212,15 +243,14 @@ void hlab::FoliageModel::GetMeshInFrustum() {
                         tempMesh->vertexBuffer =
                             tempMesh->vertexBuffers[vertexId];
                         tempMesh->vertexCount = tempMesh->vertexCounts[vertexId];
-
+                         
                          if (cameraToCenter < billboardDistance){ 
-
                             if (cameraToCenter < shadowDistance)
-                                m_foundMesh.push_back(tempMesh);
+                                    resultModel->push_back(tempMesh);
                             else  
-                                m_foundDistantMesh.push_back(tempMesh); 
-                         } else {
-                            m_foundBillboardFoliages.push_back(
+                                resultDistantModel->push_back(tempMesh); 
+                         } else { 
+                                resultBillboardMesh->push_back( 
                                 m_billboards[node.objectID]);
                          }
                     } 
@@ -240,25 +270,38 @@ void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
                
         if (isDestory || m_isVisible == false)
                 return;
-         
 
-    static int searchingMeshTimer = 20;
-       
+    static int searchingMeshTimer = 20; 
+         
         if (searchingMeshTimer > 10) { 
-                GetMeshInFrustum();  
+                GetMeshInFrustum(false);
+                GetMeshInFrustum(true);
                 searchingMeshTimer = 0;
         } 
-        searchingMeshTimer++;   
-              
-       RenderFoliage(context, m_foundMesh);
-            
-        if ( m_appBase->isRenderShadowMap == false) {
-                RenderFoliage(context, m_foundDistantMesh);
+        searchingMeshTimer++;     
+                 
+         
+        if (renderState != ERenderState::reflect) 
+        {
+                RenderFoliage(context, m_foundMesh);
+                 
+                if (m_appBase->isRenderShadowMap == false)
+                        RenderFoliage(context, m_foundDistantMesh);
+
+                for (auto &billboardFoliage : m_foundBillboardFoliages) {
+                        billboardFoliage->Render(context);
+                } 
+                   
+        } else if (m_appBase->m_foundMirror) {
+                RenderFoliage(context, m_foundReflectMesh);
+                if (m_appBase->isRenderShadowMap == false)
+                        RenderFoliage(context, m_foundDistantReflectMesh);
+                          
+                for (auto &billboardFoliage : m_foundBillboardReflectFoliages) {
+                        billboardFoliage->Render(context);
+                } 
         } 
-          
-        for (auto &billboardFoliage : m_foundBillboardFoliages) {
-                billboardFoliage->Render(context);
-        }
+
 }  
  
 void hlab::FoliageModel::RenderFoliage(ComPtr<ID3D11DeviceContext> &context,

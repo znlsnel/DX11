@@ -20,9 +20,9 @@ struct DepthOnlyPixelShaderInput
 void main(DepthOnlyPixelShaderInput input)
 {
     // 아무것도 하지 않음 (Depth Only)
-    float a = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord, 0).a : 1.0;
-    float a2 = useARTTexture ? ARTTex.SampleLevel(linearWrapSampler, input.texcoord, 0).r : 1.0;
-       
+    float a = albedoTex.SampleLevel(linearWrapSampler, input.texcoord, 0).a;
+    float a2 = ARTTex.SampleLevel(linearWrapSampler, input.texcoord, 0).r;
+      
     clip(a - 0.05);
     if (useARTTexture && a2 < 0.1)
         clip(-1);

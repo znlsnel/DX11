@@ -708,11 +708,16 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
   
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
           
+        
       int lod = 0; 
-    if (m_appBase)
+    if (m_appBase) {
         lod = int((m_appBase->m_camera->GetPosition() - GetPosition()).Length());
+        
+    }
+
     if (m_isVisible) {  
         for (const auto &mesh : m_meshes) {
+
             if (m_useLod == false)
                 mesh->SetLod(0);
             else
@@ -721,8 +726,9 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
               
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
+
             context->VSSetConstantBuffers(1, 2, constBuffers);
-             
+            
             context->VSSetShaderResources(0, 1, mesh->heightSRV.GetAddressOf());
 
             // 물체 렌더링할 때 여러가지 텍스춰 사용 (t0 부터시작)
@@ -1027,6 +1033,7 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
+     
 
     for (auto model : childModels) {
         model->UpdateTranseform(m_scale, m_rotation, m_position);

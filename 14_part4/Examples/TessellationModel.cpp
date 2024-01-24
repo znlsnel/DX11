@@ -152,11 +152,6 @@ void hlab::TessellationModel::RenderTessellation(
 
 void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
          
-        if (renderState == ERenderState::reflect) {
-    
-                Model::Render(context);
-                return;
-        }  
     if (m_isVisible) {
         for (const auto &mesh : m_meshes) {
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(), 
@@ -218,8 +213,15 @@ GraphicsPSO &hlab::TessellationModel::GetPSO(const bool wired) {
 GraphicsPSO &TessellationModel::GetDepthOnlyPSO() { 
     renderState = ERenderState::depth;   
     return Graphics::terrainDepthPSO;
-      
+       
 } 
+GraphicsPSO &TessellationModel::GetReflectPSO(const bool wired) {
+    // TODO: 여기에 return 문을 삽입합니다.
+    renderState = ERenderState::reflect;
+    return wired ? Graphics::reflectTerrainWirePSO
+                 : Graphics::reflectTerrainSolidPSO; 
+}
+ 
     
 void TessellationModel::UpdateTextureMap(
     ComPtr<ID3D11DeviceContext> &context, Vector3 pos, int type) { 

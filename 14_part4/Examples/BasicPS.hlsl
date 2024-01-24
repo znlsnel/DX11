@@ -353,7 +353,7 @@ PixelShaderOutput main(PixelShaderInput input)
                                      : emissionFactor;
 
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
-    ambientLighting = float3(0.0, 0.0, 0.0); 
+   // ambientLighting = float3(0.0, 0.0, 0.0);  
     float3 directLighting = float3(0, 0, 0);
 
     // 0.3, 1.0, 3.0, 5.0, 10.0
@@ -383,7 +383,7 @@ PixelShaderOutput main(PixelShaderInput input)
         normalWorld, pixelToEye, albedo, metallic, roughness, directLighting);
         
     }
-    else
+    else 
     { 
         float3 tempDL[2] =
         {
@@ -398,7 +398,7 @@ PixelShaderOutput main(PixelShaderInput input)
         {
             if (i == distanceID - 1 || i == distanceID)
             {
-                int id = clamp(i - (distanceID - 1), 0, 1);
+                int id = clamp(i - (distanceID - 1), 0, 1); 
                 tempDL[id] = DrawLight(input, lights[i], shadowMaps[i],
                     normalWorld, pixelToEye, albedo, metallic, roughness, tempDL[id]);
 
@@ -407,7 +407,7 @@ PixelShaderOutput main(PixelShaderInput input)
              
         // ex) 5.0 <= x < 10.0 - 5.0 / 10.0 - 5.0
         float rt = distance_worldToEye - distances[distanceID] /
-                        distances[distanceID + 1] - distances[distanceID];
+                        distances[distanceID + 1] - distances[distanceID]; 
         rt = clamp(rt, 0.0, 1.0);
         directLighting = tempDL[0] * (1.0 - rt) + tempDL[1] * rt;
     }

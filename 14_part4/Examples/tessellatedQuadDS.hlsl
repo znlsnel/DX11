@@ -18,14 +18,13 @@ struct PatchConstOutput
     float edges[4] : SV_TessFactor;
     //float inside[2] : SV_TessFactor;
     float inside[2] : SV_InsideTessFactor;
-    
 };
-
+ 
 [domain("quad")]
 PixelShaderInput main(PatchConstOutput patchConst,
-             float2 uv : SV_DomainLocation,
+             float2 uv : SV_DomainLocation, 
              const OutputPatch<HullShaderOutput, 4> quad)
-{ 
+{  
     PixelShaderInput output;
     
     float3 v1 = quad[0].posModel * (1 - uv.x) + quad[1].posModel * (uv.x);
@@ -34,7 +33,7 @@ PixelShaderInput main(PatchConstOutput patchConst,
     
     output.posWorld = mul(float4(output.posModel, 1.0), world).xyz;
     output.posProj = mul(float4(output.posWorld, 1.0), viewProj);
-     
+      
     // TangentWorld
     { 
         float4 temp1 = mul(float4(quad[0].tangentModel, 0.0), world);

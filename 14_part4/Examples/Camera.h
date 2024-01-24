@@ -26,6 +26,7 @@ class Camera {
         UpdateViewDir();
     }
 
+    Vector3 GetCameraPosition();
     void UpdatePos();
     void UpdateViewDir();
     void UpdateKeyboard(const float dt, bool const keyPressed[256]);

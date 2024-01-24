@@ -62,6 +62,8 @@ cbuffer GlobalConstants : register(b0)
     matrix viewProj;
     matrix invViewProj; // Proj -> World
     matrix invView;
+    Matrix reflectWorld;
+
 
     float3 eyeWorld;
     float strengthIBL;

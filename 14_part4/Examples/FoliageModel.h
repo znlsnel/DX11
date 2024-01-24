@@ -22,7 +22,9 @@ class FoliageModel : public Model{
     void MakeBoundingBox(
         ComPtr<ID3D11Device> &device, const vector<MeshData> &meshDatas);
     void MakeBVH();
-    void GetMeshInFrustum();
+    void GetMeshInFrustum(bool isFindingReflectModel); 
+
+
     virtual void Render(ComPtr<ID3D11DeviceContext> &context) override;
     void RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
                        vector<shared_ptr<Mesh>> &meshes);
@@ -34,12 +36,15 @@ private:
     vector<BoundingBox> m_boundingBoxs;
     
     vector<shared_ptr<Mesh>> m_foundMesh; 
+    vector<shared_ptr<Mesh>> m_foundReflectMesh;
     vector<shared_ptr<Mesh>> m_foundDistantMesh; 
+    vector<shared_ptr<Mesh>> m_foundDistantReflectMesh; 
+
     vector<shared_ptr<Model>> m_foundBillboardFoliages;
+    vector<shared_ptr<Model>> m_foundBillboardReflectFoliages;
     vector<int> m_meshStartID;
     vector<BVNode> m_bvh;  
      
-
      bool isBBDRendering = false;
      virtual void UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
                                 Vector3 &position)override;

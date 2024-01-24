@@ -16,6 +16,7 @@ GeometryShaderInput main(BillboardVertexShaderInput input)
     
     // Geometry shader로 그대로 넘겨줍니다.
     output.pos = mul(input.pos, world);
-    
+
+      
     return output;
 }

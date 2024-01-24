@@ -53,7 +53,7 @@ bool Ex2001_GamePlay::Initialize() {
                tempInfo.minMetallic = 0.5f;
                tempInfo.minRoughness = 1.0f;
                tempInfo.position = tempPos; 
-                  
+               
                float dist = 0.0f;
                SetHeightPosition(tempInfo.position + Vector3(0.0f, 5.0f, 0.0f),
                                  Vector3(0.0f, -1.0f, 0.0f), dist);
@@ -72,7 +72,7 @@ bool Ex2001_GamePlay::Initialize() {
                tempModel->UpdatePosition(tempModel->GetPosition() +
                                          Vector3(0.0f, tempExtents.y, 0.0f));
         }
-    }
+    } 
     return returnValue; 
 }
  
@@ -99,7 +99,7 @@ bool Ex2001_GamePlay::InitScene() {
     InitAudio();  
            
 
-       
+        
          //Grass object  
     if (false)  
     {
@@ -136,10 +136,24 @@ bool Ex2001_GamePlay::InitScene() {
             //                         Matrix::CreateTranslation(0.0f,
             //                         0.0f, 2.0f));
     }
-      
-
+       
+    //mirror 
+    {    
+            auto mesh = GeometryGenerator::MakeSquare(5.f, {10.f, 10.f});
+            Vector3 position = Vector3(-7.649f, 1.467f, 4.878f);
+            m_mirror = make_shared<Model>(m_device, m_context, vector{mesh});
+            m_mirror->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+                                     Matrix::CreateTranslation(position));  
+            
+            m_mirror->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+            m_mirror->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
+            m_mirror->m_materialConsts.GetCpu().metallicFactor = 0.5f;
+            m_mirror->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
+            m_mirror->m_castShadow = false;
+            AddBasicList(m_mirror); 
+    } 
     // ocean 
-        {
+        if (true){
         auto mesh = GeometryGenerator::MakeSquare(200.0, {10.0f, 10.0f});
         m_ocean =
             make_shared<OceanModel>(m_device, m_context, vector{mesh});
@@ -894,5 +908,5 @@ void Ex2001_GamePlay::UpdateGUI() {
    ImGui::Checkbox("Character View", &m_camera->m_UsingCharacterView);
    //ImGui::SliderInt("BVNode Box", &m_BVHNodeID, 0, m_BVNodes.size() - 1);
 }  
-
+ 
 } // namespace hlab

@@ -10,12 +10,18 @@ struct PixelShaderOutput
 {
     float4 pixelColor : SV_Target0;
 };
+  
+cbuffer skyBoxBuffer : register(b4)
+{ 
+    float3 lightDir;
+    float dummy;
+}  
 
 PixelShaderOutput main(SkyboxPixelShaderInput input)
 {
     PixelShaderOutput output;
 
-    
+     
     if (input.posModel.y < -0.1)
         input.posModel.y *= -1.0f;
     else if (input.posModel.y < 0.1)
