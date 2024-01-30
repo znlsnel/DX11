@@ -151,13 +151,12 @@ float4 main(PixelShaderInput input) : SV_Target0
     // define water planes
     float3 waterPlaneHigh = float3(0.0, 0.0, 0.0);
     float3 waterPlaneLow = float3(0.0, -WATER_DEPTH, 0.0);
-
+     
     // define ray origin, moving around
     //float3 origin = float3(globalTime, CAMERA_HEIGHT, globalTime);
-   // float3 origin = float3(0, CAMERA_HEIGHT, 0);
+    // float3 origin = float3(0, CAMERA_HEIGHT, 0);
     float3 origin = eyeWorld;
 
-    // calculate intersections and reconstruct positions
     float highPlaneHit = intersectPlane(origin, ray, waterPlaneHigh, float3(0.0, 1.0, 0.0));
     float lowPlaneHit = intersectPlane(origin, ray, waterPlaneLow, float3(0.0, 1.0, 0.0));
     float3 highHitPos = origin + ray * highPlaneHit;

@@ -21,7 +21,7 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
     m_geometryShader = Graphics::billboardGS;
     m_inputLayout = Graphics::billboardIL;
     m_pixelShader = pixelShader;
-    
+    m_depthPixelShader = Graphics::depthOnlyPS;
     static int index = 0;
     m_billboardConsts.GetCpu().widthWorld = width; 
     m_billboardConsts.GetCpu().index = index;
@@ -68,7 +68,12 @@ void BillboardModel::Render(ComPtr<ID3D11DeviceContext> &context) {
         // 편의상 PSO 설정을 Render()에서 바꾸는 방식
         context->IASetInputLayout(m_inputLayout.Get());
         context->VSSetShader(m_vertexShader.Get(), 0, 0);
-        context->PSSetShader(m_pixelShader.Get(), 0, 0);
+
+        if (renderState == ERenderState::depth)
+                context->PSSetShader(m_depthPixelShader.Get(), 0, 0);
+        else
+                context->PSSetShader(m_pixelShader.Get(), 0, 0);
+         
         ID3D11Buffer *constBuffers[4] = {
             this->m_meshConsts.Get(),
             this->m_materialConsts.Get(),
@@ -106,4 +111,5 @@ void BillboardModel::Render(ComPtr<ID3D11DeviceContext> &context) {
     }
 }
 
-} // namespace hlab
+
+} // namespace hlab   

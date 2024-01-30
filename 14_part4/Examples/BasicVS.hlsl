@@ -52,7 +52,7 @@ PixelShaderInput main(VertexShaderInput input)
     input.tangentModel = tangentModel;
 
 #endif
-   
+    
     output.posModel = input.posModel;
     output.normalWorld = mul(float4(input.normalModel, 0.0f), worldIT).xyz;
     output.normalWorld = normalize(output.normalWorld);
@@ -60,7 +60,7 @@ PixelShaderInput main(VertexShaderInput input)
     
     //참고: windTrunk, windLeaves 옵션도 skinnedMesh처럼 매크로 사용 가능
     float dist = length(output.posWorld - eyeWorld);
-    if (windTrunk != 0.0 && dist < 3)
+    if (windTrunk != 0.0)
     {
         float2 rotCenter = float2(0.0f, -0.5f);
         float2 temp = (input.posModel.xy - rotCenter);
@@ -73,7 +73,7 @@ PixelShaderInput main(VertexShaderInput input)
     }
     
     
-    if (windLeaves != 0.0 && dist < 0.3)
+    if (windLeaves != 0.0 )
     {
         float3 windVel = float3(sin(input.posModel.x * 100.0 + globalTime * 0.1)
                                 * cos(input.posModel.y * 100 + globalTime * 0.1), 0, 0)

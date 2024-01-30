@@ -97,10 +97,10 @@ bool Ex2001_GamePlay::InitScene() {
     //InitPhysics(true);  
      
     InitAudio();  
-           
+            
 
         
-         //Grass object  
+         //Grass object   
     if (false)  
     {
             shared_ptr<GrassModel> grass = make_shared<GrassModel>();
@@ -140,11 +140,12 @@ bool Ex2001_GamePlay::InitScene() {
     //mirror 
     {    
             auto mesh = GeometryGenerator::MakeSquare(5.f, {10.f, 10.f});
-            Vector3 position = Vector3(-7.649f, 1.467f, 4.878f);
+             
             m_mirror = make_shared<Model>(m_device, m_context, vector{mesh});
-            m_mirror->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-                                     Matrix::CreateTranslation(position));  
-            
+            m_mirror->UpdateTranseform(Vector3(0.078f, 0.054f, 1.0f),
+                                       Vector3(0.0f),
+                                       Vector3(-8.313f, 1.186f, 4.183f));
+             
             m_mirror->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
             m_mirror->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
             m_mirror->m_materialConsts.GetCpu().metallicFactor = 0.5f;

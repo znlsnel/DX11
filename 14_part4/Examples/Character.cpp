@@ -56,10 +56,10 @@ void hlab::Character::UpdateTransform(float dt)
         if (m_appBase->m_camera->m_objectTargetCameraMode == false)
                 return;
         if (m_appBase->m_keyPressed['A']) {
-                m_mesh->AddYawOffset(-3.141592f * 240.f / 180.f * dt);
+                m_mesh->AddYawOffset(-3.141592f * 80.f / 180.f * dt);
         }
         else if (m_appBase->m_keyPressed['D']) {
-                m_mesh->AddYawOffset(3.141592f * 240.f / 180.f * dt);
+                m_mesh->AddYawOffset(3.141592f * 80.f / 180.f * dt);
         }
 
         Vector3 vc;

@@ -178,12 +178,12 @@ class AppBase {
                             0.25f;
                     };
                      
-                    // front
+                    // front  
                CraeteOriginNNormal(frontLeftBottom, frontLeftTop,
                                         frontRightBottom, frontRightTop);
                     frustum.push_back(
                         std::make_pair(SimpleMath::Plane(origin, normal), origin));
-                     
+                       
                     // Back
                     CraeteOriginNNormal(backRightBottom, backRightTop,
                                         backLeftBottom, backRightTop);
@@ -465,7 +465,7 @@ class AppBase {
     // shadow 0.3 -> 1.0 -> 3.0 -> 5.0 -> (10.0 * 10.0) 
     Vector3 m_shadowAspects[5] =   
     {
-            Vector3(0.8f, -0.8f, 7.25f),   
+            Vector3(1.325f, -0.8f, 7.25f),   
             Vector3(2.0f, -2.0f, 8.f),  
             Vector3(3.5f, -3.5f, 10.f),   
             Vector3(7.0f, -7.0f, 20.f),  

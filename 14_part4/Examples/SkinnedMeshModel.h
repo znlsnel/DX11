@@ -173,8 +173,8 @@ class SkinnedMeshModel : public Model {
 
     GraphicsPSO &GetDepthOnlyPSO() override {
         return Graphics::depthOnlySkinnedPSO;
-    }
-
+    } 
+     
     virtual void InitMeshBuffers(ComPtr<ID3D11Device> &device, const MeshData &meshData, shared_ptr<Mesh> &newMesh) override{
                  vector<SkinnedVertex> initVtx;
                 vector<seed_seq::result_type> initIdx;

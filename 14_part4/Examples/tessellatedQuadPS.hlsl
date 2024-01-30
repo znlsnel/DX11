@@ -32,12 +32,16 @@ struct PixelShaderOutput
 
 float4 GetTexture(Texture2DArray textureArray, SamplerState ss, float2 texc, float lod)
 {
-    float4 curT = textureArray.SampleLevel(linearWrapSampler, float3(texc, currTexture.x), lod);
-    float4 rightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, rightTexture.x), lod);
-    float4 upT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upTexture.x), lod);
-    float4 upRightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upRightTexture.x), lod);
+    //float4 curT = textureArray.SampleLevel(linearWrapSampler, float3(texc, currTexture.x), lod);
+    //float4 rightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, rightTexture.x), lod);
+    //float4 upT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upTexture.x), lod);
+    //float4 upRightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upRightTexture.x), lod);
+    float4 curT = textureArray.Sample(linearWrapSampler, float3(texc, currTexture.x));
+    float4 rightT = textureArray.Sample(linearWrapSampler, float3(texc, rightTexture.x));
+    float4 upT = textureArray.Sample(linearWrapSampler, float3(texc, upTexture.x));
+    float4 upRightT = textureArray.Sample(linearWrapSampler, float3(texc, upRightTexture.x));
     float4 result = 
-    curT * (currTexture.y) + 
+    curT * (currTexture.y) +  
     rightT * (rightTexture.y)+ 
     upT * (upTexture.y) + 
     upRightT * (upRightTexture.y);
@@ -78,7 +82,8 @@ float3 DiffuseIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
     float3 F0 = lerp(Fdielectric, albedo, metallic);
     float3 F = SchlickFresnel(F0, max(0.0, dot(normalWorld, pixelToEye)));
     float3 kd = lerp(1.0 - F, 0.0, metallic);
-    float3 irradiance = irradianceIBLTex.SampleLevel(linearWrapSampler, normalWorld, 0).rgb;
+    //float3 irradiance = irradianceIBLTex.SampleLevel(linearWrapSampler, normalWorld, 0).rgb;
+    float3 irradiance = irradianceIBLTex.Sample(linearWrapSampler, normalWorld).rgb;
     
     return kd * albedo * irradiance;
 }
@@ -86,7 +91,8 @@ float3 DiffuseIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
 float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
                    float metallic, float roughness)
 {
-    float2 specularBRDF = brdfTex.SampleLevel(linearClampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness), 0.0f).rg;
+    //float2 specularBRDF = brdfTex.SampleLevel(linearClampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness), 0.0f).rg;
+    float2 specularBRDF = brdfTex.Sample(linearClampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness)).rg;
     float3 specularIrradiance = specularIBLTex.SampleLevel(linearWrapSampler, reflect(-pixelToEye, normalWorld),
                                                             roughness * 10.0f).rgb;
     const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
@@ -175,9 +181,12 @@ void FindBlocker(out float avgBlockerDepthView, out float numBlockers, float2 uv
     numBlockers = 0;
     for (int i = 0; i < 64; ++i)
     {
+        //float shadowMapDepth =
+        //    shadowMap.SampleLevel(shadowPointSampler, float2(uv + diskSamples64[i] * searchRadius), 0).r;
+        
         float shadowMapDepth =
-            shadowMap.SampleLevel(shadowPointSampler, float2(uv + diskSamples64[i] * searchRadius), 0).r;
-
+            shadowMap.Sample(shadowPointSampler, float2(uv + diskSamples64[i] * searchRadius)).r;
+        
         shadowMapDepth = N2V(shadowMapDepth, invProj);
         
         if (shadowMapDepth < zReceiverView)
@@ -454,11 +463,13 @@ PixelShaderOutput main(PixelShaderInput input)
     
     clip(albedo.a - 0.5); // Tree leaves
     
-    float ao = useAOMap ? ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture.x), lod).r : 1.0;
-    float metallic = metallicFactor;
-    float roughness = useRoughnessMap ? clamp(ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture.x), lod).g, minRoughness, 1.0) : roughnessFactor;
+    //float ao = useAOMap ? ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture.x), lod).r : 1.0;
+    //float roughness = useRoughnessMap ? clamp(ORDpTex.SampleLevel(linearWrapSampler, float3(input.texcoord, currTexture.x), lod).g, minRoughness, 1.0) : roughnessFactor;
+    float metallic = metallicFactor; 
     float3 emission = emissionFactor;
-     
+    float ao = useAOMap ? ORDpTex.Sample(linearWrapSampler, float3(input.texcoord, currTexture.x)).r : 1.0;
+    float roughness = useRoughnessMap ? clamp(ORDpTex.Sample(linearWrapSampler, float3(input.texcoord, currTexture.x)).g, minRoughness, 1.0) : roughnessFactor;
+      
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
     
     float3 directLighting = float3(0, 0, 0);

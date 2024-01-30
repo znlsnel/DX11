@@ -13,6 +13,7 @@ ComPtr<ID3D11SamplerState> shadowPointSS;
 ComPtr<ID3D11SamplerState> shadowCompareSS;
 ComPtr<ID3D11SamplerState> pointWrapSS;
 ComPtr<ID3D11SamplerState> linearMirrorSS;
+ComPtr<ID3D11SamplerState> anisotropicClampSampler;
 vector<ID3D11SamplerState *> sampleStates;
 
 // Rasterizer States
@@ -162,6 +163,11 @@ void Graphics::InitSamplers(ComPtr<ID3D11Device> &device) {
     sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
     sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     device->CreateSamplerState(&sampDesc, linearClampSS.GetAddressOf());
+     
+    
+        sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+        sampDesc.MaxAnisotropy = 16;
+        device->CreateSamplerState(&sampDesc, anisotropicClampSampler.GetAddressOf());
 
     sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
     device->CreateSamplerState(&sampDesc, pointClampSS.GetAddressOf());
@@ -194,6 +200,8 @@ void Graphics::InitSamplers(ComPtr<ID3D11Device> &device) {
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     device->CreateSamplerState(&sampDesc, linearMirrorSS.GetAddressOf());
 
+
+
     // 샘플러 순서가 "Common.hlsli"에서와 일관성 있어야 함
     sampleStates.push_back(linearWrapSS.Get());    // s0
     sampleStates.push_back(linearClampSS.Get());   // s1
@@ -202,6 +210,7 @@ void Graphics::InitSamplers(ComPtr<ID3D11Device> &device) {
     sampleStates.push_back(pointWrapSS.Get());     // s4
     sampleStates.push_back(linearMirrorSS.Get());  // s5
     sampleStates.push_back(pointClampSS.Get());    // s6
+    sampleStates.push_back(anisotropicClampSampler.Get()); // s6
 }
 
 void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
@@ -722,7 +731,7 @@ void Graphics::InitVolumeShaders(ComPtr<ID3D11Device> &device) {
 
     foliageBillboardPSO = defaultSolidPSO; 
     foliageBillboardPSO.m_vertexShader = billboardVS;
-    foliageBillboardPSO.m_pixelShader = billboardPS;
+    foliageBillboardPSO.m_pixelShader = basicPS;
     foliageBillboardPSO.m_geometryShader = foliageGS;
     foliageBillboardPSO.m_inputLayout = billboardIL;
     foliageBillboardPSO.m_rasterizerState = solidBothRS; 

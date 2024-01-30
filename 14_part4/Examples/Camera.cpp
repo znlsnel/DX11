@@ -43,25 +43,25 @@ Vector3 Camera::GetCameraPosition() {
         }
         return GetTarget()->GetMesh()->GetPosition();
                    
-}
-void Camera::UpdatePos() {
+} 
+void Camera::UpdatePos() {  
 
         if (m_target != nullptr && m_objectTargetCameraMode) {
                 Vector3 tempPos = m_target->GetMesh()->m_worldRow.Translation();
-                //
+               tempPos += Vector3(0.0f, 0.1f, 0.0f);
                 tempPos += -GetForwardVector() * cameraDistance;
                 SetLocation(tempPos);
         } 
-        else if (m_isCameraLock == false)
-        {
-                Vector3 moveDir{0.f, 0.f, 0.f};
+        else if (m_isCameraLock == false) 
+        {  
+                Vector3 moveDir{0.f, 0.f, 0.f};  
                 
                 if (m_appBase->m_keyPressed['W'])
-                    moveDir += m_forwardDir;
+                    moveDir += m_forwardDir; 
 
                 if (m_appBase->m_keyPressed['S'])
                     moveDir += -m_forwardDir;
-                    
+                     
                 if (m_appBase->m_keyPressed['A']) {
                     moveDir += -m_rightDir;
                 }

@@ -49,11 +49,16 @@ void main(point GeometryShaderInput input[1], uint primID
     float4 right = float4(cross(up.xyz, normalize(front.xyz)), 0.0);
     right = normalize(right) * 0.2;
     BillboardPixelShaderInput output;
+     
+    float size = 1; 
+    right *= size;
+    up *= size;
     
     float yOffset = float(foliageID + 1) / 6.0;
     output.tangentWorld =right; 
     {
         output.posWorld = input[0].pos - (right); 
+        output.posWorld *= size;
         output.posProj = output.posWorld;
         output.posProj = mul(output.posProj, view);
         output.posProj = mul(output.posProj, proj);
@@ -63,17 +68,19 @@ void main(point GeometryShaderInput input[1], uint primID
          
         outputStream.Append(output);
 
-        output.posWorld = input[0].pos - (right) + (0.2 * up);
+        output.posWorld = input[0].pos - (right) + (0.15 * up);
+        output.posWorld *= size;
         output.posProj = output.posWorld;
         output.posProj = mul(output.posProj, view);
         output.posProj = mul(output.posProj, proj);
         output.normalWorld = front;
-        output.posModel = -(right) + (0.2 * up);
+        output.posModel = -(right) + (0.15 * up);
         output.texCoord = float2(1.0, yOffset - (1.0/6.0));
 
         outputStream.Append(output);
 
         output.posWorld = input[0].pos + (right);
+        output.posWorld *= size;
         output.posProj = output.posWorld;
         output.posProj = mul(output.posProj, view);
         output.posProj = mul(output.posProj, proj);
@@ -81,19 +88,20 @@ void main(point GeometryShaderInput input[1], uint primID
         output.posModel = +(right);
         output.texCoord = float2(0.0, yOffset);
 
-        outputStream.Append(output);
-
-        output.posWorld = input[0].pos + (right) + (0.2 * up);
+        outputStream.Append(output); 
+          
+        output.posWorld = input[0].pos + (right) + (0.15 * up);
+        output.posWorld *= size;
         output.posProj = output.posWorld;
         output.posProj = mul(output.posProj, view);
         output.posProj = mul(output.posProj, proj);
         output.normalWorld = front;
-        output.posModel = +(right) + (0.2 * up);
+        output.posModel = +(right) + (0.15 * up);
         output.texCoord = float2(0.0, yOffset - (1.0 / 6.0));
           
         outputStream.Append(output);
     }
-    //{
+    //{ 
         
     //    output.posWorld = input[0].pos - (front);
     //    output.pos = output.posWorld;

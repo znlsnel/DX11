@@ -49,8 +49,15 @@ class BillboardModel : public Model {
 
     GraphicsPSO &GetPSO(const bool wired) override {
         // return wired ? Graphics::defaultWirePSO : fireballPSO;
-        return Graphics::defaultWirePSO;
+            
+        return Model::GetPSO(wired);
     }
+    virtual GraphicsPSO &GetDepthOnlyPSO() override{
+
+        return Model::GetDepthOnlyPSO();
+    
+    };
+     
 
   public:
     ConstantBuffer<BillboardConsts> m_billboardConsts;
@@ -68,6 +75,7 @@ class BillboardModel : public Model {
     ComPtr<ID3D11Buffer> m_vertexBuffer;
     ComPtr<ID3D11VertexShader> m_vertexShader;
     ComPtr<ID3D11PixelShader> m_pixelShader;
+    ComPtr<ID3D11PixelShader> m_depthPixelShader;
     ComPtr<ID3D11InputLayout> m_inputLayout;
 
     uint32_t m_indexCount = 0;

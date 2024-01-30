@@ -817,11 +817,12 @@ void AppBase::UpdateLights(float dt) {
     static float updateTimer = 0.0f;
     if (updateTimer > 0.0f) {
 
-        Vector3 tempCamPos =
-            m_camera->m_objectTargetCameraMode == false || m_camera->GetTarget() == nullptr
-            ? RayCasting(false, 0.0f, -1.f)  
-                :  m_camera->GetTarget()->GetMesh()->GetPosition();
-          
+        //Vector3 tempCamPos =
+        //    m_camera->m_objectTargetCameraMode == false || m_camera->GetTarget() == nullptr
+        //    ? RayCasting(false, 0.0f, -1.f)  
+        //        :  m_camera->GetTarget()->GetMesh()->GetPosition();
+        Vector3 tempCamPos = m_camera->GetTarget()->GetMesh()->GetPosition();
+
         //Vector3 tempCamPos = m_camera->GetPosision();
          
         //Vector3 tempCamPos = RayCasting(0.0f, -0.25f);  
@@ -1090,16 +1091,16 @@ void AppBase::RenderMirror() {
         m_context->ClearDepthStencilView(m_defaultDSV.Get(), D3D11_CLEAR_DEPTH,
                                          1.0f, 0); 
           
-        for (auto &model : m_foundReflectModelList) {
+        for (auto &model : m_foundReflectModelList) { 
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
             model->Render(m_context);
         }
-        static int tempTT = 0;
-        if (tempTT > 5) {
-                cout << "m_foundReflectModelList. size : " << int(m_foundReflectModelList.size()) << "\n";
-            tempTT = 0;
-        }
-        tempTT++;
+        //static int tempTT = 0;
+        //if (tempTT > 5) {
+        //        cout << "m_foundReflectModelList. size : " << int(m_foundReflectModelList.size()) << "\n";
+        //    tempTT = 0;
+        //}
+        //tempTT++;
 
         for (auto &model : m_NoneBVHList) {
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));

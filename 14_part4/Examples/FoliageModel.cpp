@@ -280,7 +280,7 @@ void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
         } 
         searchingMeshTimer++;     
                  
-         
+          
         if (renderState != ERenderState::reflect) 
         {
                 RenderFoliage(context, m_foundMesh);
@@ -288,25 +288,31 @@ void hlab::FoliageModel::Render(ComPtr<ID3D11DeviceContext> &context) {
                 if (m_appBase->isRenderShadowMap == false)
                         RenderFoliage(context, m_foundDistantMesh);
 
-                for (auto &billboardFoliage : m_foundBillboardFoliages) {
-                        billboardFoliage->Render(context);
-                } 
+                if (renderState != ERenderState::depth) {
+                        for (auto &billboardFoliage : m_foundBillboardFoliages) {
+                                billboardFoliage->Render(context);
+                        } 
+                
+                }
                    
         } else if (m_appBase->m_foundMirror) {
                 RenderFoliage(context, m_foundReflectMesh);
                 if (m_appBase->isRenderShadowMap == false)
                         RenderFoliage(context, m_foundDistantReflectMesh);
-                          
-                for (auto &billboardFoliage : m_foundBillboardReflectFoliages) {
-                        billboardFoliage->Render(context);
-                } 
+                 
+                if (renderState != ERenderState::depth) {
+                        for (auto &billboardFoliage :
+                             m_foundBillboardReflectFoliages) {
+                                billboardFoliage->Render(context);
+                        }
+                }
         } 
 
 }  
- 
+  
 void hlab::FoliageModel::RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
                                        vector<shared_ptr<Mesh>> &meshes) { 
-        if (meshes.size() == 0) { 
+        if (meshes.size() == 0) {  
                 return;     
         }  
          for (int i = 0; i < meshes.size(); i++){

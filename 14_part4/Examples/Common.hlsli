@@ -21,7 +21,8 @@ SamplerComparisonState shadowCompareSampler : register(s3);
 SamplerState pointWrapSampler : register(s4);
 SamplerState linearMirrorSampler : register(s5);
 SamplerState pointClampSampler : register(s6);
-
+SamplerState anisotropiClampSampler : register(s7);
+ 
 // 공용 텍스춰들 t10 부터 시작
 TextureCube envIBLTex : register(t10);
 TextureCube specularIBLTex : register(t11);

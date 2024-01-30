@@ -170,7 +170,7 @@ void hlab::TessellationModel::Render(ComPtr<ID3D11DeviceContext> &context) {
              
                     
             ID3D11ShaderResourceView *temp[2] = {
-                //m_textureMapSRV.Get(),
+                //m_textureMapSRV.Get(), 
                 m_heightMapSRV.Get(), 
                 m_ORDpTexturesSRV.Get(),
             };
