@@ -8,7 +8,7 @@
 Texture2D albedoTex : register(t0);
 Texture2D normalTex : register(t1);
 Texture2D aoTex : register(t2);
-Texture2D metallicRoughnessTex : register(t3);
+Texture2D metallicRoughnessTex : register(t3); 
 Texture2D emissiveTex : register(t4); 
 Texture2D ARTTex : register(t5); 
 
@@ -23,7 +23,7 @@ float4 GetTexture(Texture2D txt, SamplerState ss, float2 texc, float lod)
     //float4 upT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upTexture.x), lod);
     //float4 upRightT = textureArray.SampleLevel(linearWrapSampler, float3(texc, upRightTexture.x), lod);
     float4 curT = { 0,0,0,0};  
-    if (true || (useARTTexture == 0 && lod > -1))  
+    if ( true || (useARTTexture == 0 && lod > -1))  
         curT = txt.Sample(ss, texc);
     else 
         curT = txt.SampleLevel(anisotropiClampSampler, texc, lod);
@@ -35,7 +35,7 @@ float4 GetTexture(Texture2D txt, SamplerState ss, float2 texc, float lod)
 float3 SchlickFresnel(float3 F0, float NdotH)
 {
     return F0 + (1.0 - F0) * pow(2.0, (-5.55473 * NdotH - 6.98316) * NdotH);
-    //return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+    //return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0); 
 }
 
 struct PixelShaderOutput
@@ -48,16 +48,25 @@ float3 GetNormal(PixelShaderInput input, float lod)
 {
     float3 normalWorld = normalize(input.normalWorld);
     
+    //    // 뒷면 여부를 확인하기 위한 시야 벡터 계산
+    //float3 viewVector = normalize(input.posWorld - eyeWorld);
+    //// 뒷면 여부 확인
+    //bool isBackFace = dot(viewVector, normalWorld) > -0.1;
+    //if (isBackFace)
+    //{
+    //    normalWorld = -normalWorld; // 뒷면이면 노멀 벡터 뒤집기
+    //}
+      
     if (useNormalMap) // NormalWorld를 교체
     { 
         //float3 normal = normalTex.SampleLevel(linearWrapSampler, input.texcoord, lod).rgb;
         //float3 normal = normalTex.Sample(linearWrapSampler, input.texcoord).rgb;
         float3 normal = GetTexture(normalTex, linearWrapSampler, input.texcoord, lod).rgb;
         normal = 2.0 * normal - 1.0; // 범위 조절 [-1.0, 1.0]
-         
+     
         // OpenGL 용 노멀맵일 경우에는 y 방향을 뒤집어줍니다.
         normal.y = invertNormalMapY ? -normal.y : normal.y;
-
+         
         float3 N = normalWorld;
         float3 T = normalize(input.tangentWorld - dot(input.tangentWorld, N) * N);
         float3 B = cross(N, T);
@@ -82,10 +91,10 @@ float3 DiffuseIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
     
     return kd * albedo * irradiance;
 }
- 
+  
 float3 SpecularIBL(float3 albedo, float3 normalWorld, float3 pixelToEye,
                    float metallic, float roughness) 
-{
+{ 
     //float2 specularBRDF = brdfTex.SampleLevel(linearClampSampler, float2(dot(normalWorld, pixelToEye), 1.0 - roughness), 0.0f).rg;
     //float3 specularIrradiance = specularIBLTex.SampleLevel(linearWrapSampler, reflect(-pixelToEye, normalWorld),
     //                                                        roughness * 10.0f).rgb;
@@ -153,11 +162,11 @@ float N2V(float ndcDepth, matrix invProj)
 
 // Assuming that LIGHT_FRUSTUM_WIDTH == LIGHT_FRUSTUM_HEIGHT
 // #define LIGHT_RADIUS_UV (LIGHT_WORLD_RADIUS / LIGHT_FRUSTUM_WIDTH)
-
+ 
 float PCF_Filter(float2 uv, float zReceiverNdc, float filterRadiusUV, Texture2D shadowMap)
-{
+{  
     float sum = 0.0f;
-    for (int i = 0; i < 64; ++i)
+    for (int i = 0; i <64; ++i)
     {
         float2 offset = diskSamples64[i] * filterRadiusUV;
         sum += shadowMap.SampleCmpLevelZero(
@@ -344,42 +353,38 @@ float3 normalWorld, float3 pixelToEye, float4 albedo, float metallic, float roug
             directLighting += (diffuseBRDF + specularBRDF) * radiance * NdotI;
 
     return directLighting;
-}
+} 
  
  
  
 PixelShaderOutput main(PixelShaderInput input)
 {
     PixelShaderOutput output;
-    lod = length(input.posWorld - eyeWorld);
+    lod = length(input.posWorld - eyeWorld); 
     lod -= 5;
     lod = clamp(lod, 0.0, 10.0);
     lod /= 5;    
       
-    //float a = ARTTex.SampleLevel(linearClampSampler, input.texcoord, lod).r;
     float a = GetTexture(ARTTex, linearClampSampler, input.texcoord, lod).r;
-    
-   //float a = ARTTex.Sample(linearClampSampler, input.texcoord).r;
-    if (useARTTexture && a < 0.2) 
+     
+    if (useARTTexture && a < 0.4)  
         clip(-0.1); 
-         
+           
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
     float3 normalWorld = GetNormal(input, lod);
-    
-    //float4 albedo = useAlbedoMap ? albedoTex.SampleLevel(linearWrapSampler, input.texcoord,  lod) * float4(albedoFactor, 1)
-    //                             : float4(albedoFactor, 1);
+     
     float4 albedo = useAlbedoMap ? GetTexture(albedoTex, linearWrapSampler, input.texcoord, lod) * float4(albedoFactor, 1)
                                  : float4(albedoFactor, 1);
-      
-    clip(albedo.a - 0.5); // Tree leaves
+        
+    clip(albedo.a - 0.05); // Tree leaves
     
-    //float ao = useAOMap ? aoTex.SampleLevel(linearWrapSampler, input.texcoord, lod).r : 1.0;
-    //float metallic = useMetallicMap ? clamp(metallicRoughnessTex.SampleLevel(linearWrapSampler, input.texcoord,  lod).b, minMetallic, 1.0) * metallicFactor
-    //                                : metallicFactor;
-    //float roughness = useRoughnessMap ? clamp(metallicRoughnessTex.SampleLevel( linearWrapSampler, input.texcoord, lod).g, minRoughness, 1.0) * roughnessFactor
-    //                                  : roughnessFactor;
-    //float3 emission = useEmissiveMap ? emissiveTex.SampleLevel(linearWrapSampler, input.texcoord, lod).rgb
-    //                                 : emissionFactor;
+    if (false && length(input.posWorld - eyeWorld) > 5)
+    {
+        output.pixelColor = albedo;
+        output.indexColor = indexColor;
+        return output;
+    } 
+    
     float ao = useAOMap ? GetTexture(aoTex, linearWrapSampler, input.texcoord, lod).r : 1.0;
     float metallic = useMetallicMap ? clamp(GetTexture(metallicRoughnessTex, linearWrapSampler, input.texcoord, lod).b, minMetallic, 1.0) * metallicFactor
                                     : metallicFactor;
@@ -389,7 +394,6 @@ PixelShaderOutput main(PixelShaderInput input)
                                      : emissionFactor;
 
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
-   // ambientLighting = float3(0.0, 0.0, 0.0);  
     float3 directLighting = float3(0, 0, 0);
 
     // 0.3, 1.0, 3.0, 5.0, 10.0
@@ -420,7 +424,7 @@ PixelShaderOutput main(PixelShaderInput input)
         
     }
     else 
-    { 
+    {  
         float3 tempDL[2] =
         {
             float3(0.0, 0.0, 0.0),
@@ -439,7 +443,7 @@ PixelShaderOutput main(PixelShaderInput input)
                     normalWorld, pixelToEye, albedo, metallic, roughness, tempDL[id]);
 
             }
-        }
+        } 
              
         // ex) 5.0 <= x < 10.0 - 5.0 / 10.0 - 5.0
         float rt = distance_worldToEye - distances[distanceID] /
@@ -454,6 +458,20 @@ PixelShaderOutput main(PixelShaderInput input)
     
    output.pixelColor = float4(ambientLighting + directLighting + emission, 1.0);
     output.pixelColor *= 1.2;
+    if (false && isSelected)
+    {   
+        float tempD = max(0.0, dot(pixelToEye, normalWorld));
+        output.pixelColor += float4(0.02, 0.02, 0.02, 0.0);
+        if (tempD < 0.5)
+        {    
+            tempD *= (1.0 / 0.5);
+            tempD = 1.0 - tempD; 
+            // 0 ~ 0.2 
+            output.pixelColor += float4(0.5, 0.5, 0.5, 0.0) * tempD;
+            
+        }
+    }
+     
     output.indexColor = indexColor;
     
     

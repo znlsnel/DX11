@@ -255,37 +255,10 @@ void AppBase::RayCasting(Vector3 origin, Vector3 dir, float& dist) {
                        
                  if (r == false) 
                          dist = fDist;
-
-                 if (r) {
-                         cout << "succeeed \n";
-                 }
-                 else {
-                         cout << "failed  \n";
-                 }
-
-                cout << "vertexSize : "
-                      << int(m_groundPlane->m_BVHs[0][resultIndex]
-                            .worldVertexs.size())
-                 << "\n";
-
-                for (auto &s : m_cursorSphere)
-                         s->m_isVisible = false;
-
-                int size =
-                    m_groundPlane->m_BVHs[0][resultIndex].worldVertexs.size();
-                for (int i = 0; i < size; i++) {
-                         if (m_cursorSphere.size() <= i)
-                                break;
-
-                        m_cursorSphere[i]->m_isVisible = true;
-                         m_cursorSphere[i]->UpdatePosition(
-                             m_groundPlane->m_BVHs[0][resultIndex]
-                                 .worldVertexs[i]);
-                 }
        } 
 }
- 
-void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) { 
+
+void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist, Vector3 *faceNormal) { 
         float dv = 1024.f / 500.f * 0.5f;
         float a = 1024.f / 60.f;
         float rv = 60.f / 500.f * 0.5f;
@@ -344,11 +317,28 @@ void AppBase::SetHeightPosition(Vector3 origin, Vector3 dir, float &dist) {
 
          DirectX::SimpleMath::Ray ray = SimpleMath::Ray(origin, dir);
          bool result = ray.Intersects(downPosition, leftPosition, upPosition, dist);
-         if (result == false)
+         if (result){
+                 if (faceNormal != nullptr) {
+                         *faceNormal = (downPosition - upPosition)
+                                         .Cross(leftPosition - upPosition);
+                         faceNormal->Normalize();
+                 }
+         } 
+         if (result == false) {
                  result = 
                      ray.Intersects(downPosition, upPosition, rightPosition,
-                                         dist);
-}
+                                         dist);         
+                if (result) {
+                         if (faceNormal != nullptr) {
+                                *faceNormal =
+                                    (rightPosition - upPosition)
+                                        .Cross(downPosition - upPosition);
+                                faceNormal->Normalize();
+                         }
+                 }
+         } 
+         
+} 
 
 void AppBase::ObjectDrag() {
     if (m_pickedModel == nullptr || m_leftButton == false)
@@ -584,7 +574,7 @@ bool AppBase::Initialize() {
 
         // Plane   
     if (true) { 
-        string heightMapPath;
+        string heightMapPath; 
         bool hasHeightMap = false; 
          
         auto filePath = std::filesystem::current_path();
@@ -593,14 +583,14 @@ bool AppBase::Initialize() {
                                 hasHeightMap = true;
                                 heightMapPath = file.path().string();
                                 break;
-            }     
+            }      
         }     
         if (hasHeightMap) { 
             D3D11Utils::ReadImageFile(heightMapPath, heightMapImage);
         }  
-                
+                    
         Vector2 mapTexScale = Vector2(50.f, 50.f); 
-        int mapArea = 100;  
+        int mapArea = 50;  
         float mapScale = 30.f;
         auto mesh = GeometryGenerator::MakeTessellationPlane(
             mapArea, mapArea, mapScale, mapTexScale,
@@ -695,12 +685,12 @@ bool AppBase::InitScene() {
         shared_ptr<Model>cursorSphere =
             make_shared<Model>(m_device, m_context, vector{sphere});
         cursorSphere->m_isVisible = true; // 마우스가 눌렸을 때만 보임
-        cursorSphere->m_castShadow = false; // 그림자 X
+        cursorSphere->m_castShadow = true; // 그림자 X
         cursorSphere->m_materialConsts.GetCpu().albedoFactor = Vector3(0.0f);
         cursorSphere->m_materialConsts.GetCpu().emissionFactor =
             Vector3(1.0f, 0.0f, 0.0f);
-        
-        cursorSphere->UpdateScale(Vector3(30.f, 30.f, 30.f));
+          
+        cursorSphere->UpdateScale(Vector3(300.f, 300.f, 300.f));
         cursorSphere->isCursorShpere = true;
         m_cursorSphere.push_back(cursorSphere);
         
@@ -732,15 +722,6 @@ void AppBase::Update(float dt) {
 
         m_dt = dt;
         m_inputManager->Update(dt);
-          
-        for (auto sphere : m_cursorSphere) {
-                float length =
-            (sphere->GetPosition() - m_camera->GetPosition())
-                        .Length() * 5;
-                length = max(length, 5.0f);
-
-                sphere->UpdateScale(Vector3(length) * 2);
-        }
            
         static float frustumTimer = 0.0f;
         if (frustumTimer > 1.0f / 30.f) {
@@ -817,11 +798,11 @@ void AppBase::UpdateLights(float dt) {
     static float updateTimer = 0.0f;
     if (updateTimer > 0.0f) {
 
-        //Vector3 tempCamPos =
-        //    m_camera->m_objectTargetCameraMode == false || m_camera->GetTarget() == nullptr
-        //    ? RayCasting(false, 0.0f, -1.f)  
-        //        :  m_camera->GetTarget()->GetMesh()->GetPosition();
-        Vector3 tempCamPos = m_camera->GetTarget()->GetMesh()->GetPosition();
+        Vector3 tempCamPos =
+            m_camera->m_objectTargetCameraMode == false || m_camera->GetTarget() == nullptr
+            ? RayCasting(false, 0.0f, -1.0f)  
+                :  m_camera->GetTarget()->GetMesh()->GetPosition();
+       // Vector3 tempCamPos = m_camera->GetTarget()->GetMesh()->GetPosition();
 
         //Vector3 tempCamPos = m_camera->GetPosision();
          
@@ -1308,7 +1289,7 @@ void AppBase::GetObjectsInFrustum(bool isMirror) {
                         int leftID = m_BVNodes[index].leftChildID;
                         int rightID = m_BVNodes[index].rightChildID;
                         if (leftID < m_BVNodes.size())
-                                queue.push(
+                                queue.push( 
                                     make_pair(m_BVNodes[leftID], leftID));
                         if (rightID < m_BVNodes.size())
                                 queue.push(
@@ -2137,6 +2118,8 @@ void AppBase::replicateObject()
         temp.minMetallic = m_pickedModel->m_materialConsts.GetCpu().minMetallic;
         temp.minRoughness =
             m_pickedModel->m_materialConsts.GetCpu().minRoughness;
+        temp.meshName = m_pickedModel->objectInfo.meshName;
+        temp.meshID = m_pickedModel->objectInfo.meshID;
 
         m_JsonManager->CreateMesh(temp);
 }

@@ -180,7 +180,7 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                             fileName.string();
                                     else {
                                         temp->art = fileName.string();
-                                    
+                                        
                                     } 
                                     cout << "Found ART Texture"
                                          << fileName.string() << "\n";
@@ -234,7 +234,7 @@ void JsonManager::SearchQuicellModels(const filesystem::path &directory, int cou
                                                 *temp));        
                                 } 
                         }
-                }
+                } 
                  
         }
 }
@@ -285,10 +285,10 @@ void JsonManager::SearchModelFiles(const filesystem::path &directory) {
 
         }
 }
-
+ 
 
 void hlab::JsonManager::LoadMesh() {
-
+          
     FILE *fp = fopen("saveFile.json", "r");
     if (!fp) {
             // file load failed
@@ -311,14 +311,14 @@ void hlab::JsonManager::LoadMesh() {
                         const rapidjson::Value &path =
                                 object["filePath"].GetObj();
                         temp.meshName = path["object"].GetString();
-                        temp.meshPath = path["objectPath"].GetString();
-                        temp.previewPath =
-                                path["screenshotPath"].GetString();
-                } 
+                        //temp.meshPath = path["objectPath"].GetString();
+                        //temp.previewPath =
+                        //        path["screenshotPath"].GetString();
+                }  
                 if (temp.meshID <= -2 ) {
                         const rapidjson::Value &path =
                             object["filePath"].GetObj();
-                        temp.quicellPath = path["quicellPath"].GetString();
+                        temp.quixelPath = path["quixelPath"].GetString();
                         temp.quixelID = path["quixelID"].GetInt();
                 }
                  
@@ -385,7 +385,7 @@ void hlab::JsonManager::SaveMesh() {
             const char* name = meshInfo.meshName.c_str();
             const char* meshPath = meshInfo.meshPath.c_str();
             const char* previewPath = meshInfo.previewPath.c_str();
-            const char *quicellPath = meshInfo.quicellPath.c_str();
+            const char *quicellPath = meshInfo.quixelPath.c_str();
 
         rapidjson:Value filePath(kObjectType); 
          //       cout << "meshName : "  << name << endl;
@@ -394,15 +394,15 @@ void hlab::JsonManager::SaveMesh() {
                 filePath.AddMember("object",
                                    rapidjson::Value().SetString(name, allocator), 
                                 allocator) ;
-                filePath.AddMember(
-                    "objectPath",
-                    rapidjson::Value().SetString(meshPath, allocator),
-                                allocator);
-                filePath.AddMember("screenshotPath",
-                    rapidjson::Value().SetString(previewPath, allocator),
-                                allocator);
-                filePath.AddMember(
-                    "quicellPath",
+                //filePath.AddMember(
+                //    "objectPath",
+                //    rapidjson::Value().SetString(meshPath, allocator),
+                //                allocator);
+                //filePath.AddMember("screenshotPath",
+                //    rapidjson::Value().SetString(previewPath, allocator),
+                //                allocator);
+                filePath.AddMember( 
+                    "quixelPath",
                     rapidjson::Value().SetString(quicellPath, allocator),
                     allocator);
                 filePath.AddMember(
@@ -522,20 +522,20 @@ shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
             case meshID::EQuicellPath:  
             {
                 tempMesh = CreateQuicellModel(temp);
-                auto it = quicellPaths.find(temp.quicellPath);
+                auto it = quicellPaths.find(temp.quixelPath);
                 if (it != quicellPaths.end()) {
                         tempMesh->objectInfo.meshName =   it->second.mesh[temp.quixelID];  
-                        tempMesh->objectInfo.quicellPath = it->first;
+                        tempMesh->objectInfo.quixelPath = it->first;
                 }
             } 
                 break; 
             case meshID::EQuicellFoliage: {
                 tempMesh = CreateQuicellFoliageModel(temp);
-                auto it = quicellPaths.find(temp.quicellPath);
+                auto it = quicellPaths.find(temp.quixelPath);
                 if (it != quicellPaths.end()) {
                         tempMesh->objectInfo.meshName =
                             it->second.mesh[temp.quixelID];
-                        tempMesh->objectInfo.quicellPath = it->first; 
+                        tempMesh->objectInfo.quixelPath = it->first; 
                         tempMesh->objectInfo.isFolige = true;
                         tempMesh->objectInfo.foliageDensity = temp.foliageDensity;
                         tempMesh->objectInfo.foliageRange = temp.foliageRange;
@@ -547,6 +547,8 @@ shared_ptr<Model> hlab::JsonManager::CreateMesh(ObjectSaveInfo temp) {
             {
                 tempMesh = CreateTree(temp);
                 tempMesh->objectInfo.meshName = "Tree";
+                tempMesh->m_useLod = true;
+                tempMesh->m_maxLod = 2;
             }
                 break;
             case meshID::EBillboardTree:
@@ -604,7 +606,7 @@ shared_ptr<class Model> JsonManager::CreateModel(ObjectSaveInfo info) {
 shared_ptr<class Model> 
 JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
          
-    QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
+    QuicellMeshPathInfo *temp = &quicellPaths.find(info.quixelPath)->second;
     vector<MeshData> *meshes = new vector<MeshData>();
 
      
@@ -612,7 +614,7 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
            meshes = &temp->meshs[info.quixelID];
     } 
     else { 
-           *meshes = GeometryGenerator::ReadFromFile(info.quicellPath + "\\",
+           *meshes = GeometryGenerator::ReadFromFile(info.quixelPath + "\\",
                                                     temp->mesh[info.quixelID],
                                                     false, false);
 
@@ -625,23 +627,23 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     }
     
             (*meshes)[0].albedoTextureFilename =
-               temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+               temp->Diffuse == "" ? "" : info.quixelPath + temp->Diffuse;
 
            (*meshes)[0].normalTextureFilename =
-               temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
+               temp->Normal == "" ? "" : info.quixelPath + temp->Normal;
 
            (*meshes)[0].heightTextureFilename =
                temp->Displacement == "" ? ""
-                                        : info.quicellPath + temp->Displacement;
+                                        : info.quixelPath + temp->Displacement;
              
            (*meshes)[0].aoTextureFilename =
-               temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
+               temp->Occlusion == "" ? "" : info.quixelPath + temp->Occlusion;
 
            (*meshes)[0].roughnessTextureFilename =
-               temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
+               temp->Roughness == "" ? "" : info.quixelPath + temp->Roughness;
 
            (*meshes)[0].metallicTextureFilename =
-               temp->metallic == "" ? "" : info.quicellPath + temp->metallic;
+               temp->metallic == "" ? "" : info.quixelPath + temp->metallic;
 
     shared_ptr<Model> tempModel = make_shared<Model>(
                m_appBase->m_device, m_appBase->m_context, *meshes, m_appBase);
@@ -652,14 +654,17 @@ JsonManager::CreateQuicellModel(ObjectSaveInfo info) {
     tempModel->m_drawBackFace = true; 
     tempModel->m_materialConsts.GetCpu().invertNormalMapY = true;
     tempModel->m_materialConsts.GetCpu().useMetallicMap = true;
-     
+    if (temp->art != "") {
+           //tempModel->m_meshConsts.GetCpu().useARTTexture = true; 
+    }
+      
     return tempModel;
 
 }
 
 shared_ptr<class Model>
-JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
-    QuicellMeshPathInfo *temp = &quicellPaths.find(info.quicellPath)->second;
+JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo& info) {
+    QuicellMeshPathInfo *temp = &quicellPaths.find(info.quixelPath)->second;
     vector<MeshData> *meshes = new vector<MeshData>();
     vector<int> mesheStartID;
     info.scale = Vector3(0.4f, 0.4f, 0.4f); 
@@ -683,6 +688,7 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                     
             Vector2 pos; 
             Vector3 GenPos = Vector3(pos.x, 0.0f, pos.y);
+            Quaternion rotateQ;
             {  
                     do { 
                         const float posX = randRange(gen);
@@ -691,13 +697,22 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                         pos = Vector2(posX, posY);
 
                     } while (pos.Length() > range); 
-       
+        
+                    Vector3 faceNormal;
                     float dist = 0.0f;
                     m_appBase->SetHeightPosition(
                         info.position + Vector3(pos.x, 3.0f, pos.y),
-                                                 Vector3(0.0f, -1.0f, 0.0f), dist);
+                        Vector3(0.0f, -1.0f, 0.0f), dist, &faceNormal);
                     Vector3 resultPos =
                         info.position + Vector3(pos.x, 3.0f - dist, pos.y);
+
+                    
+                    faceNormal =
+                        Vector3(faceNormal.x, faceNormal.z, faceNormal.y);
+                    Vector3 axis = faceNormal.Cross(Vector3(0.0f, 1.0f, 0.0));
+                    float theta = faceNormal.Dot(Vector3(0.0f, 1.0f, 0.0f));
+                    rotateQ =
+                        Quaternion::CreateFromAxisAngle(axis, theta);
 
 
                     Vector3 dir = resultPos - info.position;
@@ -707,6 +722,9 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                     else
                         GenPos = Vector3(pos.x,pos.y , 0.0f);    
                     GenPos *= 1.0f / info.scale.x;
+
+                     
+
            //         cout << "GenPos.Y : " << GenPos.z << "\n";
             } 
 
@@ -714,17 +732,29 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                    vector<MeshData> &tempMD = temp->meshs[quixelNum];
                     for (int id = 0; id < tempMD.size(); id++) {
                         for (auto &vtx : tempMD[id].vertices) { 
-                                 vtx.position =  (vtx.position - temp->yOffset[quixelNum]) + GenPos; 
+                               Vector3 tPos =
+                                            (vtx.position -
+                                             temp->yOffset[quixelNum]);
+
+                               //Quaternion inversQ = temp->rOffset[quixelNum];
+                               //inversQ.Conjugate();
+                               //        
+                               // tPos = Vector3::Transform(tPos, inversQ);
+                               // tPos =  Vector3::Transform(tPos, rotateQ);
+                                  
+                                 vtx.position = tPos +GenPos;
+
                         }   
-                    }     
+                    }      
                     temp->yOffset[quixelNum] = GenPos;
+         
 
                    mesheStartID.push_back(meshes->size());
                    meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
             }  
             else { 
                    vector<MeshData> tempMD = GeometryGenerator::ReadFromFile(
-                       info.quicellPath + "\\", temp->mesh[quixelNum], false, false);
+                       info.quixelPath + "\\", temp->mesh[quixelNum], false, false);
 
                         Vector3 minCorner(1000.f); 
                         Vector3 maxCorner(-1000.f);
@@ -744,57 +774,64 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
                          
                         for (int id = 0; id < tempMD.size(); id++) {
                                  for (auto &vtx : tempMD[id].vertices) {
-                                        vtx.position += Vector3(0.0f, 0.0f, tempOffset);
+                                        Vector3 temp =
+                                            Vector3(0.0f, 0.0f, tempOffset);
+                                        //temp = Vector3::Transform(temp, rotateQ);
+
+                                        vtx.position += temp;
+                                        ;
                                  }
                         }   
                          
                          
                    mesheStartID.push_back(meshes->size());
                    meshes->insert(meshes->end(), tempMD.begin(), tempMD.end());
-            
+             
                    if (temp->hasMeshs.size() == 0) {
                          temp->meshs.resize(temp->mesh.size());
                          temp->hasMeshs.resize(temp->mesh.size());
                          temp->yOffset.resize(temp->mesh.size());
+                         temp->rOffset.resize(temp->mesh.size());
                    }  
                    temp->meshs[quixelNum] = tempMD;
                    temp->hasMeshs[quixelNum] = true;
                    temp->yOffset[quixelNum] = GenPos;
+
             } 
     }  
         
     for (int i : mesheStartID) { 
                 (*meshes)[i].albedoTextureFilename =
-                temp->Diffuse == "" ? "" : info.quicellPath + temp->Diffuse;
+                temp->Diffuse == "" ? "" : info.quixelPath + temp->Diffuse;
 
                 (*meshes)[i].normalTextureFilename =
-                temp->Normal == "" ? "" : info.quicellPath + temp->Normal;
+                temp->Normal == "" ? "" : info.quixelPath + temp->Normal;
 
                 (*meshes)[i].heightTextureFilename =
-                temp->Displacement == "" ? "" : info.quicellPath + temp->Displacement;
+                temp->Displacement == "" ? "" : info.quixelPath + temp->Displacement;
 
                 (*meshes)[i].aoTextureFilename = 
-                temp->Occlusion == "" ? "" : info.quicellPath + temp->Occlusion;
+                temp->Occlusion == "" ? "" : info.quixelPath + temp->Occlusion;
                 
                 (*meshes)[i].roughnessTextureFilename =
-                temp->Roughness == "" ? "" : info.quicellPath + temp->Roughness;
+                temp->Roughness == "" ? "" : info.quixelPath + temp->Roughness;
                   
                 (*meshes)[i].metallicTextureFilename =
-                temp->metallic == "" ? "" : info.quicellPath + temp->metallic;    
+                temp->metallic == "" ? "" : info.quixelPath + temp->metallic;    
 
                 (*meshes)[i].artTextureFilename =
-                    temp->art == "" ? "" : info.quicellPath + temp->art;    
+                    temp->art == "" ? "" : info.quixelPath + temp->art;    
                   
                 (*meshes)[i].billboardARTTextureFilename = 
-                    temp->billboardArt == "" ? "" : info.quicellPath + temp->billboardArt;    
+                    temp->billboardArt == "" ? "" : info.quixelPath + temp->billboardArt;    
 
                 (*meshes)[i].billboardDiffuseTextureFilename =
-                    temp->billboardDiffuse == "" ? ""  : info.quicellPath + temp->billboardDiffuse;    
+                    temp->billboardDiffuse == "" ? ""  : info.quixelPath + temp->billboardDiffuse;    
                  
                 (*meshes)[i].billboardNormalTextureFilename =
-                    temp->billboardNormal == "" ? "" : info.quicellPath + temp->billboardNormal;    
-    }  
-       
+                    temp->billboardNormal == "" ? "" : info.quixelPath + temp->billboardNormal;    
+    }   
+        
     shared_ptr<FoliageModel> tempModel =
         make_shared<FoliageModel>(m_appBase->m_device, m_appBase->m_context, *meshes, m_appBase, mesheStartID);
     tempModel->objectInfo.quixelID = info.quixelID;
@@ -804,7 +841,10 @@ JsonManager::CreateQuicellFoliageModel(ObjectSaveInfo info) {
     tempModel->m_drawBackFace = true;
     tempModel->m_materialConsts.GetCpu().invertNormalMapY = true;
     tempModel->m_materialConsts.GetCpu().useMetallicMap = true;
-
+    //info.minMetallic = 0.85f; 
+    info.minMetallic =0.84f;
+    info.minRoughness = 0.84f;
+    
     return tempModel;
 }
 
@@ -816,7 +856,7 @@ std::shared_ptr<class Model> JsonManager::CreateCharacter(ObjectSaveInfo info) {
             "ch80_Standard Run.fbx", 
             "ch80_Running Backward.fbx", 
             "ch80_Jumping_Up.fbx",
-            "ch80_Jumping_Down.fbx",
+            "ch80_Jumping_Down.fbx", 
             "ch80_Falling Idle.fbx", 
             "ch80_Left Turn.fbx",
             "ch80_Right Turn.fbx",
@@ -959,10 +999,10 @@ shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
         path, "Gledista_Triacanthos_3.fbx", false);
 
     Vector3 center(0.0f, 0.0f, 2.0f);
-
+     
     shared_ptr<Model> m_leaves =
         make_shared<Model>(m_appBase->m_device, m_appBase->m_context,
-                                             vector{meshes[2], meshes[3]});
+                           vector{meshes[2], meshes[3]}, m_appBase);
     m_leaves->m_meshConsts.GetCpu().windTrunk = 0.1f;
     m_leaves->m_meshConsts.GetCpu().windLeaves = 0.01f;
     m_leaves->m_materialConsts.GetCpu().albedoFactor = Vector3(0.3f);
@@ -970,11 +1010,10 @@ shared_ptr<class Model> JsonManager::CreateTree(ObjectSaveInfo info) {
     m_leaves->m_materialConsts.GetCpu().metallicFactor = 0.2f;
      m_leaves->UpdateTranseform(info.scale, info.rotation, info.position      );
 
-   m_appBase->m_basicList.push_back(m_leaves); // 리스트에 등록
-
+    m_appBase->m_basicList.push_back(m_leaves); // 리스트에 등록
+    
     shared_ptr<Model>m_trunk = make_shared<Model>(m_appBase->m_device, m_appBase->m_context,
-        vector{meshes[0], meshes[1],
-               meshes[4]}); // Trunk and branches (4 is trunk)
+    vector{meshes[0], meshes[1], meshes[4]}, m_appBase);
     m_trunk->m_meshConsts.GetCpu().windTrunk = 0.1f;
     m_trunk->m_meshConsts.GetCpu().windLeaves = 0.0f;
     m_trunk->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);

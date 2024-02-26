@@ -26,7 +26,7 @@ __declspec(align(256)) struct MeshConstants {
     Matrix world;
     Matrix worldIT;
     Matrix worldInv;
-
+     
     //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
     //Vector4 indexColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
     float indexColor[4] = {0.0f, 0.0f, 0.0f, 0.7865f};
@@ -36,7 +36,9 @@ __declspec(align(256)) struct MeshConstants {
     float heightScale = 0.0f; 
     float windTrunk = 0.0f;
     float windLeaves = 0.0f;
+
     int useARTTexture = 0;
+    int useFoliageAnim = 0;
 };
 
 // 주로 Pixel 쉐이더에서 사용

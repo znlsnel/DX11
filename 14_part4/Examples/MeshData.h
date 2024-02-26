@@ -12,7 +12,7 @@ using std::vector;
  struct ObjectSaveInfo {
 
     int meshID = 0;
-
+     
     Vector3 scale{1.f};
     Vector3 position{0.f};
     Vector3 rotation{0.f};
@@ -20,7 +20,7 @@ using std::vector;
     string meshName = "";
     string meshPath = "";
     string previewPath = "";
-    string quicellPath = "";
+    string quixelPath = "";
     int objectID;
     int quixelID = 0;
      

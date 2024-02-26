@@ -215,15 +215,21 @@ float2(-0.8470120123194587, 0.48548496473788055), float2(0.29904134279525085, -0
 float2(0.41623562331748715, 0.9006236205438447),
         };
         
-        [unroll]
-        for (int i = 0; i < 64; i++)
-        {
-         //   int index = int(16.0 * random(posWorld.xyz, i)) % 16u;
-            percentLit +=shadowMap.
-            SampleCmpLevelZero(shadowCompareSampler, lightTexcoord.xy + (offsets[i] * dx), lightScreen.z - 0.001).r;
-        }
-        shadowFactor = percentLit / 64.0;
+        //[unroll]
+        //for (int i = 0; i < 64; i++)
+        //{
+        // //   int index = int(16.0 * random(posWorld.xyz, i)) % 16u;
+        //    percentLit +=shadowMap.
+        //    SampleCmpLevelZero(shadowCompareSampler, lightTexcoord.xy + (offsets[i] * dx), lightScreen.z - 0.001).r;
+        //}
+        //shadowFactor = percentLit / 64.0;
 
+
+         //   int index = int(16.0 * random(posWorld.xyz, i)) % 16u;
+            percentLit += shadowMap.
+            SampleCmpLevelZero(shadowCompareSampler, lightTexcoord.xy, lightScreen.z - 0.001).r;
+        
+        shadowFactor = percentLit;
     }
 
     float3 radiance = light.radiance * spotFator * att * shadowFactor;

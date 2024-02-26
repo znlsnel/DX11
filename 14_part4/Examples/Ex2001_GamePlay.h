@@ -39,7 +39,7 @@ class Ex2001_GamePlay : public AppBase {
         }
         PX_RELEASE(gFoundation);
     }
-
+    
     virtual bool Initialize()override;
     bool InitScene() override;
 
@@ -48,19 +48,19 @@ class Ex2001_GamePlay : public AppBase {
                                   const PxVec3 &velocity = PxVec3(0));
     void CreateStack(const PxTransform &t, int numStacks, int numSlices,
                      PxReal halfExtent);
-    void InitPhysics(bool interactive);
+    void InitPhysics(bool interactive); 
 
     void UpdateLights(float dt) override;
     void UpdateGUI() override;
-    void Update(float dt) override;
-
+    void Update(float dt) override; 
+     
     void Render() override;
     void InitAudio();
-
+     
     double GetTimeSeconds() { return timeSeconds; };
-
+     
   public:
-    float m_simToRenderScale = 0.01f; // 시뮬레이션 물체가 너무 작으면 불안정
+    float m_simToRenderScale = 0.01f; // 시뮬레이션 물체가 너무 작으면 불안정 
 
     PxDefaultAllocator gAllocator;
     PxDefaultErrorCallback gErrorCallback;

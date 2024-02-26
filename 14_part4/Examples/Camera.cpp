@@ -34,21 +34,22 @@ Matrix Camera::GetCharacterViewRow() {
            Matrix::CreateRotationY(-GetTarget()->GetMesh()->GetRotation().y + 3.141592) *
            Matrix::CreateRotationX(-GetTarget()->GetMesh()->GetRotation().x);
            Matrix::CreateRotationZ(-GetTarget()->GetMesh()->GetRotation().z);
-} 
-
+}          
+             
 Vector3 Camera::GetEyePos() { return m_position; }
 Vector3 Camera::GetCameraPosition() { 
-        if (/*GetTarget() == nullptr || */m_UsingCharacterView == false) {
-               return GetPosition();   
-        }
+        if (GetTarget() == nullptr || m_UsingCharacterView == false) {
+               return GetPosition();    
+        }  
         return GetTarget()->GetMesh()->GetPosition();
-                   
-} 
-void Camera::UpdatePos() {  
+                             
+}      
+void Camera::UpdatePos() {   
 
         if (m_target != nullptr && m_objectTargetCameraMode) {
                 Vector3 tempPos = m_target->GetMesh()->m_worldRow.Translation();
-               tempPos += Vector3(0.0f, 0.1f, 0.0f);
+               tempPos += Vector3(0.f, 0.1f, 0.0f); 
+               tempPos -= -m_rightDir * 0.1f; 
                 tempPos += -GetForwardVector() * cameraDistance;
                 SetLocation(tempPos);
         } 
@@ -173,7 +174,7 @@ void Camera::PrintView() {
 Vector3 Camera::NdcToWorld(Vector3 ndc) { 
 
 
-
+         
         Matrix viewRow = GetViewRow();
 
         if (m_UsingCharacterView && GetTarget() != nullptr)

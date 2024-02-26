@@ -45,7 +45,7 @@ bool Ex2001_GamePlay::Initialize() {
                 const float randYaw = randRot(gen); 
                  
                ObjectSaveInfo tempInfo;
-               tempInfo.quicellPath = "C:\\DEVELOPMENT\\GIT\\DX11_"
+               tempInfo.quixelPath = "C:\\DEVELOPMENT\\GIT\\DX11_"
                                       "HongLab\\Assets\\Quicells\\q49\\";
                tempInfo.meshID = -2;
                tempInfo.rotation =
@@ -683,7 +683,7 @@ void Ex2001_GamePlay::UpdateGUI() {
                         flag += ImGui::CheckboxFlags(
                             "Use AO",
                             &m_pickedModel->m_materialConsts.GetCpu().useAOMap,
-                            1);
+                            1); 
                         flag += ImGui::CheckboxFlags(
                             "Use HeightMapping",
                             &m_pickedModel->m_meshConsts.GetCpu().useHeightMap,
@@ -811,22 +811,22 @@ void Ex2001_GamePlay::UpdateGUI() {
                                            ImVec2(100, 100))) {
 
                         temp.meshID = -2;  
-                        temp.quicellPath = object.first;
+                        temp.quixelPath = object.first;
                         temp.rotation =
                             Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
                         temp.minMetallic = 0.5f;
                         temp.minRoughness = 1.0f;
-                        temp.position = RayCasting(0.0f, 0.0f);
-
+                        temp.position = RayCasting(false, 0.0f, 0.0f);
+                         
                         float dist = 0.0f;
-                        SetHeightPosition(temp.position +
+      /*                  SetHeightPosition(temp.position +
                                               Vector3(0.0f, 5.0f, 0.0f),
                                           Vector3(0.0f, -1.0f, 0.0f), dist);
                         if (dist > 0.0f)
                             temp.position = temp.position +
                                             Vector3(0.0f, 5.0f, 0.0f) +
                                             Vector3(0.0f, -1.0f, 0.0f) * dist;
-                           
+                           */
                         shared_ptr<Model> tempModel =
                             m_JsonManager->CreateMesh(temp);
                          
@@ -867,7 +867,7 @@ void Ex2001_GamePlay::UpdateGUI() {
                         temp.foliageRange = createRange; 
                         temp.foliageDensity = createDensity;
                         temp.meshID = -3; 
-                        temp.quicellPath = object.first;
+                        temp.quixelPath = object.first;
                         temp.rotation =
                             Vector3(3.141592f * 90.f / 180.f, 0.0f, 0.0f);
                         temp.minMetallic = 0.5f;

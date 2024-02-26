@@ -42,10 +42,10 @@ struct BVNode {
     int leftChildID = -1;
     int rightChildID = -1; 
     BoundingBox boundingBox;
-     
+      
 };
-
-
+ 
+ 
 enum EMouseMode : int {
         MouseModeNone = 0,
         ObjectPickingMode = 1,
@@ -57,13 +57,13 @@ enum EEditTextureType : int {
         Ground = 0,
         RiverBed = 1,
         PavingStones = 2,
-        Rock = 3,
+        Rock = 3, 
 };
- 
+  
 class AppBase {
   public:
     struct MyFrustum {
-        public:
+        public: 
                 MyFrustum(){};
           float Distance(Vector3 planePoint, Vector3 normal,
                                Vector3 point) {
@@ -77,12 +77,12 @@ class AppBase {
                     Vector3 frontRightTop;
                     Vector3 frontLeftBottom;
                     Vector3 frontRightBottom;
-
+                            
                     Vector3 backLeftTop;
                     Vector3 backRightTop;
                     Vector3 backLeftBottom;
                     Vector3 backRightBottom;
-
+                       
                     if (true || isMirror == false) {
                             frontLeftTop =
                                 camera->NdcToWorld(Vector3(-1.0f, 1.0f, 0.0f));
@@ -109,10 +109,10 @@ class AppBase {
                             Vector3 mirrorNormal = Vector3::Transform(
                                 Vector3(0.0f, 0.0f, -1.0f), tempMtx);
                             mirrorNormal.Normalize(); 
-
+                             
                             Vector3 cameraPos =
                                 appBase->m_camera->GetCameraPosition();
-                             
+                               
                             //Vector3 reflectCameraPos = Vector3::Transform(
                             //    cameraPos, appBase->m_reflectRow);
                             Vector3 reflectCameraPos = cameraPos;
@@ -122,7 +122,7 @@ class AppBase {
                                 tempMtx);
                             Vector3 mirrorPos =
                                 appBase->m_mirror->GetPosition();
-                             
+                               
                             frontLeftTop = mirrorPos + Vector3(-mirrorExtents.x,
                                                                mirrorExtents.y,
                                                                mirrorExtents.z);
@@ -254,7 +254,7 @@ class AppBase {
   public:
     AppBase();
     virtual ~AppBase();  
-
+     
     int Run();
     float GetAspectRatio() const;
 
@@ -280,7 +280,8 @@ class AppBase {
     void SetPipelineState(const GraphicsPSO &pso);
     void SetPipelineState(const ComputePSO &pso);
     void SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU);
-    virtual void SetHeightPosition(Vector3 origin, Vector3 dir, float &dist);
+    virtual void SetHeightPosition(Vector3 origin, Vector3 dir, float &dist,
+                                   Vector3 *faceNormal = nullptr);
     void SetMainViewport();
     void SetShadowViewport(); 
 
@@ -379,41 +380,41 @@ class AppBase {
     ComPtr<ID3D11ShaderResourceView> m_postEffectsSRV;
     ComPtr<ID3D11ShaderResourceView> m_prevSRV;
     ComPtr<ID3D11ShaderResourceView> m_billboardTreeSRV;
-
-    Matrix tempRotation;
-
+     
+    Matrix tempRotation; 
+     
     // Depth buffer 관련
     ComPtr<ID3D11Texture2D> m_depthOnlyBuffer; // No MSAA
     ComPtr<ID3D11DepthStencilView> m_depthOnlyDSV;
     ComPtr<ID3D11DepthStencilView> m_defaultDSV;
     ComPtr<ID3D11ShaderResourceView> m_depthOnlySRV;
-
+       
     // Shadow maps
     int m_shadowWidth = 1280;
     int m_shadowHeight = 1280;
-
+       
     ComPtr<ID3D11Texture2D> m_shadowBuffers[MAX_LIGHTS]; // No MSAA
     ComPtr<ID3D11Texture2D> m_overallShadowBuffer; // No MSAA
     ComPtr<ID3D11DepthStencilView> m_shadowDSVs[MAX_LIGHTS];
     ComPtr<ID3D11DepthStencilView> m_overallShadowDSV;
     ComPtr<ID3D11ShaderResourceView> m_shadowSRVs[MAX_LIGHTS];
     ComPtr<ID3D11ShaderResourceView> m_overallShadowSRV;
-
+        
     D3D11_VIEWPORT m_screenViewport;
-
+     
     // 시점을 결정하는 카메라 클래스 추가
     shared_ptr<Camera> m_camera;
     bool m_keyPressed[256] = {
-        false,
-    };
-
+        false, 
+    };  
+      
         float m_keyPressedTime[256] = {
         0.0f,
     };
 
     bool m_keyToggle[256] = {
         false,
-    };
+    }; 
 
     bool m_leftButton = false;
     bool m_rightButton = false;
@@ -423,7 +424,7 @@ class AppBase {
     // 마우스 커서 위치 저장 (Picking에 사용)
     float m_mouseNdcX = 0.0f;
     float m_mouseNdcY = 0.0f;
-    int m_mouseX = -1;
+    int m_mouseX = -1; 
     int m_mouseY = -1;
     int m_preMouse[2] = {0, 0};
     float cameraDistance_min = 0.3f;
@@ -471,7 +472,7 @@ class AppBase {
             Vector3(7.0f, -7.0f, 20.f),  
             Vector3(10.0f, -10.0f, 120.f),  
     };   
-         
+          
     // 여러 예제들 공용     
     shared_ptr<Model> m_screenSquare; // PostEffect에 사용   
     shared_ptr<Model> m_skybox;
@@ -489,10 +490,10 @@ class AppBase {
 
     DirectX::SimpleMath::Plane m_mirrorPlane; 
     float m_mirrorAlpha = 1.0f; // Opacity
-     
+       
     EMouseMode m_mouseMode = EMouseMode::ObjectPickingMode;
-    EEditTextureType m_textureType = EEditTextureType::EditTextureTypeNone;
-
+    EEditTextureType m_textureType = EEditTextureType::EditTextureTypeNone; 
+           
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
     map<int, shared_ptr<Model>> m_objects;
     vector<shared_ptr<Model>> m_basicList;
@@ -500,11 +501,11 @@ class AppBase {
     vector<shared_ptr<Model>> m_foundModelList;
     vector<shared_ptr<Model>> m_foundReflectModelList;
     vector<shared_ptr<class Character>> m_characters;
-     
+       
     shared_ptr<class JsonManager> m_JsonManager;
     map < string, tuple<ComPtr<ID3D11Texture2D>,
             ComPtr<ID3D11ShaderResourceView>>> m_textureStorage; 
     map<string, shared_ptr<Mesh>> m_meshSrotage;
 };  
-
-} // namespace hlab
+ 
+} // namespace hlab 

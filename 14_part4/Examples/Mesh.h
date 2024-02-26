@@ -13,14 +13,14 @@
 #include "Texture3D.h"
 
 namespace hlab {
-
+         
 using Microsoft::WRL::ComPtr;
 
 struct Mesh {
 
-	public:
+    public:
     Mesh(){};
-      Mesh(Mesh *otherMesh) {  
+    Mesh(Mesh *otherMesh) {  
 		*this = *otherMesh; 
       }
     void SetLod(int level) {

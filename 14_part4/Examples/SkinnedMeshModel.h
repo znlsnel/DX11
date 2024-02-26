@@ -51,15 +51,23 @@ class SkinnedMeshModel : public Model {
         };
 
         void GetCurrFramePos(vector<Matrix>& posMat, float dt, bool useBlendFrame = false) {
-
             float *tempFrame = &frame;
-                if (useBlendFrame)
+                if (useBlendFrame) 
                 tempFrame = &blendFrame;
 
-
+                   
+                int FrameIterval = 1;
                 int currFrame = (int)*tempFrame; 
-            int nextFrame = std::min(currFrame + 1, endFrame);
-                float lerpValue = (float)*tempFrame - currFrame;
+                currFrame /= FrameIterval; 
+                currFrame *= FrameIterval;
+                  
+                    
+            int nextFrame = std::min(currFrame + FrameIterval, endFrame);
+             //   float lerpValue = (float)*tempFrame - currFrame; 
+            float lerpValue = (*tempFrame - currFrame )/ (float)FrameIterval;
+           // 6.123
+            // 4 , 2.123 / 4 
+                   //cout << "lerpValue :" << lerpValue << "\n"; 
 
             aniData->Update(clipId, currFrame);
             for (int i = 0; i < posMat.size(); i++) {

@@ -66,7 +66,7 @@ cbuffer GlobalConstants : register(b0)
     Matrix reflectWorld;
 
 
-    float3 eyeWorld;
+    float3 eyeWorld; 
     float strengthIBL;
 
     int textureToDraw = 0; // 0: Env, 1: Specular, 2: Irradiance, 그외: 검은색
@@ -79,7 +79,7 @@ cbuffer GlobalConstants : register(b0)
     float3 cameraWorld; 
     float directionalLightPow = 1.0f; 
 };
-
+ 
 cbuffer MeshConstants : register(b1)
 {
     matrix world; // Model(또는 Object) 좌표계 -> World로 변환
@@ -92,7 +92,10 @@ cbuffer MeshConstants : register(b1)
     float heightScale;
     float windTrunk;
     float windLeaves;
+
     int useARTTexture; 
+    int useFoliageAnim;
+     
 };
 
 cbuffer MaterialConstants : register(b2)
@@ -104,14 +107,15 @@ cbuffer MaterialConstants : register(b2)
     
     float minMetallic;
     float minRoughness;
-    
     int useAlbedoMap;
     int useNormalMap;
+    
     int useAOMap; // Ambient Occlusion
     int invertNormalMapY;
     int useMetallicMap;
     int useRoughnessMap;
     int useEmissiveMap; 
+    
     int isSelected;
 };
 

@@ -8,19 +8,23 @@
 
 
 void hlab::InputManager::Update(float dt) 
-{ 
+{  
     static float rayTime = 0.0f;
     if (usingRayCasting && rayTime > 1.0f / 60.f){
-        if (m_appBase->m_mouseMode == EMouseMode::TextureMapEditMode)
-                m_appBase->RayCasting(true); 
+        m_appBase->m_cursorSphere[0]->m_isVisible = true;
+        if (m_appBase->m_mouseMode == EMouseMode::TextureMapEditMode) {
+                Vector3 tempPos = m_appBase->RayCasting(true); 
+ /*               m_appBase->m_cursorSphere[0]->UpdatePosition(tempPos); */
+         
+        } 
 
         rayTime = 0.0f;        
-
+         
 
     } 
-    else if (usingRayCasting == false){
-                m_appBase->m_cursorSphere[0]->m_isVisible = false;
-    }  
+    //else if (usingRayCasting == false){
+    //            m_appBase->m_cursorSphere[0]->m_isVisible = false;
+    //}  
         rayTime += dt; 
 
         if (m_appBase->m_leftButton)

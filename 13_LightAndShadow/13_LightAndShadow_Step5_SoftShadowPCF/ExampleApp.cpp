@@ -88,7 +88,7 @@ bool ExampleApp::Initialize() {
         m_mainObj->m_materialConstsCPU.invertNormalMapY = true; // GLTF는 true로
         m_mainObj->m_materialConstsCPU.albedoFactor = Vector3(1.0f);
         m_mainObj->m_materialConstsCPU.roughnessFactor = 0.3f;
-        m_mainObj->m_materialConstsCPU.metallicFactor = 0.8f;
+        m_mainObj->m_materialConstsCPU.metallicFactor = 0.8f; 
         m_mainObj->UpdateWorldRow(Matrix::CreateTranslation(center));
 
         m_basicList.push_back(m_mainObj); // 리스트에 등록

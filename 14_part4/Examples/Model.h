@@ -119,7 +119,7 @@ class Model {
                                  int currClipId, int nextClipId, int frame);
 
     virtual void RenderNormals(ComPtr<ID3D11DeviceContext> &context);
-    virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
+    virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context); 
     virtual void RenderBVH(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);
     
@@ -221,7 +221,8 @@ class Model {
     int m_lodCount = 0;
      int m_BVHMaxLevel = 0;
     int maxRenderingBVHLevel = 0; 
-       
+    int m_currLod = 0;   
+
     vector<shared_ptr<Mesh>> m_meshes;
 
     ConstantBuffer<MeshConstants> m_meshConsts;
@@ -230,6 +231,7 @@ class Model {
     DirectX::BoundingSphere m_boundingSphere;
     vector<vector<BoundingCollision>> m_BVHs;
     ERenderState renderState = ERenderState::basic; 
+    Model* parentModel;
     //                        [0]
     //          [1]                        [2]
     //    [3]       [4]           [5]           [6]

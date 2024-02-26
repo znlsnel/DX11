@@ -79,27 +79,28 @@ struct AnimationData {
 
             // keys.size()가 0일 경우에는 Identity 변환
             auto key = keys.size() > 0
-                           ? keys[frame % keys.size()]
+                           ? keys[frame % keys.size()] 
                            : AnimationClip::Key(); // key가 reference 아님
-
+              
             // Root일 경우
             if (parentIdx < 0) 
             {
                 if (frame != 0) 
                 {
                         accumulatedRootTransform =
-                        Matrix::CreateTranslation(key.pos - prevPos)
-                        *  accumulatedRootTransform;
-                }  
+                        Matrix::CreateTranslation(key.pos - prevPos) * accumulatedRootTransform; 
+                            /*                    accumulatedRootTransform = */
+                        //Matrix::CreateTranslation(Vector3(0.0f)) * accumulatedRootTransform; 
+                }   
                 else 
                 {
                         auto temp = accumulatedRootTransform.Translation();
-                        temp.y = key.pos.y; // 높이 방향만 첫 프레임으로 보정
+                      //  temp.y = key.pos.y; // 높이 방향만 첫 프레임으로 보정
                         accumulatedRootTransform.Translation(key.pos);
                 }
-                  
+                    
                 prevPos = key.pos;
-                key.pos = Vector3(0.0f); 
+                key.pos = Vector3(0.0f);  
             }
 
             // TODO: parentMatrix 사용

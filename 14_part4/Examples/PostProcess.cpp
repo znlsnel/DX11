@@ -58,8 +58,8 @@ void PostProcess::Initialize(
         {resources[0], m_bloomSRVs[0],  resources[1]}); // resource[1]은 모션 블러를 위한 이전 프레임 결과
     m_combineFilter.SetRenderTargets(targets);
     m_combineFilter.m_constData.strength = 0.0f; // Bloom strength
-    m_combineFilter.m_constData.option1 = 1.45f;  // Exposure로 사용
-    m_combineFilter.m_constData.option2 = 1.6f;  // Gamma로 사용
+    m_combineFilter.m_constData.option1 = 2.f;  // Exposure로 사용
+    m_combineFilter.m_constData.option2 = 1.8f;  // Gamma로 사용
 
     // 주의: float render target에서는 Gamma correction 하지 않음 (gamma = 1.0)
 

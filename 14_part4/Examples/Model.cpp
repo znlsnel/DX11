@@ -428,8 +428,9 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
      
     bool debugTextureFile = true;
     
+    m_lodCount = 0;
     for (const auto &meshData : meshes) {
-        auto newMesh = std::make_shared<Mesh>();
+        auto newMesh = std::make_shared<Mesh>(); 
          
         if (m_allowDuplicateMesh == false &&  meshData.name != "" && m_appBase != nullptr) 
         { 
@@ -447,7 +448,8 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         } else {
                 InitMeshBuffers(device, meshData, newMesh);
         }
-
+        m_lodCount = max(int(newMesh->vertexBuffers.size() - 1), m_lodCount); 
+         
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
                 if (!meshData.opacityTextureFilename.empty()) {
@@ -608,7 +610,9 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         this->m_meshes.push_back(newMesh);
     }
+    
 
+                     
     // 
     m_BVHs.resize(meshes.size());
     m_BVHMesh.resize(meshes.size());
@@ -708,21 +712,26 @@ GraphicsPSO &Model::GetReflectPSO(const bool wired) {
   
 void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
           
-        
-      int lod = 0; 
+         
     if (m_appBase) {
-        lod = int((m_appBase->m_camera->GetPosition() - GetPosition()).Length());
-        
+        m_currLod =
+            int((m_appBase->m_camera->GetPosition() - GetPosition()).Length()); 
+        m_currLod /= 3;  
+         //m_currLod = m_maxLod;
+
+        if (isChildModel && parentModel) {
+            m_currLod = parentModel->m_currLod;
+            m_useLod = parentModel->m_useLod;
+        } 
     }
 
     if (m_isVisible) {  
         for (const auto &mesh : m_meshes) {
-
             if (m_useLod == false)
                 mesh->SetLod(0);
             else
-                mesh->SetLod(min(lod, m_maxLod));
-             
+                mesh->SetLod(min(m_currLod, m_maxLod));
+              
               
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
@@ -815,13 +824,15 @@ void Model::RenderBVH(ComPtr<ID3D11DeviceContext> &context)
 {
     int startIndex = 0;
     int maxIndex = 0;
-    for (int i = 0; i < maxRenderingBVHLevel - 1; i++) {
-        startIndex = startIndex * 2 + 2;
-        //if (i == maxRenderingBVHLevel - 3)
-        //    startIndex = maxIndex;
+    if (maxRenderingBVHLevel > 0) {
+            for (int i = 0; i < maxRenderingBVHLevel - 2; i++) {
+                startIndex = startIndex * 2 + 2;
+                //if (i == maxRenderingBVHLevel - 3)
+                //    startIndex = maxIndex;
+            }
+            maxIndex = startIndex * 2 + 2;
+            startIndex++;
     }
-    maxIndex = startIndex * 2 + 2;
-    startIndex++;
         //    cout << "maxIndex : " << maxIndex << endl;
 
     for (auto mesh : m_BVHMesh) {
@@ -924,6 +935,7 @@ void Model::DestroyObject() {
 void Model::SetChildModel(shared_ptr<Model> model) {
     if (model->isChildModel == false) {
         model->isChildModel;
+        model->parentModel = this;
     }
     childModels.push_back(model);
 }
@@ -960,15 +972,15 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
         BVBMeshs.back()->stride = UINT(sizeof(Vertex));
 
         D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                                      BVBMeshs.back()->indexBuffer);
+                                      BVBMeshs.back()->indexBuffer); 
 
         BVBMeshs.back()->meshConstsGPU = m_meshConsts.Get();
         BVBMeshs.back()->materialConstsGPU = m_materialConsts.Get();
          
-         
-        if (currLevel > m_BVHMaxLevel) 
+          
+        if (currLevel > m_BVHMaxLevel)  
             break;
-
+         
         BoundingCollision &currBox = BVHBoxs.back();
         int InterID = (maxID + minID) / 2;
         
@@ -976,23 +988,16 @@ void Model::SetBVH(ComPtr<ID3D11Device> device,
         int nextMinID = minID;
         int nextMaxID = InterID; 
         bool leftChild = nextMinID + 2 < nextMaxID;
-        // 0 1 2 3 4 5  
+
         if (leftChild) {        
-                //int temp = 4 - (InterID - nextMinID) % 4;
-                //nextMaxID += temp == 4 ? 0 : temp;
             queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
         }
 
-          
         nextMinID = nextMaxID;
         nextMaxID = maxID;
         bool rightChild = nextMinID + 2 < nextMaxID;
 
         if (rightChild) {
-                //int temp = 4 - (maxID - nextMinID) % 4;
-                //nextMaxID += temp == 4 ? 0 
-                //        : nextMaxID + temp > maxIndex ? 0 
-                //        : temp;
                 queue.push(std::make_tuple(nextMinID, nextMaxID, currLevel + 1));
         }
 
@@ -1033,11 +1038,13 @@ void Model::UpdateWorldRow(Vector3 &scale, Vector3 &rotation,
     m_meshConsts.GetCpu().world = m_worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
-     
-
+    
     for (auto model : childModels) {
         model->UpdateTranseform(m_scale, m_rotation, m_position);
     }
+
+
+
 } 
 
 ComPtr<ID3D11Buffer>

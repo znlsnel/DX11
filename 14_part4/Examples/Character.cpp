@@ -40,6 +40,7 @@ hlab::Character::Character(AppBase* base, ComPtr<ID3D11Device>& device,
 }
 
 void hlab::Character::Update(float dt) {
+
         UpdateState(dt);
         UpdateTransform(dt);
 }
@@ -61,9 +62,9 @@ void hlab::Character::UpdateTransform(float dt)
         else if (m_appBase->m_keyPressed['D']) {
                 m_mesh->AddYawOffset(3.141592f * 80.f / 180.f * dt);
         }
-
-        Vector3 vc;
-        if (state == walk || state == run) {
+        
+        Vector3 vc; 
+        if (  (state == walk || state == run)) {
                 Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
                 dir = Vector4::Transform(
                         dir, m_mesh->m_worldRow);
@@ -83,7 +84,7 @@ void hlab::Character::UpdateTransform(float dt)
 
                 m_mesh->UpdatePosition(velocity);
         }
-
+         
          
         static Vector3 dir = Vector3(0.0f, -1.0f, 0.0f);
         static Vector3 velocity;

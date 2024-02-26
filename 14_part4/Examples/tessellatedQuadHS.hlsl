@@ -32,19 +32,10 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
 {
     PatchConstOutput pt;
     
-    // 3  1
-    // 4   2
-    
-    
-    // 1 = 31
-    // 2 = 12
-    // 3 = 42
-    // 4 = 34
     float3 posWorld1 = mul(float4(patch[0].posModel, 1.0), world).xyz;
     float3 posWorld2 = mul(float4(patch[1].posModel, 1.0), world).xyz;
     float3 posWorld3 = mul(float4(patch[2].posModel, 1.0), world).xyz;
     float3 posWorld4 = mul(float4(patch[3].posModel, 1.0), world).xyz;
-    
     
     float3 posCenter = (posWorld1 + posWorld2 + posWorld3 + posWorld4) / 4.0;
      
@@ -53,11 +44,10 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     float len3 = length(cameraWorld - (posWorld2 + (posWorld4 - posWorld2) / 2.0));
     float len4 = length(cameraWorld - (posWorld3 + (posWorld4 - posWorld3) / 2.0));
     float len5 = length(cameraWorld - posCenter);
-  //  len5 = 1.0;   
       
-    float maxSize = 10;
-    
-    float distMin = 3.0;
+    float maxSize = 20;
+        
+    float distMin = 5.0;
     float distMax = 10.0;   
      
     len1 =  saturate((len1 - distMin) / (distMax - distMin));
@@ -66,19 +56,12 @@ PatchConstOutput MyPatchConstantFunc(InputPatch<VertexOutput, 4> patch,
     len4 =  saturate((len4 - distMin) / (distMax - distMin));
     len5 =  saturate((len5 - distMin) / (distMax - distMin));
        
-    //len1 /= 3;
-    //len2 /= 3;
-    //len3 /= 3;
-    //len4 /= 3; 
-    //len5 /= 3; 
-        
     pt.edges[0] = lerp(maxSize, 1.0, len1);
     pt.edges[1] = lerp(maxSize, 1.0, len2);
     pt.edges[2] = lerp(maxSize, 1.0, len3);
     pt.edges[3] = lerp(maxSize, 1.0, len4);
     pt.inside[0] = lerp(maxSize, 1.0, len5);
     pt.inside[1] = lerp(maxSize, 1.0, len5);
-
 
     return pt;
 }

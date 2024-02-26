@@ -26,9 +26,9 @@ PixelShaderOutput main(SkyboxPixelShaderInput input)
         input.posModel.y *= -1.0f;
     else if (input.posModel.y < 0.1)
         input.posModel.y = 0.1;
-    
+     
     output.pixelColor = envIBLTex.SampleLevel(linearWrapSampler, input.posModel.xyz, envLodBias);
-
+output.pixelColor += 0.2;
     /*if (textureToDraw == 0)
         output.pixelColor = envIBLTex.SampleLevel(linearWrapSampler, input.posModel.xyz, envLodBias);
     else if (textureToDraw == 1)

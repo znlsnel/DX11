@@ -37,17 +37,13 @@ void main(point GeometryShaderInput input[1], uint primID
 {
     
     float4 up = float4(0, 1, 0, 0);
-    //float4 front = mul(float4(0.0, 0.0, -1.0, 0.0), world);
-    //front = mul(front, reflectWorld);
-      
     float3 reflectPos = mul(float4(input[0].pos.xyz, 0.0), reflectWorld).xyz;
       
-   // float4 front = float4(eyeWorld - input[0].pos.xyz, 0.0);
     float4 front = float4(eyeWorld - reflectPos, 0.0); 
     front = normalize(front); 
     
     float4 right = float4(cross(up.xyz, normalize(front.xyz)), 0.0);
-    right = normalize(right) * 0.2;
+    right = normalize(right) * 0.3;
     BillboardPixelShaderInput output;
      
     float size = 1; 
@@ -101,48 +97,7 @@ void main(point GeometryShaderInput input[1], uint primID
           
         outputStream.Append(output);
     }
-    //{ 
-        
-    //    output.posWorld = input[0].pos - (front);
-    //    output.pos = output.posWorld;
-    //    output.pos = mul(output.pos, view);
-    //    output.pos = mul(output.pos, proj);
-    //    output.texCoord = float2(1.0, 1.0);
-    //    output.normalWorld = right;
-    //    output.posModel = -(front);
-    //    outputStream.Append(output);
 
-    //    output.posWorld = input[0].pos - (front) + (0.2 * up);
-    //    output.pos = output.posWorld;
-    //    output.pos = mul(output.pos, view);
-    //    output.pos = mul(output.pos, proj);
-    //    output.texCoord = float2(1.0, 0.0);
-    //    output.normalWorld = right;
-    //    output.posModel = -(front) + (0.2 * up);
-
-    //    outputStream.Append(output);
-
-    //    output.posWorld = input[0].pos + (front);
-    //    output.pos = output.posWorld;
-    //    output.pos = mul(output.pos, view);
-    //    output.pos = mul(output.pos, proj);
-    //    output.texCoord = float2(0.0, 1.0);
-    //    output.normalWorld = right;
-    //    output.posModel = +(front);
-    //    outputStream.Append(output);
-
-    //    output.posWorld = input[0].pos + (front) + (0.2 * up);
-    //    output.pos = output.posWorld;
-    //    output.pos = mul(output.pos, view);
-    //    output.pos = mul(output.pos, proj);
-    //    output.texCoord = float2(0.0, 0.0);
-    //    output.normalWorld = right;
-    //    output.posModel = +(front) + (0.2 * up);
-    //    outputStream.Append(output);
-    //}
-    // 주의: GS는 Triangle Strips으로 출력합니다.
-    // https://learn.microsoft.com/en-us/windows/win32/direct3d9/triangle-strips
-     
     outputStream.RestartStrip(); // Strip을 다시 시작
 }
     

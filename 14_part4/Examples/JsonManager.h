@@ -32,6 +32,7 @@ struct QuicellMeshPathInfo {
 
     vector<vector<MeshData>> meshs;
     vector<Vector3> yOffset;
+    vector<DirectX::SimpleMath::Quaternion> rOffset;
     vector<bool> hasMeshs;
 
     ComPtr<ID3D11Texture2D> objectImage;
@@ -62,7 +63,7 @@ class JsonManager {
 
     shared_ptr<class Model> CreateModel(struct ObjectSaveInfo info);
     shared_ptr<class Model> CreateQuicellModel(struct ObjectSaveInfo info);
-    shared_ptr<class Model> CreateQuicellFoliageModel(struct ObjectSaveInfo info);
+    shared_ptr<class Model> CreateQuicellFoliageModel(struct ObjectSaveInfo& info);
     shared_ptr<class Model> CreateCharacter(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateMountain(struct ObjectSaveInfo info); 
     shared_ptr<class Model> CreateCylinder(struct ObjectSaveInfo info); 

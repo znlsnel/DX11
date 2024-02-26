@@ -8,32 +8,32 @@ namespace hlab {
 
 struct FoliageConsts {
     int foliageID = 0; 
-    int dummy[3] = {0, 0,0 };
+    int dummy[3] = {0, 0,0 }; 
 };
 
 class FoliageModel : public Model{
   public: 
-    FoliageModel(){}; 
+    FoliageModel(){};  
     FoliageModel(ComPtr<ID3D11Device> &device,
                  ComPtr<ID3D11DeviceContext> &context,
                  const vector<MeshData> &meshes, class AppBase *appBase,
                  vector<int> &meshStartID);
-      
+       
     void MakeBoundingBox(
         ComPtr<ID3D11Device> &device, const vector<MeshData> &meshDatas);
     void MakeBVH();
     void GetMeshInFrustum(bool isFindingReflectModel); 
-
      
+        
     virtual void Render(ComPtr<ID3D11DeviceContext> &context) override;
     void RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
                        vector<shared_ptr<Mesh>> &meshes);
-    float billboardDistance = 2.0f;
-    float shadowDistance = 2.0f;
-       
-private:  
+    float billboardDistance = 3.0f; 
+    float shadowDistance = 3.0f;
+           
+private:   
     vector<shared_ptr<Model>> m_billboards;
-    vector<BoundingBox> m_boundingBoxs;
+    vector<BoundingBox> m_boundingBoxs; 
      
     vector<shared_ptr<Mesh>> m_foundMesh; 
     vector<shared_ptr<Mesh>> m_foundReflectMesh;
@@ -42,7 +42,7 @@ private:
 
     vector<shared_ptr<Model>> m_foundBillboardFoliages;
     vector<shared_ptr<Model>> m_foundBillboardReflectFoliages;
-    vector<int> m_meshStartID;  
+    vector<int> m_meshStartID;   
     vector<BVNode> m_bvh;   
      
      bool isBBDRendering = false; 

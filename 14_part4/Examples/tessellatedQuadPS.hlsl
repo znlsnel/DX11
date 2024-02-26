@@ -394,13 +394,13 @@ PixelShaderOutput main(PixelShaderInput input)
         texDir.y = texDir.y > 0 ? texDx : -texDx;
     } 
         
-    currTexture.x = int(textureMap.Sample(pointWrapSampler, texc).r * 255);
+    currTexture.x = int(textureMap.SampleLevel(pointWrapSampler, texc,0).r * 255);
     float2 rightTexc = texc + float2(texDir.x, 0);
-    rightTexture.x = int(textureMap.Sample(pointWrapSampler, rightTexc).r * 255);
+    rightTexture.x = int(textureMap.SampleLevel(pointWrapSampler, rightTexc, 0).r * 255);
     float2 upTexc = texc + float2(0, texDir.y);
-    upTexture.x = int(textureMap.Sample(pointWrapSampler, upTexc).r * 255);
+    upTexture.x = int(textureMap.SampleLevel(pointWrapSampler, upTexc, 0).r * 255);
     float2 upRightTexc = texc + float2(texDir.x, texDir.y);
-    upRightTexture.x = int(textureMap.Sample(pointWrapSampler, upRightTexc).r * 255);
+    upRightTexture.x = int(textureMap.SampleLevel(pointWrapSampler, upRightTexc, 0).r * 255);
     
     float eyeToPixelLength = length(input.posWorld - eyeWorld);
        

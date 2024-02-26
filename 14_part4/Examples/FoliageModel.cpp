@@ -19,7 +19,10 @@ hlab::FoliageModel::FoliageModel(ComPtr<ID3D11Device> &device,
     Initialize(device, context, meshes);
 
     m_meshStartID = meshStartID;
+
     MakeBoundingBox(device, meshes); 
+    m_materialConsts.GetCpu().useMetallicMap = true;
+    m_materialConsts.GetCpu().useRoughnessMap = true;
 }
     
 void hlab::FoliageModel::MakeBoundingBox(
@@ -28,8 +31,8 @@ void hlab::FoliageModel::MakeBoundingBox(
     for (int meshID : m_meshStartID) {
         auto &mesh = meshDatas[meshID]; 
         Vector3 minCorner(10000.f);
-        Vector3 maxCorner(0.f);
-         
+        Vector3 maxCorner(-10000.f);
+            
         for (const auto& vtx : mesh.vertices) {
             minCorner = Vector3::Min(minCorner, vtx.position);
             maxCorner = Vector3::Max(maxCorner, vtx.position);
@@ -41,24 +44,30 @@ void hlab::FoliageModel::MakeBoundingBox(
         shared_ptr<BillboardModel> tempBM =  
             make_shared<BillboardModel>(m_appBase);  
         Vector4 tempPos = Vector4(Center.x, Center.y, Center.z, 1.0);
-
+         
         tempBM->Initialize(device, m_appBase->m_context, {tempPos}, 2,
                            Graphics::basicPS);
         tempBM->m_geometryShader = Graphics::foliageGS; 
         tempBM->resViews = 
-        {m_meshes[0]->billboardDiffuseSRV.Get(),
+        {m_meshes[0]->billboardDiffuseSRV.Get(), 
                             m_meshes[0]->billboardNormalSRV.Get(), 
                             m_meshes[0]->aoSRV.Get(),
                             m_meshes[0]->metallicRoughnessSRV.Get(),
                             m_meshes[0]->emissiveSRV.Get(),
                             m_meshes[0]->billboardArtSRV.Get()}; 
-
+         
         tempBM->useOtherShaderResource = true;
         tempBM->m_materialConsts.GetCpu().useAlbedoMap = true; 
-        tempBM->m_materialConsts.GetCpu().useNormalMap = true;
+        tempBM->m_materialConsts.GetCpu().useNormalMap = true; 
+        tempBM->m_materialConsts.GetCpu().minMetallic = 0.9f;
+        tempBM->m_materialConsts.GetCpu().minRoughness = 0.9f;
+
+        tempBM->m_materialConsts.GetCpu().useRoughnessMap = 1;
+        tempBM->m_materialConsts.GetCpu().useMetallicMap = 1;
+
         tempBM->m_materialConsts.Upload(m_appBase->m_context);
         tempBM->m_meshConsts.GetCpu().useARTTexture = 1;
-         
+          
 
         std::random_device rd;
         std::mt19937 gen(rd()); 
@@ -198,9 +207,9 @@ void hlab::FoliageModel::GetMeshInFrustum(
 
         std::queue<pair<BVNode, int>> queue;
         
-        if (m_bvh.size() == 0)
+        if (m_bvh.size() == 0) 
                 return;
-         
+          
         static int id = 0; 
         queue.push(make_pair(m_bvh[0], id));
          
@@ -349,8 +358,11 @@ void hlab::FoliageModel::RenderFoliage(ComPtr<ID3D11DeviceContext> &context,
                 context->IASetVertexBuffers(0, UINT(vertexBuffers.size()),
                                             vertexBuffers.data(), &mesh->stride,
                                             &mesh->offset);
-                  
-                context->Draw(mesh->vertexCount, 0);
+                context->IASetIndexBuffer(mesh->indexBuffer.Get(),
+                                          DXGI_FORMAT_R32_UINT, 0);
+                 
+                //context->Draw(mesh->vertexCount, 0);7
+                context->DrawIndexed(mesh->indexCount, 0, 0);
 
                 // Release resources
                 ID3D11ShaderResourceView *nulls[3] = {NULL, NULL, NULL};
