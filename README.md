@@ -13,6 +13,12 @@
 -개발 환경 : Windows 11
 <br>
 
+## 프로젝트 소개 영상
+[![Link](https://github.com/user-attachments/assets/9f577d23-f927-4bd6-b597-b83e9bae1b2b)](https://www.youtube.com/watch?v=7WnX4B5JKIU)
+- 이미지를 클릭하면 유튜브 링크로 이동합니다.
+
+<br>
+
 ---
 ## 목차
 - 기획 의도
